@@ -1,1334 +1,1471 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Backend Prompt — Volume 4
+
+## Role
+
+You are the senior backend engineering team responsible for implementing the next production-grade implementation unit of an original Amazon-style ecommerce marketplace.
+
+Act as:
+
+* Principal Software Architect
+* Staff Backend Engineer
+* Database Architect
+* Distributed Systems Engineer
+* Payment Systems Engineer
+* Security Engineer
+* QA Engineer
+* DevOps Engineer
+
+This is an implementation task, not a tutorial.
+
+You must inspect the actual repository and implement real, production-quality changes.
+
+---
+
+# 1. Project Context
+
+Build an original production-grade ecommerce marketplace supporting:
+
+* customers
+* products
+* product variants
+* SKUs
+* sellers
+* seller offers
+* pricing
+* promotions
+* inventory
+* carts
+* checkout
+* orders
+* payments
+* fulfillment
+* shipping
+* returns
+* refunds
+* reviews
+* search
+* notifications
+* administration
+* analytics
+
+Technology baseline:
+
+* Node.js
+* NestJS
+* TypeScript
+* PostgreSQL
+* Prisma
+* Redis
+* Elasticsearch/OpenSearch
+* BullMQ
+* AWS S3
+* AWS CloudFront
+* Stripe
+* REST
+* OpenAPI / Swagger
+* Webhooks
+* Kafka/Redpanda where justified
+* Docker
+* Terraform/OpenTofu
+* AWS
+* Kubernetes where justified
+
+Architectural principles:
+
+* Clean Architecture
+* Domain-Driven Design
+* SOLID
+* Repository Pattern
+* Service Layer
+* Explicit bounded contexts
+* Strong typing
+* Transactional consistency
+* Idempotency
+* Server-side authorization
+* Production-grade observability and reliability
+
+The actual repository is the source of truth.
+
+---
+
+# 2. Repository-First Requirement
+
+Before making changes:
+
+1. Inspect the repository.
+2. Inspect the backend structure.
+3. Inspect Prisma schema and migrations.
+4. Inspect existing authentication and authorization.
+5. Inspect Customer, Product, SKU, SellerOffer, Pricing, Inventory, Reservation, and Cart implementations.
+6. Inspect API conventions.
+7. Inspect existing transaction helpers.
+8. Inspect Redis infrastructure.
+9. Inspect outbox/event infrastructure.
+10. Inspect BullMQ infrastructure.
+11. Inspect Stripe configuration if already present.
+12. Inspect existing tests.
+13. Inspect configuration/environment management.
+14. Inspect documentation.
+
+Do not assume previous functionality exists simply because it is described here.
+
+Reuse compatible existing implementations.
+
+Do not create duplicate entities, services, repositories, controllers, migrations, or event systems.
+
+If the repository differs from this specification, analyze the actual implementation and make the smallest safe change necessary.
+
+---
+
+# 3. Scope of This Volume
+
+Implement the production-grade backend foundation for:
+
+1. Checkout
+2. Checkout sessions
+3. Cart-to-checkout validation
+4. Checkout pricing
+5. Promotions/coupons integration
+6. Tax calculation boundary
+7. Shipping-selection boundary
+8. Inventory reservation integration
+9. Order creation
+10. Order aggregate
+11. Order items
+12. Immutable order snapshots
+13. Order totals
+14. Order state machine
+15. Order status history
+16. Order idempotency
+17. Checkout failure recovery
+18. Checkout expiration
+19. Checkout/order events
+20. Checkout background jobs
+21. Customer order APIs
+22. Administrative/seller order access boundaries
+23. Security
+24. Observability
+25. Automated testing
 
-Build the production-ready backend for inventory, warehouses, inventory reservations, transfers, shopping cart, wishlist, checkout, taxes, shipping calculation, and order-preparation workflows for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+Do not implement the complete fulfillment, shipping execution, returns, reviews, notifications, or analytics systems in this volume.
 
-The platform is an original implementation.
+Payments must be integrated only to the extent required to establish a correct checkout/order/payment boundary. The complete payment lifecycle and Stripe production integration should be completed in the dedicated payment implementation unit.
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+---
 
-This prompt is completely independent and may be executed in a separate conversation.
+# 4. Checkout Domain
 
-The backend must follow the established ecommerce architecture, database ownership model, seller-isolation rules, catalog architecture, pricing architecture, API conventions, event architecture, payment boundaries, and security model.
+Create or extend an explicit Checkout bounded context.
 
-Do not redesign the architecture.
+Checkout is the orchestration boundary between:
 
-Do not generate frontend code.
+* Customer
+* Cart
+* Catalog
+* SellerOffer
+* Pricing
+* Promotion
+* Inventory
+* Address
+* Tax
+* Shipping
+* Payment
+* Order
+
+Checkout must never trust client-provided:
 
-Do not generate mobile code.
+* prices
+* discounts
+* totals
+* inventory
+* seller identity
+* tax
+* shipping costs
 
-Do not generate Kubernetes manifests.
+All authoritative values must be derived server-side.
+
+---
+
+# 5. Checkout Session
+
+Implement a durable CheckoutSession where appropriate.
+
+A checkout session should track:
+
+* ID
+* customer
+* source cart
+* status
+* currency
+* billing address reference/snapshot
+* shipping address reference/snapshot
+* selected shipping option where applicable
+* pricing snapshot
+* totals
+* inventory reservation references
+* expiration timestamp
+* idempotency information
+* timestamps
 
-Do not generate Terraform.
+Possible lifecycle states may include:
 
-Do not generate infrastructure implementation code.
+* ACTIVE
+* VALIDATING
+* AWAITING_PAYMENT
+* PAYMENT_PROCESSING
+* COMPLETED
+* FAILED
+* EXPIRED
+* CANCELLED
 
-Do not generate CI/CD workflows.
+Use the repository's conventions if equivalent states already exist.
 
-────────────────────────────────────────
+Do not introduce unnecessary state complexity.
 
-MISSION
+---
 
-Implement the production-ready backend required for:
+# 6. Checkout State Machine
 
-• Warehouses
-• Inventory
-• Inventory items
-• Inventory movements
-• Inventory adjustments
-• Inventory reservations
-• Reservation expiration
-• Inventory transfers
-• Low-stock alerts
-• Multi-warehouse allocation
-• Shopping cart
-• Wishlist
-• Checkout sessions
-• Tax calculation
-• Shipping calculation
-• Delivery estimates
-• Checkout validation
-• Order-preparation workflows
+Implement explicit state transitions.
 
-The implementation must support:
+Do not allow arbitrary status mutation.
 
-• Millions of products
-• Hundreds of thousands of sellers
-• Multiple warehouses
-• High inventory-write volume
-• High checkout concurrency
-• Multiple sellers in a single cart
-• Multi-seller checkout
-• Regional inventory
-• Regional pricing
-• Regional taxes
-• Regional shipping
-• Horizontal scaling
-• High availability
-• Strong transactional correctness
+For every transition define:
 
-────────────────────────────────────────
+* current state
+* allowed next state
+* triggering operation
+* authorization
+* transactional requirements
+* emitted events
+* failure behavior
 
-TECHNOLOGY STACK
+Invalid transitions must fail deterministically.
 
-Backend:
+Never allow clients to submit an arbitrary desired order status.
 
-• Node.js
-• NestJS
-• TypeScript
+---
 
-Database:
+# 7. Checkout Initialization
 
-• PostgreSQL
-• Prisma ORM
+Implement checkout initialization from a valid cart.
 
-Cache:
+The process must:
 
-• Redis
+1. Authenticate customer.
+2. Load authoritative cart.
+3. Validate cart ownership.
+4. Validate cart items.
+5. Revalidate product/SKU/offer state.
+6. Recalculate authoritative prices.
+7. Validate promotions.
+8. Validate inventory.
+9. Validate address requirements.
+10. Establish shipping/tax calculation boundaries.
+11. Create checkout session.
+12. Create required reservation intent/reservations according to the inventory architecture.
+13. Persist all authoritative state transactionally where applicable.
+14. Return the checkout representation.
 
-Background Processing:
+Do not perform external network calls inside a long database transaction.
 
-• BullMQ
+---
 
-Event Streaming:
+# 8. Checkout Revalidation
 
-• Kafka or Redpanda where justified
+Checkout data can become stale.
 
-Payments:
+Before order creation, revalidate:
 
-• Stripe integration boundary from the established architecture
+* offer status
+* seller status
+* product visibility
+* price
+* promotion validity
+* coupon validity
+* inventory
+* reservation state
+* customer address
+* shipping selection
+* tax calculation
+* currency
+* quantity constraints
 
-Search:
+If anything changed, return structured checkout validation errors.
 
-• Elasticsearch/OpenSearch integration where required
+Do not silently create an order with stale data.
 
-Object Storage:
+---
 
-• AWS S3 integration where required
+# 9. Pricing Snapshot
 
-Testing:
+At checkout, create an authoritative pricing snapshot.
 
-• Jest
-• Supertest
-• Integration testing tools
+The snapshot must preserve the exact values used to create the order.
 
-────────────────────────────────────────
+Capture appropriate information such as:
 
-IMPLEMENTATION RULES
+* SKU/offer identity
+* seller
+* quantity
+* unit price
+* line subtotal
+* promotion discount
+* coupon discount
+* tax
+* shipping amount
+* total
 
-Never generate pseudo-code.
+Use exact monetary representation.
 
-Never generate placeholders.
+Do not use floating-point arithmetic.
 
-Never generate TODO comments.
+The snapshot becomes immutable once the order is created.
 
-Never omit implementations.
+---
 
-Never say:
+# 10. Money and Currency
 
-- "implement similarly"
-- "left as an exercise"
-- "for brevity"
-- "remaining code omitted"
+Use the repository's established money representation.
 
-Every generated file must be complete.
+If not already established, use an integer minor-unit or equivalent exact representation.
 
-Every generated file must compile.
+Every monetary value must have explicit currency semantics.
 
-Never regenerate unchanged files.
+Do not mix currencies without explicit conversion rules.
 
-Only modify existing files when required.
+Do not calculate monetary totals using JavaScript floating-point arithmetic.
 
-Use strict TypeScript.
+Use deterministic rounding rules.
 
-Use dependency injection.
+---
 
-Keep controllers thin.
+# 11. Promotion Integration
 
-Keep domain rules outside controllers.
-
-Use repositories for persistence.
-
-Use DTOs for external contracts.
-
-Use centralized validation.
-
-Use centralized error handling.
-
-Use structured logging.
-
-Use production-ready transaction handling.
-
-────────────────────────────────────────
-
-DOMAIN OWNERSHIP
-
-Maintain clear boundaries between:
-
-Inventory
-
-Warehouses
-
-Inventory Reservations
-
-Inventory Transfers
-
-Cart
-
-Wishlist
-
-Checkout
-
-Taxes
-
-Shipping Calculation
-
-Do not mix inventory state with cart state.
-
-Do not treat the cart as an inventory source of truth.
-
-Do not create orders directly from unvalidated cart state.
-
-────────────────────────────────────────
-
-WAREHOUSE DOMAIN
-
-Implement:
-
-• Warehouse creation
-• Warehouse update
-• Warehouse status
-• Warehouse address
-• Warehouse region
-• Warehouse operating settings
-• Warehouse capacity metadata
-• Warehouse ownership
-
-Support states such as:
-
-• Draft
-• Active
-• Maintenance
-• Suspended
-• Closed
-
-Define seller ownership for seller-controlled warehouses.
-
-Platform-controlled warehouses must be isolated from seller-controlled warehouse data.
-
-────────────────────────────────────────
-
-WAREHOUSE LOCATIONS
-
-Support warehouse locations where required.
-
-Define:
-
-• Location
-• Zone
-• Bin
-• Storage area
-
-Use warehouse-location metadata only where it provides operational value.
-
-Do not create unnecessary physical-logistics complexity in the transactional model.
-
-────────────────────────────────────────
-
-INVENTORY ITEM
-
-Implement inventory records associated with:
-
-• Product variant
-• Seller offer
-• Warehouse
-
-Track appropriate quantities:
-
-• On hand
-• Available
-• Reserved
-• Damaged
-• In transit
-• Safety stock
-
-Define derived versus persisted quantities carefully.
-
-Avoid allowing multiple independent sources of truth for the same stock quantity.
-
-────────────────────────────────────────
-
-INVENTORY INVARIANTS
-
-Enforce:
-
-• Available quantity cannot exceed on-hand quantity
-• Reserved quantity cannot exceed available reservable quantity
-• Invalid negative values must be rejected
-• Inventory updates must be atomic
-• Inventory reservations must be idempotent
-• Inventory releases must be idempotent
-
-Define behavior for products where negative inventory is intentionally allowed, if supported.
-
-Do not silently allow negative inventory for ordinary physical goods.
-
-────────────────────────────────────────
-
-INVENTORY MOVEMENTS
-
-Implement an immutable inventory movement ledger.
-
-Support movement types such as:
-
-• Receipt
-• Sale
-• Reservation
-• Reservation Release
-• Adjustment
-• Transfer Out
-• Transfer In
-• Return
-• Damage
-• Loss
-• Correction
-
-Each movement must include:
-
-• Product/variant
-• Seller
-• Warehouse
-• Quantity
-• Movement type
-• Reference
-• Actor/system source
-• Timestamp
-• Idempotency key where appropriate
-
-The movement ledger must be auditable.
-
-────────────────────────────────────────
-
-INVENTORY ADJUSTMENTS
-
-Implement controlled stock adjustments.
-
-Support:
-
-• Increase
-• Decrease
-• Reason
-• Reference
-• Actor
-• Approval where required
-
-High-risk manual adjustments should require elevated permissions.
-
-Every adjustment must create an auditable movement.
-
-────────────────────────────────────────
-
-INVENTORY RESERVATIONS
-
-Implement reservation functionality.
-
-Support:
-
-• Reservation creation
-• Reservation confirmation
-• Reservation release
-• Reservation expiration
-• Reservation extension where allowed
-• Reservation cancellation
-• Reservation lookup
-
-A reservation must include:
-
-• Reservation ID
-• Cart/checkout reference
-• Product/variant
-• Seller offer
-• Warehouse
-• Quantity
-• Status
-• Expiration
-• Created timestamp
-• Updated timestamp
-
-────────────────────────────────────────
-
-RESERVATION STATE MACHINE
-
-Support states such as:
-
-• Pending
-• Active
-• Confirmed
-• Released
-• Expired
-• Canceled
-• Failed
-
-Define allowed transitions.
-
-Transitions must be idempotent.
-
-A released or expired reservation cannot be released twice in a way that corrupts inventory.
-
-────────────────────────────────────────
-
-INVENTORY CONCURRENCY
-
-Prevent overselling under concurrent requests.
-
-Evaluate:
-
-• Row-level locking
-• Optimistic concurrency
-• Atomic updates
-• Serializable transactions where justified
-• Reservation tokens
-
-Use the least complex strategy that guarantees correctness at the required scale.
-
-Define behavior when two checkout requests compete for the same final units.
-
-────────────────────────────────────────
-
-MULTI-WAREHOUSE ALLOCATION
-
-Implement inventory allocation logic.
-
-Support selection based on:
-
-• Availability
-• Customer region
-• Shipping region
-• Warehouse status
-• Seller ownership
-• Shipping speed
-• Cost
-• Warehouse capacity
-
-Do not reserve inventory in every possible warehouse.
-
-Select an appropriate fulfillment plan before creating reservations.
-
-────────────────────────────────────────
-
-INVENTORY TRANSFERS
-
-Implement:
-
-• Transfer creation
-• Transfer approval
-• Transfer dispatch
-• Transfer receipt
-• Transfer cancellation
-• Transfer failure
-
-Support:
-
-• Source warehouse
-• Destination warehouse
-• Product/variant
-• Quantity
-• Transfer status
-• Tracking metadata
-
-Inventory must not become available at the destination until the appropriate transfer state is reached.
-
-────────────────────────────────────────
-
-LOW-STOCK ALERTS
-
-Implement low-stock thresholds.
-
-Support:
-
-• Product-level threshold
-• Warehouse-level threshold
-• Seller-level threshold where appropriate
-
-Use asynchronous notifications rather than slowing inventory transactions.
-
-────────────────────────────────────────
-
-INVENTORY EXPIRATION JOBS
-
-Implement background jobs for:
-
-• Reservation expiration
-• Reservation reconciliation
-• Stale transfer detection
-• Inventory reconciliation
-• Low-stock processing
-
-Jobs must be:
-
-• Idempotent
-• Retryable
-• Observable
-
-────────────────────────────────────────
-
-CART DOMAIN
-
-Implement shopping cart functionality.
-
-Support:
-
-• Cart creation
-• Cart retrieval
-• Add item
-• Update quantity
-• Remove item
-• Clear cart
-• Cart expiration where appropriate
-• Multi-device cart access
-• Seller separation
-• Cart totals
-
-Cart items must reference authoritative catalog and offer identifiers.
-
-Do not trust client-submitted prices.
-
-────────────────────────────────────────
-
-CART VALIDATION
-
-Before checkout, validate:
-
-• Product exists
-• Offer exists
-• Offer is active
-• Seller is active
-• Product is purchasable
-• Variant exists
-• Current price
-• Promotion eligibility
-• Quantity limits
-• Inventory availability
-• Regional availability
-• Shipping eligibility
-
-The cart may contain stale information.
-
-Checkout must always revalidate authoritative state.
-
-────────────────────────────────────────
-
-CART CONSISTENCY
-
-The cart may be eventually consistent in some UI scenarios.
-
-However:
-
-• Checkout validation must be strongly consistent
-• Prices must be revalidated
-• Inventory must be revalidated
-• Promotions must be revalidated
-
-Do not permanently reserve inventory simply because an item was added to a cart unless the business model explicitly requires it.
-
-────────────────────────────────────────
-
-WISHLIST
-
-Implement:
-
-• Wishlist creation
-• Add item
-• Remove item
-• List items
-• Reordering where appropriate
-
-Prevent duplicate wishlist entries.
-
-Wishlist must not reserve inventory.
-
-────────────────────────────────────────
-
-CHECKOUT DOMAIN
-
-Implement checkout as an explicit workflow.
-
-Support:
-
-• Checkout creation
-• Checkout retrieval
-• Address selection
-• Shipping selection
-• Tax calculation
-• Promotion validation
-• Coupon validation
-• Inventory validation
-• Inventory reservation
-• Payment preparation
-• Order-preparation validation
-
-Do not create a permanent order merely because checkout began.
-
-────────────────────────────────────────
-
-CHECKOUT STATE MACHINE
-
-Support states such as:
-
-• Draft
-• Validating
-• Inventory Reserved
-• Awaiting Payment
-• Payment Processing
-• Ready for Order Creation
-• Completed
-• Failed
-• Expired
-• Canceled
-
-Define transitions.
-
-Every transition must be validated server-side.
-
-────────────────────────────────────────
-
-CHECKOUT SNAPSHOTS
-
-Persist snapshots where required for:
-
-• Product title
-• Seller
-• Offer
-• Price
-• Currency
-• Discount
-• Tax
-• Shipping
-• Customer address
-• Selected delivery method
-
-The final order must not depend on mutable current catalog state.
-
-────────────────────────────────────────
-
-TAX ARCHITECTURE
-
-Implement the tax abstraction boundary.
-
-Support:
-
-• Tax jurisdiction
-• Tax rates
-• Tax categories
-• Exemptions where applicable
-• Tax calculation
-• Tax rounding
-• Tax snapshots
-
-The system must support future integration with external tax providers.
-
-Do not hard-code a single country's tax rules into the core domain.
-
-────────────────────────────────────────
-
-TAX CALCULATION
-
-Calculate taxes based on:
-
-• Product
-• Seller
-• Customer location
-• Shipping destination
-• Tax jurisdiction
-• Price
-• Discount
-• Shipping charges
-
-Define rounding strategy.
-
-Historical orders must preserve the tax result used during checkout.
-
-────────────────────────────────────────
-
-SHIPPING DOMAIN
-
-Implement shipping calculation foundations.
-
-Support:
-
-• Shipping addresses
-• Shipping zones
-• Shipping methods
-• Shipping rates
-• Delivery estimates
-• Seller shipping rules
-• Warehouse shipping rules
-• Regional restrictions
-
-Define provider abstraction.
-
-Do not tie core checkout logic directly to a specific shipping carrier.
-
-────────────────────────────────────────
-
-SHIPPING RATE CALCULATION
-
-Support:
-
-• Flat rate
-• Free shipping
-• Threshold-based shipping
-• Weight-based shipping
-• Region-based shipping
-• Seller-specific shipping
-
-Prepare for external carrier-rate APIs.
-
-Handle provider failures safely.
-
-────────────────────────────────────────
-
-DELIVERY ESTIMATES
-
-Calculate estimated delivery based on:
-
-• Warehouse
-• Inventory availability
-• Processing time
-• Shipping method
-• Destination
-• Carrier/service
-• Cutoff times where applicable
-
-Clearly identify estimates versus guarantees.
-
-────────────────────────────────────────
-
-CHECKOUT SHIPPING ALLOCATION
-
-For multi-seller or multi-warehouse carts, design:
-
-• Shipping groups
-• Seller shipping groups
-• Warehouse shipping groups
-• Shipping methods
-• Shipping costs
-• Delivery estimates
-
-Do not assume a single shipment for every cart.
-
-────────────────────────────────────────
-
-CHECKOUT PROMOTIONS
-
-Integrate with the established promotion and coupon engine.
+Integrate checkout with the existing promotion domain.
 
 Validate:
 
-• Coupon
-• Promotion
-• Eligibility
-• Usage limits
-• Expiration
-• Seller restrictions
-• Product restrictions
+* promotion lifecycle
+* date window
+* customer eligibility
+* seller ownership
+* product/SKU eligibility
+* minimum purchase requirements
+* maximum discount
+* usage limits
+* stacking rules
+* priority
+* currency
 
-Do not permanently consume a coupon before the appropriate transactional point.
+Promotions must be recalculated server-side.
 
-────────────────────────────────────────
+Do not trust a promotion ID sent by a client as proof of eligibility.
 
-CHECKOUT IDEMPOTENCY
+---
 
-Implement idempotency for:
+# 12. Coupon Integration
 
-• Checkout creation
-• Inventory reservation
-• Shipping selection
-• Coupon redemption preparation
-• Payment preparation
+Integrate coupon validation with checkout.
 
-Client retries must not create duplicate reservations or duplicate checkout objects.
+Protect against:
 
-────────────────────────────────────────
+* expired coupons
+* inactive coupons
+* seller ownership violations
+* customer eligibility violations
+* usage limit violations
+* duplicate redemption
+* brute-force coupon enumeration
+* race conditions around redemption
 
-CHECKOUT FAILURE HANDLING
+Coupon redemption must be transactionally safe.
 
-Define behavior when:
+Do not mark a coupon as consumed before the authoritative order lifecycle requires it.
 
-• Inventory becomes unavailable
-• Price changes
-• Promotion expires
-• Coupon becomes invalid
-• Tax provider fails
-• Shipping provider fails
-• Payment cannot proceed
-• Reservation cannot be created
+If the architecture uses reservation-style coupon usage, implement it explicitly.
 
-Return recoverable errors where possible.
+---
 
-Do not leave stale reservations behind.
+# 13. Tax Boundary
 
-────────────────────────────────────────
+Implement a tax calculation abstraction.
 
-DATABASE
+The abstraction must support:
 
-Implement Prisma models and migrations for:
+* taxable items
+* shipping tax where applicable
+* customer/shipping jurisdiction
+* seller context
+* currency
+* tax amount
+* tax calculation version/reference
 
-• Warehouse
-• WarehouseLocation where justified
-• InventoryItem
-• InventoryMovement
-• InventoryReservation
-• InventoryTransfer
-• InventoryTransferItem where required
-• LowStockRule
-• Cart
-• CartItem
-• Wishlist
-• WishlistItem
-• Checkout
-• CheckoutItem
-• CheckoutShippingGroup
-• ShippingMethod
-• ShippingRate
-• TaxCalculation
-• AddressSnapshot where appropriate
+Do not hardcode jurisdiction-specific tax rules throughout the checkout service.
+
+If no external tax provider is configured, implement the repository's supported deterministic tax strategy rather than inventing a production provider integration.
+
+Keep the tax provider boundary extensible.
+
+---
+
+# 14. Shipping Boundary
+
+Create a shipping calculation/selection abstraction.
+
+It should support:
+
+* eligible shipping options
+* estimated delivery information
+* shipping cost
+* seller/fulfillment constraints
+* destination
+* package/order context
+
+Do not implement the complete fulfillment engine here.
+
+Do not pretend to know carrier rates without a configured provider.
+
+Use deterministic development behavior only where the repository explicitly supports it.
+
+---
+
+# 15. Inventory Reservation Integration
+
+Checkout must integrate with the inventory reservation system.
+
+Ensure:
+
+* required quantities are reserved
+* reservations are tied to the correct checkout context
+* reservations expire
+* duplicate reservation attempts are safe
+* failed checkout does not leak reservations
+* completed order consumes the appropriate reservations
+* cancelled/expired checkout releases reservations
+
+Do not implement an alternative inventory reservation system.
+
+Use the actual inventory implementation in the repository.
+
+---
+
+# 16. Checkout Concurrency
+
+Protect against:
+
+* double checkout
+* simultaneous checkout sessions from the same cart
+* stale carts
+* stale reservations
+* price changes
+* inventory races
+* repeated order creation requests
 
 Use:
 
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Composite indexes
-• Check constraints
-• Optimistic concurrency fields where required
-• Status constraints
-• Timestamps
+* database transactions
+* unique constraints
+* idempotency
+* optimistic concurrency where appropriate
+* existing inventory locking mechanisms
 
-Identify high-growth tables and partitioning candidates.
+Do not depend on frontend state to prevent duplicate checkout.
 
-────────────────────────────────────────
+---
 
-DATABASE TRANSACTIONS
+# 17. Order Domain
+
+Implement or extend an explicit Order bounded context.
+
+The order is the durable commercial record.
+
+Once created, the order must not depend on mutable product/catalog/pricing state to determine what the customer purchased.
+
+---
+
+# 18. Order Aggregate
+
+Implement an Order aggregate containing appropriate concepts such as:
+
+* order ID
+* public order number/reference
+* customer
+* currency
+* status
+* totals
+* billing information
+* shipping information
+* order items
+* payment reference
+* fulfillment reference where applicable
+* timestamps
+
+Use immutable snapshots for customer-facing commercial information.
+
+---
+
+# 19. Order Items
+
+Each OrderItem must capture the exact purchased state.
+
+At minimum preserve:
+
+* product identity/reference
+* SKU
+* seller
+* seller offer
+* product name snapshot
+* SKU/variant information snapshot where required
+* unit price
+* quantity
+* discounts
+* tax
+* line subtotal
+* line total
+* currency
+
+Do not rely on future product changes to reconstruct an old order.
+
+---
+
+# 20. Address Snapshots
+
+Orders must preserve the address used at purchase time.
+
+Do not reference only a mutable CustomerAddress record.
+
+Capture the appropriate snapshot fields required by the business and legal model.
+
+Address changes after purchase must not alter historical orders.
+
+Protect address information from unnecessary API exposure.
+
+---
+
+# 21. Seller Snapshot
+
+For marketplace orders, preserve the seller identity and relevant commercial information needed for historical order representation.
+
+Do not allow later seller profile changes to corrupt historical order data.
+
+Respect seller data isolation.
+
+---
+
+# 22. Order Totals
+
+Persist authoritative order totals.
+
+The order must preserve:
+
+* subtotal
+* discount total
+* shipping total
+* tax total
+* grand total
+* currency
+
+Ensure:
+
+`grand total = subtotal - discounts + shipping + tax`
+
+or the repository's explicitly defined formula.
+
+Validate the invariant server-side.
+
+Never accept a client-provided grand total.
+
+---
+
+# 23. Order Number
+
+Provide a customer-friendly order number separate from internal database identifiers where appropriate.
+
+Requirements:
+
+* uniqueness
+* safe generation
+* no predictable database sequence leakage if the architecture requires opaque public references
+* support for search and customer support workflows
+
+Do not expose internal primary keys unnecessarily.
+
+---
+
+# 24. Order State Machine
+
+Implement an explicit order lifecycle.
+
+Possible states may include:
+
+* PENDING
+* PAYMENT_PENDING
+* CONFIRMED
+* PROCESSING
+* PARTIALLY_FULFILLED
+* FULFILLED
+* CANCELLED
+* COMPLETED
+
+Only implement states required by the actual architecture.
+
+Do not allow arbitrary transitions.
+
+Future fulfillment/payment modules must be able to extend the lifecycle safely.
+
+---
+
+# 25. Order Status History
+
+Implement immutable order status history.
+
+Record:
+
+* order ID
+* previous status
+* new status
+* actor/source
+* reason
+* correlation ID
+* timestamp
+
+Do not modify historical status records.
+
+This provides an audit trail for customer support and operational investigation.
+
+---
+
+# 26. Order Creation
+
+Order creation must be atomic with respect to authoritative order state.
+
+The process should:
+
+1. Validate checkout session.
+2. Revalidate required commercial data.
+3. Validate inventory reservations.
+4. Calculate final authoritative totals.
+5. Create order.
+6. Create immutable order items.
+7. Create address/seller/pricing snapshots.
+8. Transition checkout state.
+9. Consume or associate inventory reservations according to the architecture.
+10. Record status history.
+11. Create required outbox events.
+12. Commit.
+
+Do not publish an order-created event before the transaction commits.
+
+---
+
+# 27. Order Idempotency
+
+Order creation must be idempotent.
+
+A repeated request caused by:
+
+* browser retry
+* mobile retry
+* network timeout
+* gateway retry
+* client reconnect
+
+must not create duplicate orders.
+
+Use the existing idempotency infrastructure.
+
+A reused idempotency key with a different payload must be rejected.
+
+---
+
+# 28. Cart Conversion
+
+After successful order creation:
+
+* mark the cart appropriately
+* prevent accidental reuse as an active purchase cart
+* preserve required historical references
+* avoid deleting data needed for order/audit history
+
+If the repository architecture creates a new cart automatically for the customer, implement that behavior consistently.
+
+---
+
+# 29. Checkout Failure Recovery
+
+Handle failures at every stage.
+
+Examples:
+
+* insufficient inventory
+* reservation expired
+* promotion changed
+* coupon invalidated
+* tax calculation failure
+* shipping calculation failure
+* database conflict
+* duplicate request
+* payment boundary failure
+
+Ensure resources are not leaked.
+
+In particular:
+
+* do not leave stale active reservations
+* do not create incomplete orders
+* do not mark carts converted prematurely
+* do not consume inventory incorrectly
+
+---
+
+# 30. Checkout Expiration
+
+Checkout sessions must expire.
+
+Implement BullMQ processing for expired sessions where appropriate.
+
+Expiration must:
+
+* identify expired sessions
+* release associated inventory reservations
+* transition checkout safely
+* remain idempotent
+* tolerate retries
+* avoid affecting completed orders
+* emit appropriate events
+* produce metrics
+
+---
+
+# 31. Payment Boundary
+
+Create a clean payment boundary without duplicating the full payment system.
+
+The checkout/order implementation must be able to represent:
+
+* payment required
+* payment pending
+* payment succeeded
+* payment failed
+* payment cancelled
+
+The actual Stripe payment orchestration should integrate through a dedicated payment service/module.
+
+Do not treat a client-side payment success response as authoritative.
+
+Do not mark an order paid merely because the frontend reports success.
+
+---
+
+# 32. Payment Security Boundary
+
+Any payment result must ultimately be verified server-side.
+
+Use secure server-side provider communication and webhook confirmation when the payment implementation exists.
+
+Never accept:
+
+* client-provided payment status
+* client-provided Stripe event status
+* arbitrary transaction IDs
+* arbitrary amount confirmation
+
+without authoritative verification.
+
+---
+
+# 33. Customer Order APIs
+
+Implement appropriate customer-facing APIs for:
+
+* creating checkout
+* retrieving checkout
+* validating checkout
+* updating supported checkout information
+* creating order
+* retrieving order
+* listing customer orders
+* retrieving order status/history where permitted
+
+Customers must only access their own orders.
+
+---
+
+# 34. Seller Order Access
+
+Create seller-scoped order access where the marketplace architecture requires it.
+
+Seller users must only see order information necessary for their own seller items.
+
+Do not expose:
+
+* unrelated seller items
+* unnecessary customer information
+* payment secrets
+* internal platform data
+
+Seller order projections should respect strict authorization boundaries.
+
+---
+
+# 35. Administrative Order Access
+
+Administrative access must use explicit permissions.
+
+Do not treat every authenticated user as an administrator.
+
+Use existing role/permission infrastructure.
+
+Administrative endpoints must be separately protected and audited.
+
+---
+
+# 36. API Design
+
+Follow existing REST conventions.
+
+Use explicit DTOs.
+
+Do not expose Prisma entities directly.
+
+Use appropriate:
+
+* HTTP methods
+* HTTP status codes
+* pagination
+* filtering
+* sorting
+* error codes
+* authentication
+* authorization
+* idempotency headers
+
+Avoid creating multiple endpoints that expose the same behavior with inconsistent contracts.
+
+---
+
+# 37. Error Contracts
+
+Use the existing standardized error format.
+
+Add appropriate domain errors such as:
+
+* CHECKOUT_NOT_FOUND
+* CHECKOUT_EXPIRED
+* CHECKOUT_INVALID
+* CHECKOUT_ALREADY_COMPLETED
+* CHECKOUT_PRICE_CHANGED
+* CHECKOUT_INVENTORY_CHANGED
+* CHECKOUT_RESERVATION_INVALID
+* ORDER_NOT_FOUND
+* ORDER_ALREADY_CREATED
+* ORDER_INVALID_STATE
+* ORDER_ACCESS_DENIED
+* PAYMENT_REQUIRED
+* PROMOTION_INVALID
+* COUPON_INVALID
+
+Reuse equivalent existing errors when already present.
+
+Do not expose raw database/provider exceptions.
+
+---
+
+# 38. Events
+
+Integrate with the existing event/outbox system.
+
+Potential events:
+
+* checkout.created
+* checkout.validated
+* checkout.expired
+* checkout.cancelled
+* order.created
+* order.confirmed
+* order.cancelled
+* order.status.changed
+* order.payment.pending
+* order.payment.confirmed
+* order.payment.failed
+
+Use the repository's event naming conventions where they already exist.
+
+Every event must have a consistent envelope containing appropriate:
+
+* event ID
+* event type
+* version
+* aggregate ID
+* aggregate type
+* producer
+* timestamp
+* correlation ID
+* causation ID
+* trace context
+* payload
+
+---
+
+# 39. Event Ordering
+
+Define ordering requirements for:
+
+* checkout lifecycle
+* order lifecycle
+* payment state
+* inventory consumption
+
+Do not assume global ordering.
+
+Use aggregate-based partitioning where Kafka/Redpanda is used.
+
+Consumers must tolerate duplicate events.
+
+---
+
+# 40. Redis
+
+Use Redis only for appropriate ephemeral/accelerating concerns.
+
+Potential uses:
+
+* checkout lookup cache where justified
+* short-lived validation cache
+* rate limiting
+* distributed coordination
+* temporary session state
+
+PostgreSQL remains authoritative for:
+
+* checkout
+* order
+* payment state
+* inventory
+* cart
+
+Define:
+
+* key namespaces
+* TTL
+* invalidation
+* stale behavior
+* failure behavior
+
+---
+
+# 41. Background Jobs
+
+Implement appropriate BullMQ jobs for:
+
+* checkout expiration
+* reservation cleanup integration
+* failed asynchronous processing
+* order event processing where appropriate
+
+Every job must define:
+
+* payload
+* retry strategy
+* backoff
+* timeout
+* concurrency
+* idempotency
+* failure handling
+* observability
+
+---
+
+# 42. Database Constraints
+
+Use Prisma migrations to establish:
+
+* order uniqueness
+* order number uniqueness
+* checkout ownership
+* valid foreign keys
+* appropriate indexes
+* status/history relationships
+* idempotency uniqueness
+* order-item relationships
+* seller/order relationships
+* payment references where appropriate
+
+Use database constraints for critical invariants wherever practical.
+
+---
+
+# 43. Transaction Boundaries
 
 Use transactions for:
 
-• Inventory reservation
-• Inventory release
-• Inventory adjustment
-• Inventory transfer transitions
-• Checkout state transitions requiring strong consistency
-• Wishlist uniqueness
-• Cart item uniqueness where needed
+* checkout creation where multiple authoritative records are created
+* checkout validation state changes
+* order creation
+* cart conversion
+* reservation consumption integration
+* order status transitions
+* idempotency state changes
+* outbox insertion
 
-Do not use distributed transactions between payment, shipping, and inventory systems.
+Do not perform slow external calls inside critical database transactions.
 
-Use orchestration and idempotency.
+---
 
-────────────────────────────────────────
+# 44. Security
 
-EVENTS
+Threat-model the checkout/order implementation.
 
-Publish events including:
+Protect against:
 
-INVENTORY
+* order IDOR
+* checkout IDOR
+* seller order isolation bypass
+* price manipulation
+* discount manipulation
+* coupon abuse
+* inventory manipulation
+* replay
+* duplicate order creation
+* privilege escalation
+* unauthorized cancellation
+* unauthorized status changes
+* payment-status spoofing
+* sensitive customer-data exposure
 
-• WarehouseCreated
-• WarehouseUpdated
-• InventoryItemCreated
-• InventoryChanged
-• InventoryReserved
-• InventoryReservationConfirmed
-• InventoryReservationReleased
-• InventoryReservationExpired
-• InventoryAdjusted
-• InventoryTransferCreated
-• InventoryTransferDispatched
-• InventoryTransferReceived
-• InventoryTransferCanceled
-• LowStockDetected
+All authorization must be server-side.
 
-CART
+---
 
-• CartCreated
-• CartItemAdded
-• CartItemUpdated
-• CartItemRemoved
-• CartCleared
+# 45. Order Cancellation Boundary
 
-CHECKOUT
+Implement only the cancellation foundation required by this volume.
 
-• CheckoutStarted
-• CheckoutValidated
-• CheckoutFailed
-• InventoryReservationFailed
-• CheckoutExpired
+Define:
 
-WISHLIST
+* which states can be cancelled
+* who may request cancellation
+* how cancellation affects checkout/inventory
+* how status history is recorded
+* how events are emitted
 
-• WishlistCreated
-• WishlistItemAdded
-• WishlistItemRemoved
+Do not implement the complete returns/refunds workflow here.
 
-SHIPPING
+Where payment reversal is required, create a clean integration boundary for the dedicated payment/returns implementation.
 
-• ShippingRateCalculated
-• ShippingSelectionChanged
+---
 
-TAX
+# 46. Privacy
 
-• TaxCalculated
+Minimize customer data returned through APIs.
 
-Events must not duplicate entire cart, checkout, or inventory records.
+Differentiate:
 
-Use transactional outbox where appropriate.
+* customer view
+* seller view
+* administrator view
 
-────────────────────────────────────────
+Do not expose unnecessary:
 
-BACKGROUND JOBS
+* addresses
+* contact details
+* payment information
+* internal IDs
+* security information
 
-Implement BullMQ jobs for:
+Respect privacy requirements across:
 
-• Reservation expiration
-• Inventory reconciliation
-• Transfer monitoring
-• Low-stock alerts
-• Cart cleanup where appropriate
-• Checkout expiration
-• Tax calculation retries
-• Shipping-rate retries
-• Inventory synchronization
+* API responses
+* logs
+* events
+* audit records
+* caches
+* background jobs
 
-Every worker must implement:
+---
 
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter handling
-• Metrics
-• Structured logging
-
-────────────────────────────────────────
-
-REDIS
-
-Use Redis selectively for:
-
-• Cart acceleration where appropriate
-• Checkout temporary state where appropriate
-• Rate limiting
-• Idempotency
-• Distributed locking
-• Cached shipping rates where safe
-• Cached tax configuration where safe
-
-PostgreSQL remains authoritative.
-
-────────────────────────────────────────
-
-API
-
-Implement production-ready APIs.
-
-WAREHOUSES
-
-• Create
-• Get
-• List
-• Update
-• Activate
-• Suspend
-
-INVENTORY
-
-• Get inventory
-• Adjust inventory
-• Inventory history
-• Low-stock configuration
-
-RESERVATIONS
-
-• Reserve
-• Confirm
-• Release
-• Get status
-
-TRANSFERS
-
-• Create
-• Get
-• Approve
-• Dispatch
-• Receive
-• Cancel
-
-CART
-
-• Get
-• Add item
-• Update item
-• Remove item
-• Clear
-
-WISHLIST
-
-• Get
-• Add
-• Remove
-
-CHECKOUT
-
-• Create
-• Get
-• Validate
-• Select address
-• Calculate tax
-• Calculate shipping
-• Apply coupon
-• Reserve inventory
-• Update shipping method
-• Prepare payment
-• Cancel
-• Expire
-
-Every endpoint must include:
-
-• Authentication
-• Authorization
-• Validation
-• Idempotency
-• Rate limiting
-• OpenAPI documentation
-• Consistent errors
-
-────────────────────────────────────────
-
-SELLER ISOLATION
-
-Seller-owned inventory must always be scoped to the authenticated seller.
-
-Apply isolation to:
-
-• Warehouses
-• Inventory
-• Transfers
-• Seller carts where relevant
-• Seller-specific shipping configuration
-• Seller-specific promotions
-
-Never trust client-provided seller IDs.
-
-Platform administrators require explicit elevated permissions.
-
-────────────────────────────────────────
-
-SECURITY
-
-Implement protections against:
-
-• Inventory manipulation
-• Unauthorized warehouse access
-• Checkout tampering
-• Price tampering
-• Coupon abuse
-• Shipping-rate manipulation
-• Tax manipulation
-• Quantity manipulation
-• IDOR
-• Replay attacks
-• Duplicate reservation
-
-All critical values must be recalculated or validated server-side.
-
-────────────────────────────────────────
-
-OBSERVABILITY
+# 47. Observability
 
 Instrument:
 
-• Inventory operations
-• Reservation latency
-• Reservation failures
-• Checkout validation
-• Checkout duration
-• Cart operations
-• Shipping calculations
-• Tax calculations
-• Transfer operations
+### Checkout
 
-Track:
+* initialization latency
+* validation failures
+* expiration
+* reservation failures
+* price changes
+* coupon failures
+* checkout conversion
 
-• Inventory reservation success rate
-• Oversell-prevention failures
-• Reservation leaks
-• Checkout abandonment
-• Checkout failure rate
-• Shipping provider latency
-• Tax provider latency
-• Queue backlog
+### Orders
 
-Never log sensitive payment credentials.
+* order creation latency
+* order creation failures
+* state transitions
+* cancellation
+* duplicate/idempotent requests
 
-────────────────────────────────────────
+### Jobs
 
-TESTING
+* checkout expiration
+* cleanup
+* event processing
 
-UNIT TESTS
+Trace critical paths across:
 
-Test:
+* HTTP
+* PostgreSQL
+* Redis
+* BullMQ
+* event infrastructure
+* payment boundary
 
-• Inventory invariants
-• Reservation state machine
-• Concurrency rules
-• Transfer state machine
-• Cart validation
-• Checkout state machine
-• Shipping calculations
-• Tax calculations
-• Coupon integration
-• Seller isolation
+Never log secrets or unnecessary customer data.
 
-INTEGRATION TESTS
+---
 
-Test:
+# 48. Audit
 
-• PostgreSQL
-• Prisma
-• Redis
-• Kafka
-• BullMQ
-• Shipping providers
-• Tax provider abstraction
+Audit:
 
-CONCURRENCY TESTS
+* order creation
+* administrative order actions
+* seller order access where appropriate
+* order cancellation
+* manual state changes
+* checkout security-sensitive operations
 
-Test:
+Audit records must be immutable.
 
-• Two buyers competing for one unit
-• Multiple reservations
-• Reservation expiration races
-• Concurrent inventory adjustments
-• Concurrent checkout retries
+---
 
-API TESTS
+# 49. Testing
 
-Test all endpoints.
+Implement comprehensive tests.
 
-PERFORMANCE TESTS
+## Unit Tests
 
 Test:
 
-• Inventory reads
-• Inventory writes
-• Reservation throughput
-• Checkout throughput
-• Cart operations
-• Shipping calculations
+* checkout state machine
+* order state machine
+* price calculations
+* discount calculations
+* coupon eligibility
+* tax abstraction
+* shipping abstraction
+* checkout validation
+* order totals
+* cancellation rules
 
-SECURITY TESTS
+## Integration Tests
 
 Test:
 
-• Seller isolation
-• Inventory tampering
-• Checkout tampering
-• Coupon abuse
-• IDOR
-• Replay
-• Reservation duplication
+* checkout persistence
+* inventory reservation integration
+* order creation
+* cart conversion
+* idempotency
+* transactions
+* outbox creation
+* checkout expiration
 
-────────────────────────────────────────
+## API Tests
 
-DOCUMENTATION
+Test:
 
-Generate:
+* customer checkout access
+* customer order access
+* seller order isolation
+* admin authorization
+* invalid state transitions
+* validation errors
+* pagination
+* idempotency
 
-• Inventory architecture
-• Reservation model
-• Warehouse model
-• Transfer model
-• Cart architecture
-• Checkout architecture
-• Tax architecture
-• Shipping architecture
-• Concurrency strategy
-• State machines
-• API contracts
-• Event contracts
-• Database schema
-• Failure handling
-• Testing strategy
+## Security Tests
 
-────────────────────────────────────────
+Explicitly test:
 
-PROJECT INDEX
+* another customer accessing checkout
+* another customer accessing order
+* seller accessing another seller's order
+* customer accessing seller-only endpoints
+* forged totals
+* forged prices
+* forged discounts
+* forged payment status
+* replayed order creation
+* coupon abuse
+* unauthorized cancellation
 
-Update the backend Project Index with:
+## Concurrency Tests
 
-• Warehouse modules
-• Inventory modules
-• Reservation modules
-• Transfer modules
-• Cart modules
-• Wishlist modules
-• Checkout modules
-• Tax modules
-• Shipping modules
-• Database objects
-• Migrations
-• APIs
-• Events
-• Queues
-• Workers
-• Tests
-• Generated files
-• Remaining work
-• Current milestone
-• Dependencies
+Test:
 
-────────────────────────────────────────
+* two checkout attempts against one cart
+* duplicate order creation
+* simultaneous checkout validation
+* reservation consumption races
+* concurrent cancellation/state transitions
 
-IMPLEMENTATION MILESTONES
+Verify no duplicate orders or inconsistent state are produced.
 
-BACKEND MILESTONE 1
+---
 
-Warehouses, locations, inventory items, inventory schema, and core inventory services.
+# 50. Performance
 
-BACKEND MILESTONE 2
+Review:
 
-Inventory movements, adjustments, concurrency controls, and auditability.
+* customer order listing
+* order retrieval
+* checkout retrieval
+* checkout validation
+* order item loading
+* seller order projections
 
-BACKEND MILESTONE 3
+Prevent:
 
-Inventory reservations, expiration, reconciliation, and low-stock processing.
+* N+1 queries
+* unbounded order retrieval
+* excessive joins
+* unnecessary relation loading
 
-BACKEND MILESTONE 4
+Use appropriate indexes and pagination.
 
-Inventory transfers and multi-warehouse allocation.
+---
 
-BACKEND MILESTONE 5
+# 51. API Documentation
 
-Shopping cart and wishlist.
+Update OpenAPI/Swagger with:
 
-BACKEND MILESTONE 6
+* checkout endpoints
+* order endpoints
+* DTOs
+* error codes
+* authorization
+* idempotency
+* lifecycle states
+* pagination
+* cancellation rules
 
-Checkout lifecycle, validation, snapshots, and idempotency.
+Document only implemented behavior.
 
-BACKEND MILESTONE 7
+---
 
-Tax calculation and shipping calculation.
+# 52. Migration Safety
 
-BACKEND MILESTONE 8
+All schema changes must use safe Prisma migrations.
 
-Checkout promotion/coupon integration and inventory reservation integration.
+Before migration:
 
-BACKEND MILESTONE 9
+* inspect current schema
+* preserve existing data
+* avoid destructive operations
+* verify indexes
+* verify constraints
+* verify foreign keys
 
-Events, queues, Redis, observability, and scheduled jobs.
+Do not reset existing databases.
 
-BACKEND MILESTONE 10
+---
 
-Integration, concurrency, performance, security, and production-readiness testing.
+# 53. Backward Compatibility
 
-Each milestone should contain approximately 20–40 files where practical.
+Preserve existing APIs and domain behavior.
 
-Every milestone must compile before proceeding.
+If contracts must change:
 
-────────────────────────────────────────
+1. inspect repository consumers
+2. make compatible changes where possible
+3. update all consumers
+4. add regression tests
+5. document changes
 
-OUTPUT FORMAT
+Do not silently break catalog, seller, pricing, inventory, or cart behavior.
 
-For every generated file provide:
+---
 
-1. Exact file path
-2. Complete file contents
+# 54. Documentation
 
-Never truncate code.
+Update relevant technical documentation covering:
 
-Never summarize source code instead of generating it.
+* checkout lifecycle
+* order lifecycle
+* order snapshots
+* idempotency
+* reservation integration
+* failure recovery
+* API contracts
+* authorization boundaries
+* background jobs
+* operational troubleshooting
 
-Never generate pseudo-code.
+Documentation must reflect actual implementation.
 
-Never generate placeholders.
+---
 
-Never generate TODO implementations.
+# 55. Explicitly Defer
 
-When modifying an existing file:
+Do not implement the complete:
 
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
+* Stripe payment system
+* payment webhook reconciliation
+* fulfillment engine
+* shipping carrier integrations
+* returns system
+* refund system
+* review system
+* notification system
+* search system
+* analytics system
 
-Never regenerate unchanged files.
+unless an existing repository implementation requires a minimal integration change.
 
-────────────────────────────────────────
+Create clean contracts for those future domains.
 
-SCOPE RESTRICTION
+---
 
-This volume covers only:
+# 56. Implementation Requirements
 
-• Warehouses
-• Inventory
-• Inventory movements
-• Inventory reservations
-• Inventory transfers
-• Low-stock processing
-• Shopping cart
-• Wishlist
-• Checkout
-• Taxes
-• Shipping calculation
-• Delivery estimates
-• Checkout promotion integration
+You must:
 
-Do not implement complete:
+1. Inspect the repository first.
+2. Understand existing implementations.
+3. Reuse compatible code.
+4. Implement the entire checkout/order scope.
+5. Create/update Prisma migrations.
+6. Implement APIs.
+7. Implement events.
+8. Implement background jobs.
+9. Implement authorization.
+10. Implement idempotency.
+11. Implement tests.
+12. Update documentation.
+13. Run formatting.
+14. Run lint.
+15. Run type checking.
+16. Run tests.
+17. Run build validation.
+18. Validate migrations.
+19. Verify no secrets were introduced.
+20. Verify no placeholders remain.
 
-• Final order orchestration
-• Payments
-• Seller payouts
-• Fulfillment execution
-• Shipment execution
-• Returns
-• Refunds
-• Reviews
-• Search
-• Recommendations
-• Notifications
-• Messaging
-• Analytics
-• Administration UI
-• Infrastructure
+Do not simply describe the implementation.
 
-Those belong to later implementation volumes.
+Actually modify the repository.
 
-────────────────────────────────────────
+---
 
-QUALITY BAR
+# 57. Final Validation
 
-Treat inventory and checkout as critical transactional infrastructure.
+Verify:
 
-Assume:
+### Checkout
 
-• High checkout concurrency
-• Limited inventory
-• Millions of carts
-• Multiple sellers per cart
-• Multiple warehouses
-• Regional fulfillment
-• Payment retries
-• Shipping-provider failures
-• Tax-provider failures
-• Global traffic
+* authoritative pricing
+* inventory validation
+* reservation integration
+* promotion validation
+* coupon validation
+* expiration
+* concurrency safety
 
-Prioritize:
+### Orders
 
-• Inventory correctness
-• Oversell prevention
-• Idempotency
-• Transaction safety
-• Checkout reliability
-• Seller isolation
-• Scalability
-• Observability
-• Recovery
-• Production readiness
+* immutable snapshots
+* correct totals
+* order number uniqueness
+* valid state machine
+* status history
+* customer isolation
+* seller isolation
+* administrative authorization
+
+### Reliability
+
+* idempotent order creation
+* retry-safe jobs
+* transactional outbox
+* safe failure recovery
+* no leaked reservations
+
+### Security
+
+* no IDOR
+* no price manipulation
+* no total manipulation
+* no payment-status spoofing
+* no unauthorized cancellation
+* no seller isolation bypass
+
+### Testing
+
+* unit tests pass
+* integration tests pass
+* API tests pass
+* security tests pass
+* concurrency tests pass
+
+### Code Quality
+
+* lint passes
+* typecheck passes
+* build passes
+* migrations are valid
+* no duplicate implementations exist
+
+---
+
+# 58. Final Report
+
+When finished, report only facts about the actual repository.
+
+Include:
+
+1. Implemented checkout functionality.
+2. Implemented order functionality.
+3. Database models/migrations.
+4. API endpoints.
+5. Events.
+6. BullMQ jobs.
+7. Redis behavior.
+8. Inventory integration.
+9. Security controls.
+10. Tests.
+11. Validation commands and actual results.
+12. Genuine remaining limitations/blockers.
+
+Do not claim something is implemented unless it actually exists and was validated.
+
+The repository is the final source of truth.
+
+---
+
+# 59. Non-Negotiable Rules
+
+* No pseudo-code.
+* No TODOs.
+* No FIXME markers.
+* No placeholder implementations.
+* No fake payment/provider integrations.
+* No invented external API behavior.
+* No hardcoded production secrets.
+* No frontend-only security.
+* No client-trusted prices.
+* No client-trusted totals.
+* No client-trusted payment status.
+* No arbitrary order state transitions.
+* No duplicate order creation.
+* No cross-customer order access.
+* No cross-seller order access.
+* No unnecessary regeneration of unchanged files.
+* No competing implementations.
+* No false completion claims.
+
+Most importantly:
+
+**Inspect the actual repository first, then implement the complete Checkout + Order backend implementation unit as a production-grade extension of the existing ecommerce marketplace.**

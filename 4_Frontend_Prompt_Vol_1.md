@@ -1,1296 +1,1670 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Frontend Prompt — Volume 1
 
-Build the production-ready web frontend foundation for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+## Web Application Foundation, Authentication, Catalog, Search, Product Pages, Cart, and Core Customer Experience
 
-The platform is an original implementation.
+You are implementing the first production-grade frontend implementation unit for an original Amazon-style enterprise ecommerce marketplace.
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+This is a **standalone implementation prompt**. It must contain everything necessary to execute this phase without relying on any previous prompt, architecture document, conversation, generated artifact, or remembered decision.
 
-This prompt is completely independent and may be executed in a separate conversation.
+The actual repository is the only source of truth for the current implementation state.
 
-The frontend must consume the established backend API contracts, authentication model, authorization model, catalog model, seller model, cart model, checkout model, order model, search model, notification model, and security model.
+Do not assume that any previous prompt was executed successfully. Inspect the repository and integrate with what actually exists.
 
-Do not redesign backend APIs.
+This frontend is one coherent part of the same ecommerce marketplace system. It is not a separate application.
 
-Do not redesign the database.
+---
 
-Do not implement backend code.
+# 1. Mission
 
-Do not implement mobile code.
+Implement the production-grade foundation of the **web customer application** using:
 
-Do not implement infrastructure implementation code.
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Query
+* Zustand
 
-Do not generate Terraform.
+Use the actual versions and conventions already present in the repository.
 
-Do not generate Kubernetes manifests.
+This phase focuses on:
 
-Do not generate CI/CD workflows.
+* Web application foundation
+* Application shell
+* Routing
+* Authentication
+* Customer session handling
+* Customer account foundation
+* Catalog browsing
+* Categories
+* Brands
+* Product discovery
+* Search
+* Product detail pages
+* Seller offers
+* Pricing presentation
+* Product media
+* Cart
+* Cart persistence
+* Responsive ecommerce UX
+* Loading/error/empty states
+* Accessibility
+* SEO foundations
+* API integration
+* Security
+* Frontend observability
+* Testing
 
-────────────────────────────────────────
+Later frontend phases may extend this into checkout, orders, payments, fulfillment, returns, reviews, notifications, seller/admin interfaces, and advanced account functionality.
 
-MISSION
+Do not implement those unrelated areas prematurely unless the existing repository already requires them for compatibility.
 
-Build the production-ready web frontend foundation for the ecommerce marketplace.
+---
 
-The web platform must support:
+# 2. Repository-First Rule
 
-• Customer marketplace
-• Seller dashboard
-• Admin dashboard
-• Product discovery
-• Search
-• Product details
-• Shopping cart
-• Checkout
-• Orders
-• Returns
-• Reviews
-• Notifications
-• Customer account
-• Seller management
-• Administration
-• Responsive layouts
-• Accessibility
-• Internationalization
-• Error handling
-• Performance optimization
+Before writing code:
 
-The frontend must be:
+1. Inspect the repository.
+2. Inspect the existing frontend structure.
+3. Inspect package.json and lockfiles.
+4. Inspect Next.js configuration.
+5. Inspect TypeScript configuration.
+6. Inspect Tailwind configuration.
+7. Inspect shadcn/ui setup.
+8. Inspect routing.
+9. Inspect existing components.
+10. Inspect TanStack Query configuration.
+11. Inspect Zustand stores.
+12. Inspect API clients.
+13. Inspect authentication implementation.
+14. Inspect environment configuration.
+15. Inspect existing backend API contracts.
+16. Inspect existing tests.
+17. Inspect existing design system.
+18. Inspect existing assets.
 
-• Fast
-• Responsive
-• Accessible
-• Secure
-• Maintainable
-• Scalable
-• Observable
-• Production-ready
+The actual repository takes precedence over assumptions in this prompt.
 
-────────────────────────────────────────
+If compatible frontend functionality already exists, extend it.
 
-TECHNOLOGY STACK
+Do not create duplicate:
 
-Framework:
+* API clients
+* authentication systems
+* query clients
+* state-management systems
+* component libraries
+* routing systems
+* design systems
+* session systems
 
-• Next.js
-• React
-• TypeScript
+Do not regenerate unchanged files.
 
-Styling:
+---
 
-• Tailwind CSS
-• shadcn/ui
-• CSS variables
-
-State Management:
-
-• Zustand
-
-Server State:
-
-• TanStack Query
-
-Forms:
-
-• React Hook Form
-• Zod
-
-Utilities:
-
-• date-fns
-
-Charts:
-
-• Recharts
-
-Animation:
-
-• Framer Motion
-
-Icons:
-
-• Lucide React
-
-Testing:
-
-• Jest
-• React Testing Library
-• Playwright
-• Accessibility testing tools
-
-────────────────────────────────────────
-
-FRONTEND ARCHITECTURE
+# 3. Technology Requirements
 
 Use:
 
-• Feature-first organization
-• Strict TypeScript
-• Reusable components
-• Clean Architecture principles where appropriate
-• Separation of presentation and business logic
-• Dependency inversion where appropriate
-• Shared design system
-• Typed API contracts
+### Framework
 
-Do not place business logic directly inside presentation components.
+* Next.js
+* React
+* TypeScript
 
-Do not duplicate backend authorization logic.
+### Styling
 
-Do not use Zustand as a replacement for server-state management.
+* Tailwind CSS
+* shadcn/ui
 
-────────────────────────────────────────
+### Server State
 
-APPLICATIONS
+* TanStack Query
 
-Build:
+### Client State
 
-CUSTOMER MARKETPLACE
+* Zustand only where client state is genuinely appropriate
 
-• Public storefront
-• Authenticated customer marketplace
-• Product discovery
-• Product pages
-• Search
-• Cart
-• Checkout
-• Orders
-• Returns
-• Reviews
-• Account
+### Validation
 
-SELLER DASHBOARD
+Use the repository's existing validation library where available.
 
-• Seller dashboard
-• Store
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Promotions
-• Coupons
-• Analytics
-• Revenue
-• Payouts
-• Reviews
-• Messages
+### Testing
 
-ADMIN DASHBOARD
+Use the repository's established frontend testing stack.
 
-• Overview
-• Customers
-• Sellers
-• Products
-• Categories
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Moderation
-• CMS
-• Feature flags
-• Audit
-• System configuration
+Do not introduce unnecessary libraries when the repository already provides an appropriate solution.
 
-────────────────────────────────────────
+---
 
-FOLDER STRUCTURE
+# 4. Frontend Architecture
 
-Create a scalable feature-first structure including:
+Use a maintainable production architecture.
 
-app/
+Separate:
 
-features/
+* UI components
+* Feature components
+* Page composition
+* API clients
+* Domain types
+* Query hooks
+* Mutations
+* Client state
+* Form state
+* Validation
+* Authentication/session handling
+* Error handling
+* Analytics/telemetry
+* Accessibility utilities
 
-components/
+Avoid putting business logic directly inside large page components.
 
-layouts/
+Prefer feature-oriented organization where compatible with the existing repository.
 
-hooks/
+---
 
-providers/
+# 5. Application Shell
 
-services/
+Implement the core ecommerce application shell.
 
-stores/
+The shell should support:
 
-lib/
+* Header
+* Logo/brand area
+* Search
+* Account access
+* Cart access
+* Navigation
+* Category navigation where appropriate
+* Main content
+* Footer
+* Responsive mobile navigation
 
-styles/
+The shell must work across:
 
-types/
+* Desktop
+* Tablet
+* Mobile web
 
-utils/
+Do not create a desktop-only layout.
 
-config/
+---
 
-public/
+# 6. Header
 
-assets/
+Build a production-grade ecommerce header.
 
-tests/
+Include appropriate:
 
-Use Next.js App Router.
+* Brand/logo
+* Search field
+* Account menu
+* Sign-in/register access
+* Orders/account access
+* Cart
+* Navigation
+* Category/menu access
+* Mobile controls
 
-Keep customer, seller, and administration features logically isolated.
+Search must be accessible from keyboard.
 
-Shared components must remain domain-neutral.
+Interactive elements must have appropriate accessible labels.
 
-────────────────────────────────────────
+Do not depend exclusively on icons to communicate functionality.
 
-NEXT.JS ARCHITECTURE
+---
 
-Implement:
+# 7. Responsive Navigation
 
-• App Router
-• Route groups
-• Layouts
-• Loading states
-• Error boundaries
-• Not-found pages
-• Suspense
-• Server Components where appropriate
-• Client Components where required
-• Middleware
-• Metadata
-• SEO foundations
-• Open Graph metadata
-• Structured metadata foundations
+Implement responsive navigation.
 
-Do not make the entire application a Client Component.
+Desktop may use:
 
-Use Server Components for appropriate product/catalog/public content.
+* Primary navigation
+* Category navigation
+* Search
+* Account/cart controls
 
-Use Client Components for interactive features.
+Mobile should use an appropriate:
 
-────────────────────────────────────────
+* Menu drawer
+* Search interface
+* Account access
+* Cart access
 
-DESIGN SYSTEM
+Do not simply shrink the desktop navigation until it becomes unusable.
 
-Build a reusable design system using:
+Maintain touch-friendly interaction targets.
 
-• shadcn/ui
-• Tailwind CSS
-• CSS variables
+---
+
+# 8. Design System
+
+Use the existing shadcn/ui and Tailwind setup.
+
+Create reusable primitives where needed:
+
+* Button
+* Input
+* Select
+* Dialog
+* Drawer
+* Dropdown
+* Tabs
+* Card
+* Badge
+* Skeleton
+* Alert
+* Toast
+* Pagination
+* Breadcrumbs
+* Tooltip
+
+Do not duplicate shadcn/ui components unnecessarily.
+
+Use consistent:
+
+* Typography
+* Spacing
+* Borders
+* Radius
+* Focus states
+* Responsive behavior
+* Error states
+* Disabled states
+
+Do not hardcode arbitrary styling independently on every page.
+
+---
+
+# 9. Theme and Visual Consistency
+
+Establish a coherent marketplace visual language.
+
+Support the repository's configured light/dark behavior if one exists.
+
+Ensure:
+
+* Contrast
+* Focus visibility
+* Readability
+* Consistent spacing
+* Clear hierarchy
+* Responsive layouts
+* Accessible controls
+
+Do not use visual effects that harm performance or usability.
+
+---
+
+# 10. API Client
+
+Implement or complete a centralized typed API client.
+
+Requirements:
+
+* Base URL configuration
+* HTTP methods
+* Request serialization
+* Response parsing
+* Authentication/session handling
+* Error normalization
+* Request IDs
+* Timeout behavior
+* Abort/cancellation where appropriate
+
+Do not make raw `fetch()` calls throughout individual components.
+
+Use a consistent abstraction.
+
+---
+
+# 11. API Error Model
+
+Normalize backend errors into a frontend-safe structure.
+
+Support:
+
+* HTTP status
+* Error code
+* Message
+* Field validation errors
+* Request ID
+* Retryability where appropriate
+
+Do not display internal backend stack traces.
+
+Do not expose sensitive provider/database errors to users.
+
+---
+
+# 12. TanStack Query
+
+Configure TanStack Query centrally.
+
+Define sensible defaults for:
+
+* staleTime
+* cacheTime/gcTime according to installed version
+* retries
+* refetch behavior
+* error handling
+
+Do not blindly retry:
+
+* Authentication failures
+* Validation failures
+* Authorization failures
+* Non-retryable business errors
+
+Use query keys consistently.
+
+Avoid manually duplicating server state in Zustand.
+
+---
+
+# 13. Zustand
+
+Use Zustand for genuinely client-owned state.
+
+Appropriate examples:
+
+* UI preferences
+* Temporary UI state
+* Search UI state where appropriate
+* Mobile navigation state
+* Local cart UI state if needed
+* Drawer/modal state
+
+Do not duplicate authoritative backend data unnecessarily.
+
+Cart data from the backend should remain server state when authenticated.
+
+---
+
+# 14. Authentication
+
+Implement the web authentication experience against the existing backend.
+
+Support, where backend contracts exist:
+
+* Registration
+* Login
+* Logout
+* Session restoration
+* Session expiration
+* Authentication errors
+* Account access
+
+Do not invent backend endpoints.
+
+Inspect actual API contracts and use them.
+
+---
+
+# 15. Authentication Security
+
+Never store sensitive authentication credentials insecurely.
+
+Follow the backend's actual session/token architecture.
+
+If the backend uses secure cookies:
+
+* Respect HttpOnly behavior.
+* Do not attempt to read HttpOnly credentials from JavaScript.
+* Handle session state through server/client-safe mechanisms.
+
+If the backend uses another established mechanism, integrate with it securely.
+
+Never expose:
+
+* Passwords
+* Refresh tokens
+* Provider secrets
+* Internal session secrets
+
+in application state, logs, URLs, or analytics.
+
+---
+
+# 16. Registration
+
+Implement a production-grade registration page.
 
 Include:
 
-• Button
-• Input
-• Textarea
-• Select
-• Checkbox
-• Radio
-• Switch
-• Dialog
-• Drawer
-• Popover
-• Dropdown
-• Tooltip
-• Tabs
-• Accordion
-• Card
-• Badge
-• Avatar
-• Breadcrumb
-• Table
-• Pagination
-• Skeleton
-• Alert
-• Toast
-• Progress
-• Calendar
-• Date picker
-• Command menu
-• Empty state
-• Error state
-• Loading state
+* Required fields from actual API contract
+* Client validation
+* Server validation handling
+* Loading state
+* Error state
+* Success state
+* Accessible form labels
+* Password requirements where applicable
 
-Components must support:
+Do not invent fields not required by the backend.
 
-• Keyboard navigation
-• Focus management
-• Dark mode
-• Responsive behavior
-• Accessible semantics
+Avoid leaking whether sensitive accounts exist where the backend intentionally prevents enumeration.
 
-────────────────────────────────────────
+---
 
-THEMING
-
-Support:
-
-• Light theme
-• Dark theme
-• System theme
-• Theme persistence
-
-Respect:
-
-• Reduced motion
-• High contrast
-• User accessibility preferences
-
-Use centralized design tokens.
-
-────────────────────────────────────────
-
-API CLIENT
-
-Implement a typed API client.
-
-Support:
-
-• Base URL
-• Authentication
-• Request IDs
-• Correlation IDs
-• Error normalization
-• Retries
-• Cancellation
-• Timeouts
-• Pagination
-• Cursor pagination
-• Multipart uploads
-• Signed upload flows
-
-Use backend contracts exactly.
-
-Do not recreate server-side business logic.
-
-────────────────────────────────────────
-
-SERVER STATE
-
-Use TanStack Query.
-
-Support:
-
-• Queries
-• Mutations
-• Infinite queries
-• Cursor pagination
-• Caching
-• Background refetching
-• Cache invalidation
-• Optimistic updates
-• Retry
-• Error handling
-
-Define consistent query-key conventions.
-
-Do not duplicate server state unnecessarily in Zustand.
-
-────────────────────────────────────────
-
-CLIENT STATE
-
-Use Zustand for client-owned state such as:
-
-• UI preferences
-• Theme
-• Navigation state
-• Cart drawer state
-• Search UI state
-• Checkout UI state
-• Notification UI state
-• Seller dashboard UI state
-• Admin UI state
-
-Use TanStack Query for authoritative server state.
-
-────────────────────────────────────────
-
-AUTHENTICATION
+# 17. Login
 
 Implement:
 
-• Registration
-• Login
-• Logout
-• Email verification
-• Password reset
-• Password change
-• Session restoration
-• Session expiration
-• Refresh handling
-• Protected routes
+* Email/identifier input
+* Password input
+* Submit state
+* Validation
+* Authentication errors
+* Session restoration
+* Redirect behavior
+* Accessible error messaging
 
-Support role-aware navigation.
+Prevent accidental duplicate submissions.
 
-Do not expose sensitive authentication credentials unnecessarily to client-side JavaScript.
+Provide appropriate links to registration and account recovery if the backend supports recovery.
 
-────────────────────────────────────────
+---
 
-ROUTING
+# 18. Session Handling
 
-Implement routes for:
+Implement robust session synchronization.
 
-PUBLIC
+Handle:
 
-• Home
-• Categories
-• Brands
-• Search
-• Products
-• Stores
-• Authentication
+* Initial session loading
+* Authenticated state
+* Anonymous state
+* Session expiration
+* Logout
+* Multiple tabs where appropriate
+* Unauthorized API responses
 
-CUSTOMER
+Avoid infinite redirect loops.
 
-• Account
-• Profile
-• Addresses
-• Wishlist
-• Cart
-• Checkout
-• Orders
-• Returns
-• Reviews
-• Notifications
-• Messages
-• Settings
+Do not assume a user is authenticated merely because client state says so.
 
-SELLER
+The server remains authoritative.
 
-• Dashboard
-• Store
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Promotions
-• Coupons
-• Analytics
-• Revenue
-• Payouts
-• Reviews
-• Messages
-• Settings
+---
 
-ADMIN
+# 19. Route Protection
 
-• Dashboard
-• Users
-• Sellers
-• Products
-• Catalog
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Moderation
-• CMS
-• Feature Flags
-• Audit
-• System Configuration
+Protect authenticated routes appropriately.
 
-Implement protected layouts and route groups.
+Examples:
 
-Backend authorization remains the final security boundary.
+* Account
+* Orders
+* Addresses
+* Saved customer information
 
-────────────────────────────────────────
+Use server-side protection where Next.js architecture permits it.
 
-CUSTOMER HOME EXPERIENCE
+Do not rely only on client-side redirects for authorization.
 
-Implement:
+---
 
-• Header
-• Navigation
-• Search
-• Category navigation
-• Promotional areas
-• Featured products
-• Trending products
-• Recommendations
-• Recently viewed
-• Seller/store discovery
-• Footer
+# 20. Home Page
+
+Implement a production-quality ecommerce home page.
+
+It should support repository-backed content such as:
+
+* Featured categories
+* Featured products
+* Popular products
+* Promotions
+* Marketplace highlights
+* Search entry
+* Seller/marketplace information where appropriate
+
+Do not fabricate dynamic commerce data.
+
+If content APIs exist, consume them.
+
+If a particular merchandising API does not exist, build the UI so it handles empty/absent content gracefully rather than inventing fake production data.
+
+---
+
+# 21. Category Navigation
+
+Implement category browsing.
 
 Support:
 
-• Loading states
-• Skeletons
-• Empty states
-• Error recovery
+* Category hierarchy
+* Breadcrumbs
+* Category page
+* Child categories
+* Product results
+* Pagination
+* Filters where supported
+* Empty states
 
-Optimize public content using Server Components and caching where appropriate.
+Respect backend category visibility.
 
-────────────────────────────────────────
+Do not assume every category is public.
 
-PRODUCT DISCOVERY
+---
 
-Implement:
+# 22. Category Pages
 
-• Category pages
-• Brand pages
-• Search pages
-• Product grids
-• Filters
-• Sorting
-• Pagination
-• Infinite scrolling where appropriate
-• Faceted navigation
+Create responsive category result pages.
 
-Support:
+Include:
 
-• Price filters
-• Rating filters
-• Brand filters
-• Category filters
-• Seller filters
-• Availability
-• Promotions
+* Breadcrumbs
+* Category title
+* Description where available
+* Product count where available
+* Product grid/list
+* Sorting
+* Filters
+* Pagination
+* Loading skeletons
+* Empty state
+* Error state
 
-Use URL query parameters for shareable search/filter state.
+Avoid layout shift.
 
-────────────────────────────────────────
+Use responsive grid behavior.
 
-PRODUCT CARD
+---
 
-Create reusable product-card interfaces containing:
+# 23. Product Cards
 
-• Product image
-• Product title
-• Rating
-• Review count
-• Price
-• Previous price
-• Discount
-• Seller
-• Availability
-• Promotional badge
-• Wishlist action
-• Add-to-cart action
+Build a reusable product-card component.
 
-Product cards must support loading and unavailable states.
+It should support:
 
-────────────────────────────────────────
+* Product image
+* Product name
+* Rating
+* Review count
+* Price
+* Previous price where applicable
+* Promotion badge
+* Availability
+* Seller/offer information where appropriate
+* Condition where appropriate
+* Wishlist/save action only if backend functionality exists
 
-PRODUCT DETAILS
+Do not display information that the backend did not authorize or provide.
 
-Implement:
+---
 
-• Product title
-• Product gallery
-• Product video where available
-• Description
-• Attributes
-• Specifications
-• Variants
-• Seller offers
-• Pricing
-• Availability
-• Shipping estimate
-• Reviews
-• Ratings
-• Related products
-• Frequently bought together
-• Cross-sells
-• Upsells
-• Wishlist
-• Add to cart
+# 24. Product Pricing Display
 
-Support large product media efficiently.
-
-────────────────────────────────────────
-
-PRODUCT GALLERY
-
-Implement:
-
-• Image gallery
-• Thumbnail navigation
-• Zoom
-• Fullscreen
-• Video playback
-• Loading states
-• Error states
-• Responsive behavior
-
-Use Next.js image optimization where appropriate.
-
-────────────────────────────────────────
-
-VARIANT SELECTION
-
-Support:
-
-• Color
-• Size
-• Capacity
-• Material
-• Style
-• Other configured attributes
-
-Variant changes must update:
-
-• Price
-• Availability
-• SKU
-• Images
-• Shipping information
-• Seller offer
-
-Do not assume every product has identical variant structures.
-
-────────────────────────────────────────
-
-SELLER OFFERS
-
-Support products with multiple sellers.
-
-Display:
-
-• Seller name
-• Seller rating
-• Condition
-• Price
-• Shipping
-• Availability
-• Delivery estimate
-
-Clearly distinguish the selected seller offer from other offers.
-
-────────────────────────────────────────
-
-WISHLIST
-
-Implement:
-
-• Add
-• Remove
-• List
-• Move to cart
-• Loading
-• Empty state
-• Optimistic updates where safe
-
-Keep wishlist state synchronized with backend state.
-
-────────────────────────────────────────
-
-SHOPPING CART
-
-Implement:
-
-• Cart drawer
-• Cart page
-• Product items
-• Seller grouping
-• Quantity controls
-• Remove
-• Save for later where supported
-• Discounts
-• Estimated shipping
-• Estimated taxes
-• Cart totals
-
-Support:
-
-• Loading
-• Empty state
-• Out-of-stock state
-• Price-changed state
-• Seller-unavailable state
-
-Never trust client-side totals as authoritative.
-
-────────────────────────────────────────
-
-CHECKOUT FOUNDATION
-
-Implement checkout UI architecture for:
-
-• Address selection
-• Shipping method
-• Delivery estimate
-• Coupon
-• Promotions
-• Tax display
-• Order summary
-• Payment selection
-• Confirmation
-
-Support:
-
-• Step validation
-• Loading states
-• Error states
-• Expired checkout
-• Inventory conflicts
-• Price changes
-• Coupon failures
-
-────────────────────────────────────────
-
-FORMS
+Money must be represented accurately.
 
 Use:
 
-• React Hook Form
-• Zod
+* Currency code
+* Correct decimal precision
+* Locale-aware formatting
+
+Do not perform financial calculations using floating-point values.
+
+Do not calculate discounts independently from authoritative backend data when exact values are available.
+
+If the backend provides:
+
+* Base price
+* Sale price
+* Discount
+* Currency
+
+render the authoritative values.
+
+---
+
+# 25. Product Detail Page
+
+Implement the complete product-detail foundation.
 
 Support:
 
-• Client validation
-• Server validation
-• Inline errors
-• Loading
-• Disabled state
-• Error summary
-• Accessible messages
+* Product title
+* Product description
+* Product media
+* Product attributes
+* Variants
+* SKU selection
+* Seller offers
+* Pricing
+* Availability
+* Ratings summary
+* Review count
+* Category breadcrumbs
+* Add-to-cart
+* Quantity selection
+* Seller information
+* Condition
 
-Use appropriate schemas for:
+Only display data actually returned by the backend.
 
-• Registration
-• Login
-• Addresses
-• Seller forms
-• Products
-• Promotions
-• Coupons
-• Checkout
+---
 
-────────────────────────────────────────
+# 26. Product Media
 
-ERROR HANDLING
+Build an accessible media gallery.
 
-Implement:
+Support:
 
-• Global error boundary
-• Route error boundaries
-• 404
-• 500
-• Network errors
-• Authorization errors
-• Validation errors
-• Payment errors
-• Checkout errors
-• Search errors
+* Primary image
+* Thumbnail navigation
+* Image zoom/lightbox where appropriate
+* Keyboard navigation
+* Alt text
+* Loading states
+* Broken-image fallback
 
-Provide recovery actions.
+Use existing S3/CloudFront URLs provided by the backend.
 
-Never expose internal stack traces.
+Do not expose private S3 credentials.
 
-────────────────────────────────────────
+Do not construct unauthorized object URLs.
 
-LOADING AND EMPTY STATES
+---
 
-Every major asynchronous UI must include:
+# 27. Variant Selection
 
-• Loading state
-• Skeleton state where appropriate
-• Empty state
-• Error state
-• Retry
+Implement variant selection according to the actual product model.
+
+Support:
+
+* Variant attributes
+* Selection state
+* Availability
+* Price updates
+* SKU selection
+* Disabled unavailable combinations
+
+Do not assume all combinations are valid.
+
+The backend remains authoritative.
+
+---
+
+# 28. Seller Offers
+
+Where products have multiple offers, present seller offers clearly.
+
+Show appropriate information such as:
+
+* Seller
+* Price
+* Condition
+* Availability
+* Fulfillment information if provided
+* Offer selection
+
+Do not expose private seller information.
+
+Never trust seller identifiers from the client when performing mutations.
+
+---
+
+# 29. Add to Cart
+
+Implement the customer-facing add-to-cart flow.
+
+Requirements:
+
+* Product/variant/SKU selection
+* Seller offer selection where necessary
+* Quantity
+* Validation
+* Loading state
+* Success feedback
+* Error handling
+
+Never assume the product is still available.
+
+The backend must remain authoritative for:
+
+* Price
+* Inventory
+* Seller
+* SKU
+* Availability
+
+---
+
+# 30. Cart Page
+
+Implement a production-grade cart page.
+
+Support:
+
+* Cart items
+* Product image
+* Product name
+* Seller
+* Price
+* Quantity
+* Quantity controls
+* Remove
+* Subtotal
+* Discounts where provided
+* Estimated totals where provided
+* Checkout CTA
+* Empty cart
+
+Do not calculate authoritative totals independently when the backend provides them.
+
+---
+
+# 31. Cart Validation
+
+The UI must handle server-side cart validation.
+
+Possible results:
+
+* Price changed
+* Item unavailable
+* Quantity reduced
+* Seller offer changed
+* Product unavailable
+* Promotion expired
+* Cart item removed
+
+Clearly communicate changes.
+
+Never silently alter user expectations.
+
+---
+
+# 32. Cart Synchronization
+
+Implement correct server/client synchronization.
+
+Authenticated users:
+
+* Backend cart is authoritative.
+
+Anonymous users:
+
+* Use the backend anonymous-cart mechanism if supported.
+* Otherwise use a secure local representation consistent with the actual backend capabilities.
+
+On authentication:
+
+* Merge anonymous cart if the backend supports merging.
+* Display conflicts clearly.
+* Refresh authoritative cart state.
+
+Do not create a second independent cart database in the browser.
+
+---
+
+# 33. Search
+
+Implement the customer-facing search experience using the backend Search API.
+
+Support:
+
+* Search input
+* Search submission
+* Suggestions/autocomplete if available
+* Search results
+* Filters
+* Facets
+* Sorting
+* Pagination
+* Empty state
+* No-results state
+* Error state
+
+Do not expose raw Elasticsearch/OpenSearch queries.
+
+---
+
+# 34. Search Suggestions
+
+If the backend provides suggestions:
+
+* Debounce requests.
+* Cancel obsolete requests.
+* Show keyboard-accessible suggestions.
+* Support arrow-key navigation.
+* Support Enter selection.
+* Support Escape to close.
+
+Do not send a request on every keystroke without appropriate debouncing.
+
+Do not expose private search data.
+
+---
+
+# 35. Search Results
+
+Implement reusable search-result components.
+
+Support:
+
+* Product cards
+* Result count
+* Filters
+* Sort
+* Pagination
+* Search query
+* Facets
+* Loading states
+* Empty states
+
+Preserve query/filter state in URLs where appropriate.
+
+URLs should remain shareable and understandable.
+
+---
+
+# 36. Search Filters
+
+Support backend-provided filters such as:
+
+* Category
+* Brand
+* Price
+* Rating
+* Seller
+* Availability
+* Condition
+* Product attributes
+
+Do not hardcode filter values that should come from the backend.
+
+Handle dynamic attribute filters safely.
+
+---
+
+# 37. Search Sorting
+
+Support only backend-supported sort modes.
+
+Possible modes:
+
+* Relevance
+* Newest
+* Price ascending
+* Price descending
+* Rating
+* Popularity
+
+Do not invent unsupported ranking values.
+
+---
+
+# 38. Pagination
+
+Use the backend's actual pagination contract.
+
+If the backend uses cursor pagination:
+
+* Preserve cursors correctly.
+* Do not fabricate page numbers.
+* Handle stale cursors.
+
+If the backend uses page-based pagination:
+
+* Use the server's total/count information.
+
+Do not request unbounded result sets.
+
+---
+
+# 39. URL State
+
+Use URL parameters for shareable discovery state where appropriate.
+
+Examples:
+
+```text
+/search?q=phone&brand=example&sort=price_asc
+/category/electronics?page=2
+```
+
+Use safe serialization.
+
+Do not put:
+
+* Tokens
+* Secrets
+* Sensitive customer information
+
+in URLs.
+
+---
+
+# 40. Breadcrumbs
+
+Implement reusable breadcrumbs for:
+
+* Categories
+* Products
+* Search where appropriate
+* Account pages where useful
+
+Use semantic navigation markup.
+
+Support structured data where appropriate.
+
+---
+
+# 41. SEO Foundations
+
+Implement strong ecommerce SEO foundations.
+
+Support:
+
+* Metadata
+* Titles
+* Descriptions
+* Canonical URLs
+* Open Graph metadata
+* Product structured data where appropriate
+* Breadcrumb structured data
+* Robots directives
+* Sitemap integration boundary
+
+Do not expose private pages to search engines.
+
+Account/cart/checkout/private administrative pages must not be indexed.
+
+---
+
+# 42. Server Rendering
+
+Use Next.js server rendering appropriately.
+
+Prefer server-rendered/static content for:
+
+* Product pages
+* Category pages
+* Public catalog content
+
+Use client components only where interactivity requires them.
+
+Do not turn the entire application into a client-rendered SPA unnecessarily.
+
+---
+
+# 43. Loading States
+
+Every async page/component must have an intentional loading state.
+
+Use:
+
+* Skeletons
+* Progress indicators
+* Disabled controls
 
 Avoid blank screens.
 
-────────────────────────────────────────
+Prevent layout shifts where possible.
 
-ACCESSIBILITY
+---
 
-Target WCAG 2.2 AA.
+# 44. Error States
 
-Implement:
+Implement user-friendly error states for:
 
-• Semantic HTML
-• Keyboard navigation
-• Screen reader support
-• ARIA labels
-• Focus management
-• Focus restoration
-• Accessible forms
-• Accessible tables
-• Accessible dialogs
-• Accessible menus
-• Accessible product controls
-• High contrast
-• Reduced motion
+* API unavailable
+* Product unavailable
+* Search unavailable
+* Cart update failure
+* Authentication failure
+* Session expiration
+* Invalid product
+* Invalid category
 
-Do not communicate information through color alone.
+Provide useful recovery actions.
 
-────────────────────────────────────────
+Do not expose stack traces.
 
-RESPONSIVE DESIGN
+---
 
-Support:
+# 45. Empty States
 
-• Desktop
-• Tablet
-• Mobile browser
-• Large displays
-• Ultra-wide displays
+Implement clear empty states for:
 
-Customer storefront, seller dashboard, and admin dashboard should use layouts optimized for their respective workflows.
+* Empty cart
+* No search results
+* Empty category
+* No suggestions
+* Missing product media
+* No available offers
 
-────────────────────────────────────────
+Include useful next actions where appropriate.
 
-INTERNATIONALIZATION
+---
 
-Design for:
+# 46. Accessibility
 
-• Multiple languages
-• Currency formatting
-• Date/time formatting
-• Regional number formats
-• RTL layouts
-• Localized validation messages
-• Localized product metadata
-
-Do not hard-code user-visible text inside business logic.
-
-────────────────────────────────────────
-
-PERFORMANCE
-
-Optimize:
-
-• Server Components
-• Client Components
-• Streaming
-• Suspense
-• Image optimization
-• Code splitting
-• Lazy loading
-• Virtualization
-• Prefetching
-• Query caching
-• Memoization
-
-Use appropriate caching for public catalog content.
-
-Avoid unnecessary JavaScript on public product pages.
-
-────────────────────────────────────────
-
-SEO
+Target strong WCAG-aligned accessibility.
 
 Implement:
 
-• Metadata
-• Canonical URLs
-• Structured data foundations
-• Product metadata
-• Breadcrumb metadata
-• Category metadata
-• Open Graph
-• Robots strategy
-• Sitemap architecture
+* Semantic HTML
+* Keyboard navigation
+* Visible focus states
+* Screen-reader labels
+* Proper form labels
+* Accessible dialogs
+* Accessible drawers
+* Accessible menus
+* Accessible autocomplete
+* Color-independent status communication
+* Appropriate heading hierarchy
+* Sufficient contrast
 
-Public catalog pages should be crawlable.
+Do not rely exclusively on color.
 
-Authenticated/private pages should not be indexed.
+---
 
-────────────────────────────────────────
+# 47. Forms
 
-SELLER DASHBOARD FOUNDATION
+Use reusable form architecture.
 
-Implement reusable seller-dashboard layout.
+Handle:
 
-Support:
+* Client validation
+* Server validation
+* Field errors
+* Submit state
+* Disabled state
+* Accessibility
+* Reset behavior
 
-• Sidebar
-• Header
-• Seller/store switcher where applicable
-• Notifications
-• Profile
-• Breadcrumbs
-• Responsive navigation
+Prevent duplicate submissions.
 
-Create dashboard foundations for:
+Do not duplicate validation rules unnecessarily when backend validation is authoritative.
 
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Promotions
-• Coupons
-• Analytics
-• Revenue
-• Payouts
-• Reviews
-• Messages
+---
 
-────────────────────────────────────────
+# 48. Authentication UX
 
-ADMIN DASHBOARD FOUNDATION
-
-Create reusable admin-dashboard layout.
+Implement polished authentication states.
 
 Support:
 
-• Navigation
-• Role-aware menus
-• Search
-• Notifications
-• Breadcrumbs
-• Audit indicators
-• Responsive layout
+* Initial loading
+* Authenticated
+* Anonymous
+* Logging in
+* Logging out
+* Session expired
+* Unauthorized
 
-Create foundations for:
+Avoid flashing protected content to unauthenticated users.
 
-• Customers
-• Sellers
-• Catalog
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Moderation
-• CMS
-• Feature flags
-• Audit
-• System configuration
+---
 
-────────────────────────────────────────
+# 49. Security
 
-ADMIN SECURITY UX
+Protect the frontend against:
 
-Sensitive admin actions must require appropriate confirmation.
+* XSS
+* Unsafe HTML rendering
+* URL injection
+* Open redirects
+* Token leakage
+* Sensitive information in URLs
+* Unsafe third-party content
+* CSRF according to backend architecture
 
-Support UI patterns for:
+Never render arbitrary HTML without sanitization and explicit need.
 
-• Destructive confirmation
-• Reason capture
-• Re-authentication where required
-• Permission-denied state
-• Audit notification
+Never place secrets in:
 
-Frontend controls must never be the final security enforcement.
+* Client bundles
+* Public environment variables
+* localStorage
+* URLs
+* analytics events
 
-────────────────────────────────────────
+---
 
-CUSTOMER ACCOUNT
+# 50. Image Security and Performance
+
+Use Next.js image optimization where compatible.
 
 Implement:
 
-• Profile
-• Addresses
-• Security
-• Sessions
-• Devices where supported
-• Notification preferences
-• Privacy
-• Orders
-• Returns
+* Responsive images
+* Appropriate dimensions
+* Lazy loading
+* Priority loading for primary content
+* Alt text
+* CDN URLs
+* Placeholder/fallback behavior
 
-Use accessible account-navigation patterns.
+Do not load massive original images when smaller variants exist.
 
-────────────────────────────────────────
+---
 
-NOTIFICATIONS
+# 51. Performance
 
-Implement frontend foundations for:
+Optimize for:
 
-• Notification center
-• Unread counts
-• Toasts
-• Notification preferences
-• Deep linking
+* Core Web Vitals
+* Initial page load
+* Time to interactive
+* Image loading
+* JavaScript bundle size
+* Server rendering
+* Query efficiency
+* Search responsiveness
 
-Support:
+Avoid:
 
-• Order notifications
-• Payment notifications
-• Shipment notifications
-• Return notifications
-• Security notifications
-• Seller notifications
-• Promotional notifications
+* Large unnecessary client bundles
+* Excessive dependencies
+* Waterfall API requests
+* Unnecessary rerenders
+* Global state for server data
 
-────────────────────────────────────────
+---
 
-MESSAGING FOUNDATION
+# 52. Query Invalidation
 
-Implement web UI foundation for:
+Use TanStack Query invalidation correctly.
 
-• Customer-seller conversations
-• Conversation list
-• Message history
-• Composer
-• Attachments
-• Unread counts
-• Read state
+Examples:
 
-Use the approved backend messaging contracts.
+After cart mutation:
 
-Do not implement a custom messaging backend.
+* Invalidate/refetch cart.
+* Update related cart-count state only if safe.
 
-────────────────────────────────────────
+After authentication:
 
-ANIMATIONS
+* Refresh session-dependent queries.
 
-Use Framer Motion where it improves UX.
+After product mutations where relevant:
 
-Support:
+* Invalidate affected product/catalog queries.
 
-• Page transitions
-• Drawers
-• Dialogs
-• Product-card interactions
-• Cart transitions
-• Notifications
-• Micro-interactions
+Do not indiscriminately invalidate the entire query cache.
 
-Respect reduced-motion preferences.
+---
 
-Avoid excessive animation.
+# 53. Optimistic Updates
 
-────────────────────────────────────────
+Use optimistic updates only when safe.
 
-SECURITY
+Appropriate examples may include:
 
-Implement:
+* Cart quantity changes
+* UI preferences
 
-• Protected routes
-• Safe rendering
-• Input sanitization where appropriate
-• Secure URL handling
-• Content Security Policy compatibility
-• Safe file upload flows
-• Secure authentication handling
-• CSRF-safe patterns where applicable
+For financial or inventory-sensitive operations, prefer authoritative server responses.
 
-Never place secrets in browser bundles.
+Every optimistic update must support rollback.
 
-Never trust client-side role checks.
+---
 
-────────────────────────────────────────
+# 54. Notifications and Toasts
 
-TESTING
+Use accessible notifications for:
 
-Generate:
+* Cart updates
+* Errors
+* Successful account operations
+* Session events
 
-UNIT TESTS
+Do not rely exclusively on transient toast messages for important information.
 
-• Utilities
-• Validation
-• Formatting
-• State logic
-
-COMPONENT TESTS
-
-• Product cards
-• Product gallery
-• Cart
-• Checkout forms
-• Navigation
-• Dialogs
-• Tables
-• Seller components
-• Admin components
-
-INTEGRATION TESTS
-
-• API client
-• Authentication
-• TanStack Query
-• Forms
-• Checkout state
+Critical errors must remain visible.
 
-END-TO-END TESTS
+---
 
-• Registration
-• Login
-• Product discovery
-• Search
-• Product page
-• Add to cart
-• Checkout
-• Order
-• Seller login
-• Seller product management
-• Admin login
+# 55. Analytics Integration Boundary
 
-ACCESSIBILITY TESTS
+Integrate with the backend analytics/business-event architecture only through safe frontend events where appropriate.
 
-• Navigation
-• Forms
-• Dialogs
-• Tables
-• Product controls
-• Checkout
+Potential client interaction events:
 
-PERFORMANCE TESTS
+* Product viewed
+* Search submitted
+* Search suggestion selected
+* Product added to cart
+* Product removed from cart
 
-• Product pages
-• Search
-• Category pages
-• Large tables
-• Seller dashboards
+Do not emit sensitive data unnecessarily.
 
-────────────────────────────────────────
+Do not treat frontend analytics events as authoritative commerce events.
 
-DOCUMENTATION
+Order/payment/revenue events must originate from the backend.
 
-Generate:
+---
 
-• Frontend architecture
-• Folder structure
-• Design system
-• Component standards
-• API client
-• State-management standards
-• Routing standards
-• Accessibility standards
-• SEO standards
-• Performance standards
-• Testing standards
-• Seller-dashboard standards
-• Admin-dashboard standards
+# 56. Frontend Observability
 
-────────────────────────────────────────
+Integrate with the repository's observability solution.
 
-PROJECT INDEX
+Capture appropriate:
 
-Maintain the frontend Project Index.
+* Route performance
+* API latency
+* Client errors
+* Query failures
+* Authentication failures
+* Important user-flow failures
 
-Track:
+Never log:
 
-• Applications
-• Pages
-• Layouts
-• Components
-• Features
-• Hooks
-• Zustand stores
-• TanStack Query integrations
-• API integrations
-• Forms
-• Tests
-• Dependencies
-• Generated files
-• Remaining work
-• Current milestone
+* Passwords
+* Tokens
+* Payment credentials
+* Sensitive personal data
 
-────────────────────────────────────────
+Use request/correlation IDs where available.
 
-IMPLEMENTATION MILESTONES
+---
 
-FRONTEND MILESTONE 1
+# 57. Error Boundaries
 
-Next.js foundation, routing, global providers, design system, API client, error handling, and configuration.
+Implement appropriate React/Next.js error boundaries.
 
-FRONTEND MILESTONE 2
+Handle:
 
-Authentication, account, profile, address management, and protected routing.
+* Route-level failures
+* Component failures
+* API failures
 
-FRONTEND MILESTONE 3
+Provide recovery actions.
 
-Home page, categories, brands, search, product listing, filtering, and product cards.
+Do not allow one component failure to destroy the entire application shell unnecessarily.
 
-FRONTEND MILESTONE 4
+---
 
-Product detail pages, variants, seller offers, media gallery, reviews, and recommendations.
+# 58. Authentication Testing
 
-FRONTEND MILESTONE 5
+Test:
 
-Wishlist, shopping cart, cart drawer, and cart synchronization.
+* Registration
+* Login
+* Logout
+* Session restoration
+* Expired session
+* Unauthorized access
+* Protected routes
+* Invalid credentials
+* Validation errors
 
-FRONTEND MILESTONE 6
+Do not test only the happy path.
 
-Checkout, addresses, shipping, promotions, taxes, payment UI, and confirmation.
+---
 
-FRONTEND MILESTONE 7
+# 59. Catalog Testing
 
-Customer orders, returns, refunds, notifications, and messaging foundation.
+Test:
 
-FRONTEND MILESTONE 8
+* Category loading
+* Product loading
+* Product not found
+* Product variants
+* Seller offers
+* Pricing display
+* Media failures
+* Empty category
+* Pagination
 
-Seller dashboard foundation and seller workflows.
+---
 
-FRONTEND MILESTONE 9
+# 60. Search Testing
 
-Admin dashboard foundation and administrative workflows.
+Test:
 
-FRONTEND MILESTONE 10
+* Search submission
+* Suggestions
+* Debouncing
+* Keyboard navigation
+* Filters
+* Sorting
+* Pagination
+* Empty results
+* API failure
+* Stale requests
+* URL synchronization
 
-Accessibility, SEO, internationalization, performance, testing, and production hardening.
+---
 
-Each milestone should contain approximately 20–40 files where practical.
+# 61. Cart Testing
 
-Every milestone must compile before proceeding.
+Test:
 
-────────────────────────────────────────
+* Add to cart
+* Remove item
+* Quantity update
+* Empty cart
+* Price changes
+* Inventory changes
+* Seller-offer changes
+* Anonymous cart
+* Authenticated cart
+* Cart merge where supported
+* Server validation failures
+* Duplicate submissions
 
-OUTPUT FORMAT
+---
 
-For every generated file provide:
+# 62. Accessibility Testing
 
-1. Exact file path
-2. Complete file contents
+Test:
 
-Never truncate code.
+* Keyboard navigation
+* Focus management
+* Dialogs
+* Menus
+* Search autocomplete
+* Forms
+* Error announcements
+* Screen-reader labels
 
-Never summarize source code instead of generating it.
+Use the repository's accessibility testing tools if available.
 
-Never generate pseudo-code.
+---
 
-Never generate placeholders.
+# 63. Responsive Testing
 
-Never generate TODO implementations.
+Verify:
 
-When modifying an existing file:
+* Mobile widths
+* Tablet widths
+* Desktop widths
+* Large displays
 
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
+Pay particular attention to:
 
-Never regenerate unchanged files.
+* Header
+* Search
+* Product grid
+* Product detail
+* Cart
+* Navigation
+* Dialogs
+* Drawers
 
-────────────────────────────────────────
+---
 
-SCOPE RESTRICTION
+# 64. Browser Compatibility
 
-This volume covers the web frontend foundation and core marketplace experience.
+Support the browsers defined by the repository's actual deployment target.
 
-Do not implement:
+Do not introduce browser-specific APIs without appropriate compatibility handling.
 
-• Backend code
-• Mobile code
-• Kubernetes
-• Terraform
-• CI/CD infrastructure
+---
 
-Consume the established backend contracts exactly.
+# 65. Environment Configuration
 
-Do not redesign APIs or database structures.
+Public frontend environment variables must contain only values safe to expose to browsers.
 
-────────────────────────────────────────
+Never expose:
 
-QUALITY BAR
+* Stripe secret keys
+* Database credentials
+* AWS secret keys
+* Internal API credentials
+* Provider secrets
 
-Treat the web application as a production marketplace serving millions of customers and hundreds of thousands of sellers.
+Use server-side environment variables for secrets.
 
-Assume:
+---
 
-• High catalog traffic
-• High search traffic
-• Large product catalogs
-• High checkout traffic
-• Large seller dashboards
-• Large administrative datasets
-• Multiple currencies
-• Multiple languages
-• Strict security requirements
+# 66. Type Safety
 
-Prioritize:
+Maintain strict TypeScript typing.
 
-• Performance
-• Accessibility
-• SEO
-• Security
-• Responsive design
-• Excellent ecommerce UX
-• Correct server-state synchronization
-• Maintainability
-• Scalability
-• Production readiness
+Do not:
+
+* Use `any` to bypass contract issues.
+* Duplicate backend DTO definitions unnecessarily.
+* Cast arbitrary API responses without validation.
+* Ignore TypeScript errors.
+
+If generated API types exist, reuse them.
+
+If not, create consistent frontend API types based on actual contracts.
+
+---
+
+# 67. Backend Contract Integration
+
+The frontend must consume the actual backend contracts present in the repository.
+
+For each integration verify:
+
+* HTTP method
+* URL
+* Authentication
+* Request DTO
+* Response DTO
+* Error format
+* Pagination
+* Query parameters
+* Validation
+* Authorization
+
+Do not invent endpoints.
+
+If an expected endpoint does not exist, implement the frontend in a way that does not fake the missing functionality and clearly report the backend dependency.
+
+---
+
+# 68. No Fake Data
+
+Do not use fake production data as a substitute for backend integration.
+
+Development fixtures may be used only if the repository already has an established fixture/mock architecture.
+
+Do not ship fake:
+
+* Prices
+* Inventory
+* Reviews
+* Seller information
+* Orders
+* Payment status
+* Search results
+
+---
+
+# 69. SEO and Accessibility Validation
+
+Validate:
+
+* Page titles
+* Metadata
+* Canonicals
+* Heading structure
+* Alt text
+* Link semantics
+* Keyboard navigation
+* Focus states
+* Robots behavior
+
+Public catalog pages should be discoverable.
+
+Private customer/admin pages should not be indexed.
+
+---
+
+# 70. Build and Validation
+
+Before considering this phase complete:
+
+1. Run frontend build.
+2. Run TypeScript validation.
+3. Run lint.
+4. Run unit tests.
+5. Run component tests.
+6. Run integration tests.
+7. Run accessibility tests.
+8. Run relevant E2E tests.
+9. Validate responsive behavior.
+10. Validate API integration.
+11. Validate authentication.
+12. Validate cart synchronization.
+13. Validate search behavior.
+14. Validate SEO metadata.
+15. Inspect browser console for unexpected errors.
+16. Inspect network requests for accidental secrets.
+17. Validate production environment configuration.
+
+Fix real issues.
+
+Do not falsely claim successful validation.
+
+---
+
+# 71. What This Volume Must NOT Implement
+
+Do not prematurely implement the complete remaining ecommerce frontend.
+
+Defer unless already required by the repository:
+
+* Full checkout UI
+* Payment UI
+* Order-history workflows
+* Shipment tracking UI
+* Returns UI
+* Review submission/moderation UI
+* Seller portal
+* Administrator portal
+* Advanced notification center
+* Advanced account management
+* Personalized recommendation UI
+* Advanced analytics dashboards
+
+These can be implemented in later frontend/mobile phases.
+
+---
+
+# 72. Final Repository Inspection
+
+After implementation verify:
+
+* The web app builds.
+* Routes are coherent.
+* Authentication works against actual backend contracts.
+* Catalog pages use actual APIs.
+* Search uses actual search APIs.
+* Product pages use authoritative backend data.
+* Cart uses authoritative backend state.
+* No fake commerce data remains in production paths.
+* No duplicate API/client/state architecture was introduced.
+* No secrets are exposed.
+* SEO is implemented correctly.
+* Accessibility requirements are addressed.
+* Responsive behavior is functional.
+* Error/loading/empty states exist.
+* Tests pass to the extent actually validated.
+
+---
+
+# 73. Final Implementation Report
+
+At the end provide a factual report based only on the actual repository.
+
+Include:
+
+### Implemented
+
+Actual frontend functionality implemented.
+
+### Routes
+
+Actual routes/pages created or modified.
+
+### Components
+
+Important reusable components created or modified.
+
+### API Integration
+
+Actual backend endpoints consumed.
+
+### State Management
+
+Actual TanStack Query/Zustand usage.
+
+### Authentication
+
+Actual authentication/session behavior.
+
+### Catalog
+
+Actual catalog/product/category functionality.
+
+### Search
+
+Actual search functionality.
+
+### Cart
+
+Actual cart functionality.
+
+### SEO
+
+Actual SEO implementation.
+
+### Accessibility
+
+Actual accessibility improvements/tests.
+
+### Security
+
+Actual frontend security protections.
+
+### Tests
+
+Actual tests and commands/results.
+
+### Build
+
+Actual build/typecheck/lint results.
+
+### Remaining Work
+
+Only genuinely incomplete functionality discovered in the repository.
+
+Never claim functionality that was not actually implemented and validated.
+
+---
+
+# 74. Non-Negotiable Rules
+
+* Inspect the repository first.
+* The actual repository is the source of truth.
+* This prompt is standalone.
+* This is one implementation unit of one coherent ecommerce marketplace.
+* Integrate with the existing backend.
+* Do not create competing frontend architectures.
+* Do not regenerate unchanged files.
+* Do not invent backend endpoints.
+* Do not use fake production data.
+* Do not expose secrets.
+* Do not trust client-side authorization.
+* Do not duplicate authoritative backend state unnecessarily.
+* Do not use floating-point calculations for authoritative money.
+* Do not expose sensitive customer or seller information.
+* Do not render unsafe arbitrary HTML.
+* Do not put tokens/secrets in URLs.
+* Do not rely solely on client-side route protection.
+* Do not sacrifice accessibility for visual appearance.
+* Do not sacrifice SEO for unnecessary client-side rendering.
+* Do not sacrifice performance through unnecessary JavaScript.
+* Do not use TODOs or placeholders instead of implementation.
+* Do not falsely claim completion.
+* Implement real production-grade functionality.
+* Add real tests.
+* Validate the actual repository.
+
+Now inspect the repository and implement this entire **Web Frontend Foundation, Authentication, Catalog, Search, Product Pages, and Cart implementation unit** as a production-grade extension of the existing Amazon-style ecommerce marketplace.

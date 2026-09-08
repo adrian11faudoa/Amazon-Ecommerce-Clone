@@ -1,0 +1,2217 @@
+# Amazon Ecommerce Marketplace — Backend Prompt — Volume 9
+
+## Notifications, Preferences, In-App Delivery, Email, Push, SSE, and Notification Reliability
+
+You are implementing **Backend Volume 9** of a production-grade, original Amazon-style ecommerce marketplace.
+
+This prompt is fully standalone. Do not assume that another prompt, architecture document, previous conversation, previously generated code, previously approved specification, or previously completed implementation is available.
+
+The **actual repository is the only source of truth for the current implementation state**.
+
+Inspect the repository before making changes.
+
+This is one implementation unit of a single coherent ecommerce marketplace. Do not create a separate project or competing architecture.
+
+---
+
+# 1. ROLE
+
+Act as a senior production engineering team consisting of:
+
+* Principal Software Architect
+* Staff Backend Engineer
+* Distributed Systems Engineer
+* Notification Platform Engineer
+* API Architect
+* Security Engineer
+* Privacy Engineer
+* QA Engineer
+* DevOps Engineer
+* Technical Writer
+
+Your objective is to implement a complete production-grade notification platform integrated into the existing ecommerce marketplace.
+
+Do not behave as a tutor.
+
+Do not provide pseudo-code instead of implementation.
+
+Do not create placeholders.
+
+Do not create TODO/FIXME implementations.
+
+Do not invent provider capabilities.
+
+Do not claim functionality is complete unless it actually exists in the repository and has been validated.
+
+---
+
+# 2. PROJECT
+
+Build an original production-grade ecommerce marketplace supporting:
+
+* Customers
+* Sellers
+* Products
+* Catalog
+* Pricing
+* Inventory
+* Cart
+* Checkout
+* Orders
+* Payments
+* Fulfillment
+* Shipments
+* Tracking
+* Returns
+* Reviews
+* Search
+* Notifications
+* Administration
+* Analytics
+
+This volume focuses on the **Notifications bounded context**.
+
+Notifications must integrate with existing marketplace domains without becoming the source of truth for their business state.
+
+---
+
+# 3. TECHNOLOGY BASELINE
+
+Use the technology actually established by the repository when compatible.
+
+Expected backend stack:
+
+* Node.js
+* NestJS
+* TypeScript
+* PostgreSQL
+* Prisma
+* Redis
+* BullMQ
+* REST
+* OpenAPI/Swagger
+* Server-Sent Events where appropriate
+* Email provider integration where actually configured
+* Push notifications through FCM/APNS where applicable
+* AWS infrastructure where already established
+* OpenTelemetry-compatible observability
+
+Do not replace an existing compatible implementation merely because another design is preferred.
+
+---
+
+# 4. FIRST ACTION — REPOSITORY AUDIT
+
+Before implementation:
+
+1. Inspect the repository.
+2. Identify existing notification functionality.
+3. Inspect Prisma schema and migrations.
+4. Inspect:
+
+   * Customer
+   * Seller
+   * Identity
+   * Authentication
+   * Device
+   * Push token
+   * Orders
+   * Payments
+   * Fulfillment
+   * Shipments
+   * Tracking
+   * Returns
+   * Reviews
+   * Search
+   * Events/outbox
+   * BullMQ
+   * Redis
+   * API conventions
+   * Authorization
+   * Audit
+   * Logging
+   * Observability
+5. Identify existing email infrastructure.
+6. Identify existing FCM/APNS infrastructure.
+7. Identify existing SSE/WebSocket infrastructure.
+8. Identify existing template systems.
+9. Identify existing user preference models.
+10. Reuse existing infrastructure whenever possible.
+
+Do not create duplicate notification, device-token, event, queue, or user-preference systems.
+
+---
+
+# 5. PRIMARY OBJECTIVE
+
+Implement a production-grade notification subsystem supporting:
+
+* In-app notifications
+* Notification preferences
+* Email notifications
+* Push notifications
+* Notification templates
+* Notification delivery attempts
+* Notification status
+* Read/unread state
+* Notification categories
+* User/device targeting
+* Event-driven notification creation
+* BullMQ delivery
+* Retry handling
+* Idempotency
+* Deduplication
+* Provider abstraction
+* Provider failure handling
+* SSE delivery where appropriate
+* Notification history
+* Customer notification APIs
+* Seller notification APIs where applicable
+* Administrative notification controls where appropriate
+* Security
+* Privacy
+* Observability
+* Auditability
+* Testing
+
+---
+
+# 6. NOTIFICATION BOUNDED CONTEXT
+
+Create or complete an explicit Notifications bounded context.
+
+Notifications owns:
+
+* Notification records
+* Notification preferences
+* Notification templates
+* Delivery attempts
+* Notification status
+* Channel routing
+* In-app notification state
+* Device-token registration where appropriate
+* Notification orchestration
+* Delivery retries
+
+Notifications does NOT own:
+
+* Orders
+* Payments
+* Shipments
+* Returns
+* Products
+* Reviews
+* Seller accounts
+
+Those domains remain authoritative.
+
+Notifications reacts to domain events generated by those systems.
+
+---
+
+# 7. NOTIFICATION CHANNELS
+
+Support channels appropriate to the existing platform:
+
+* IN_APP
+* EMAIL
+* PUSH
+
+SSE may be used as a real-time transport for newly created in-app notifications.
+
+Do not create a second notification channel unless justified by the repository.
+
+Do not pretend an external provider exists if it has not been configured.
+
+---
+
+# 8. NOTIFICATION MODEL
+
+Design and implement a durable notification model.
+
+Potential fields:
+
+* id
+* recipientUserId/customerId
+* type
+* category
+* title
+* body
+* data
+* status
+* createdAt
+* readAt
+* expiresAt
+* sourceEventId
+* correlationId
+
+Adapt to existing repository conventions.
+
+Avoid storing unnecessary private information.
+
+---
+
+# 9. NOTIFICATION IDENTITY
+
+Every notification must have a stable internal ID.
+
+Do not use timestamps or client-generated values as the primary identity.
+
+If public identifiers differ from database identifiers, follow the existing public-ID strategy.
+
+---
+
+# 10. NOTIFICATION TYPES
+
+Define controlled notification types.
+
+Examples:
+
+```text
+ORDER_CREATED
+ORDER_CONFIRMED
+ORDER_SHIPPED
+ORDER_DELIVERED
+ORDER_CANCELLED
+
+PAYMENT_REQUIRED
+PAYMENT_CONFIRMED
+PAYMENT_FAILED
+REFUND_CREATED
+REFUND_COMPLETED
+
+RETURN_REQUESTED
+RETURN_APPROVED
+RETURN_REJECTED
+RETURN_RECEIVED
+RETURN_REFUNDED
+
+REVIEW_PUBLISHED
+REVIEW_MODERATION_RESULT
+
+ACCOUNT_SECURITY
+SELLER_ACCOUNT_STATUS
+
+PROMOTION
+SYSTEM
+```
+
+Only implement notification types that correspond to actual domain events or legitimate platform behavior.
+
+Do not create arbitrary notifications merely to increase feature count.
+
+---
+
+# 11. NOTIFICATION CATEGORIES
+
+Create controlled categories such as:
+
+* ORDER
+* PAYMENT
+* SHIPPING
+* RETURNS
+* REVIEWS
+* ACCOUNT
+* SELLER
+* PROMOTION
+* SYSTEM
+
+Use categories for:
+
+* preference management
+* routing
+* UI grouping
+* filtering
+
+---
+
+# 12. NOTIFICATION CONTENT
+
+Notification content must be generated server-side.
+
+Do not trust clients to define:
+
+* notification type
+* recipient
+* title
+* security-sensitive body
+* provider payload
+
+Client applications may display notifications but must not control notification authority.
+
+---
+
+# 13. TEMPLATE SYSTEM
+
+Implement a controlled template architecture.
+
+Templates may support:
+
+* title
+* body
+* channel-specific content
+* locale
+* version
+* variables
+
+Do not allow arbitrary executable template code.
+
+Template variables must be explicitly defined.
+
+Prevent:
+
+* template injection
+* HTML injection
+* unsafe interpolation
+
+---
+
+# 14. CHANNEL-SPECIFIC CONTENT
+
+Different channels may require different representations.
+
+For example:
+
+## In-app
+
+* title
+* body
+* metadata
+* navigation target
+
+## Email
+
+* subject
+* HTML/text body
+* safe links
+
+## Push
+
+* title
+* body
+* safe data payload
+
+Do not send the entire internal notification object to external providers.
+
+---
+
+# 15. NOTIFICATION PREFERENCES
+
+Implement user-configurable preferences.
+
+Preferences should support:
+
+* notification category
+* channel
+* enabled/disabled
+* possibly frequency where justified
+
+Example:
+
+```text
+ORDER + IN_APP = enabled
+ORDER + EMAIL = enabled
+PROMOTION + PUSH = disabled
+```
+
+Adapt the model to actual product requirements.
+
+---
+
+# 16. DEFAULT PREFERENCES
+
+Define deterministic defaults.
+
+Critical transactional/security notifications may not be fully disableable.
+
+For example, account-security notifications may require mandatory delivery.
+
+Document:
+
+* default preferences
+* mandatory notifications
+* optional notifications
+* channel-specific behavior
+
+Do not silently suppress critical account/security messages.
+
+---
+
+# 17. PREFERENCE AUTHORIZATION
+
+Customers may modify only their own notification preferences.
+
+Sellers may modify only preferences belonging to their authorized seller user account.
+
+Administrators must have explicit permissions for operational controls.
+
+Prevent IDOR through preference IDs.
+
+Prefer deriving the owner from authenticated identity rather than trusting a supplied user ID.
+
+---
+
+# 18. DEVICE PUSH TOKENS
+
+Integrate with the existing device model.
+
+If push notifications are supported, maintain a secure device-token association.
+
+Potential fields:
+
+* id
+* userId
+* deviceId
+* platform
+* token
+* status
+* createdAt
+* lastSeenAt
+* revokedAt
+
+Never expose push tokens through normal customer APIs.
+
+---
+
+# 19. PUSH TOKEN SECURITY
+
+Push tokens are sensitive infrastructure identifiers.
+
+Do not:
+
+* log them unnecessarily
+* expose them to other users
+* allow arbitrary token registration for another account
+* trust a supplied user ID
+* use predictable IDs
+
+Device registration must derive ownership from authentication.
+
+---
+
+# 20. PUSH TOKEN LIFECYCLE
+
+Support:
+
+* registration
+* refresh
+* invalidation
+* revocation
+* device logout
+* token rotation where applicable
+
+If a provider reports an invalid token, mark it appropriately rather than endlessly retrying.
+
+---
+
+# 21. FCM/APNS INTEGRATION
+
+If the repository uses push notifications:
+
+* reuse the existing provider architecture
+* integrate with FCM/APNS appropriately
+* keep provider credentials server-side
+* use environment/secret management
+* never expose provider credentials to clients
+
+Do not fabricate provider responses.
+
+If provider credentials are unavailable, implement the provider boundary and test it appropriately without claiming live delivery.
+
+---
+
+# 22. EMAIL INTEGRATION
+
+If an email provider exists in the repository:
+
+* reuse it.
+
+Otherwise create a clean provider abstraction without inventing a fake production provider.
+
+Email delivery must support:
+
+* recipient validation
+* template selection
+* safe content rendering
+* retry handling
+* provider error classification
+* delivery status
+
+Do not store or log sensitive email content unnecessarily.
+
+---
+
+# 23. NOTIFICATION DELIVERY MODEL
+
+Separate:
+
+1. Notification creation
+2. Channel selection
+3. Delivery attempt
+4. Provider response
+5. Final delivery state
+
+Do not make the notification database row itself represent successful external delivery.
+
+---
+
+# 24. DELIVERY ATTEMPT MODEL
+
+Create a durable delivery-attempt record where appropriate.
+
+Potential fields:
+
+* id
+* notificationId
+* channel
+* provider
+* status
+* attemptNumber
+* providerMessageId
+* errorCode
+* errorCategory
+* attemptedAt
+* completedAt
+* nextRetryAt
+
+Adapt to repository conventions.
+
+---
+
+# 25. DELIVERY STATES
+
+Define explicit states.
+
+For example:
+
+```text
+PENDING
+PROCESSING
+SENT
+DELIVERED
+FAILED
+CANCELLED
+```
+
+Provider-specific delivery semantics may differ.
+
+Do not falsely map "accepted by provider" to "delivered to user" unless the provider actually confirms delivery.
+
+---
+
+# 26. PROVIDER STATUS
+
+Separate internal delivery status from provider status where necessary.
+
+For example:
+
+```text
+Internal:
+SENT
+
+Provider:
+ACCEPTED
+```
+
+Do not collapse different meanings into one ambiguous status.
+
+---
+
+# 27. IDEMPOTENCY
+
+Notification creation and delivery must be idempotent.
+
+Use source event identity where appropriate.
+
+For example:
+
+```text
+sourceEventId + notificationType + recipient + channel
+```
+
+may form part of a deduplication strategy.
+
+The exact uniqueness model must follow actual business requirements.
+
+Prevent duplicate notifications caused by:
+
+* event retries
+* queue retries
+* webhook retries
+* worker crashes
+* consumer restarts
+
+---
+
+# 28. EVENT-DRIVEN NOTIFICATION CREATION
+
+Consume existing domain events.
+
+Potential sources include:
+
+```text
+OrderCreated
+OrderConfirmed
+OrderShipped
+OrderDelivered
+OrderCancelled
+
+PaymentAuthorized
+PaymentFailed
+RefundCreated
+RefundCompleted
+
+ReturnRequested
+ReturnApproved
+ReturnRejected
+ReturnReceived
+ReturnRefunded
+
+ReviewPublished
+ReviewModerated
+
+SellerStatusChanged
+```
+
+Use the actual event contracts present in the repository.
+
+Do not create a new event bus.
+
+---
+
+# 29. EVENT CONSUMER DESIGN
+
+Consumers must be:
+
+* idempotent
+* retryable
+* observable
+* safe under duplicates
+* safe under restarts
+
+A duplicated event must not create duplicate customer notifications.
+
+---
+
+# 30. TRANSACTIONAL OUTBOX
+
+If the existing project uses a transactional outbox:
+
+* reuse it.
+
+When notification creation is directly coupled to an authoritative transaction, preserve atomicity where appropriate.
+
+Do not send external notifications while holding long database transactions.
+
+---
+
+# 31. BULLMQ
+
+Use existing BullMQ infrastructure for asynchronous notification delivery.
+
+Potential queues:
+
+```text
+notifications
+notification-email
+notification-push
+notification-retry
+```
+
+Do not create unnecessary queues.
+
+A job must define:
+
+* purpose
+* input
+* idempotency
+* retry policy
+* timeout
+* backoff
+* concurrency
+* failure handling
+* observability
+
+---
+
+# 32. RETRY POLICY
+
+Classify failures.
+
+## Retryable
+
+Examples:
+
+* network timeout
+* temporary provider outage
+* HTTP 5xx
+* connection failure
+
+## Non-retryable
+
+Examples:
+
+* invalid recipient
+* invalid provider credentials
+* malformed payload
+* permanently invalid push token
+
+Do not retry permanent failures indefinitely.
+
+---
+
+# 33. EXPONENTIAL BACKOFF
+
+Use bounded exponential backoff where appropriate.
+
+Prevent retry storms.
+
+Define:
+
+* maximum attempts
+* backoff
+* jitter where appropriate
+* dead-letter behavior
+
+Use existing queue conventions.
+
+---
+
+# 34. DEAD-LETTER HANDLING
+
+If the existing infrastructure supports DLQ:
+
+* integrate notification failures with it.
+
+Failed jobs must remain observable.
+
+Provide a safe reprocessing mechanism where appropriate.
+
+Do not blindly replay permanently invalid notifications.
+
+---
+
+# 35. IN-APP NOTIFICATIONS
+
+Persist in-app notifications in PostgreSQL.
+
+Support:
+
+* unread
+* read
+* creation timestamp
+* optional expiration
+* category
+* type
+* navigation metadata
+
+The database remains authoritative.
+
+---
+
+# 36. READ STATE
+
+Implement:
+
+* mark notification as read
+* mark notification as unread where supported
+* mark all as read where supported
+
+Validate ownership.
+
+Do not allow one customer to change another customer's read state.
+
+---
+
+# 37. READ-STATE CONCURRENCY
+
+Read operations must be safe under concurrent requests.
+
+Repeated:
+
+```text
+mark as read
+```
+
+should be idempotent.
+
+Do not produce inconsistent timestamps.
+
+---
+
+# 38. NOTIFICATION LIST API
+
+Implement customer-facing notification APIs.
+
+Potential endpoints:
+
+```text
+GET   /api/v1/notifications
+GET   /api/v1/notifications/unread-count
+PATCH /api/v1/notifications/:notificationId/read
+PATCH /api/v1/notifications/:notificationId/unread
+POST  /api/v1/notifications/read-all
+```
+
+Follow actual repository API conventions.
+
+Support:
+
+* pagination
+* category filters
+* read/unread filtering
+* stable ordering
+
+---
+
+# 39. PAGINATION
+
+Notification lists can grow indefinitely.
+
+Use stable pagination.
+
+Prefer cursor pagination for large histories.
+
+Define:
+
+* page size
+* maximum page size
+* cursor format
+* sort order
+
+Avoid unbounded notification queries.
+
+---
+
+# 40. UNREAD COUNT
+
+Implement an efficient unread count.
+
+Do not load every unread notification into application memory merely to count them.
+
+Use appropriate indexed database queries or a carefully designed projection/cache.
+
+If Redis is used:
+
+* define invalidation
+* define TTL
+* define consistency behavior
+
+PostgreSQL remains authoritative.
+
+---
+
+# 41. SSE REAL-TIME DELIVERY
+
+If the repository already uses Server-Sent Events, integrate notifications with SSE.
+
+SSE may deliver:
+
+* newly created notification
+* unread-count update
+* notification read-state update
+
+Do not make SSE the durable notification store.
+
+If a client disconnects, it must be able to recover missed notifications through the normal REST API.
+
+---
+
+# 42. SSE AUTHORIZATION
+
+An SSE connection must be associated with the authenticated user.
+
+Prevent:
+
+* subscribing to another user's notifications
+* arbitrary user IDs
+* token leakage
+* connection abuse
+
+Respect existing authentication architecture.
+
+---
+
+# 43. SSE RECONNECTION
+
+Support reconnection behavior.
+
+Use event IDs where appropriate.
+
+The client should be able to reconnect and recover from missed real-time events through durable APIs.
+
+Do not assume the SSE connection is always available.
+
+---
+
+# 44. NOTIFICATION DATA PAYLOAD
+
+Notification metadata may include navigation information.
+
+For example:
+
+```text
+{
+  "resourceType": "ORDER",
+  "resourceId": "..."
+}
+```
+
+Validate all resource identifiers.
+
+Do not allow arbitrary executable URLs or unsafe navigation targets.
+
+---
+
+# 45. DEEP-LINK SECURITY
+
+If notifications contain navigation links:
+
+* generate them server-side where appropriate
+* restrict allowed routes
+* never allow arbitrary redirect URLs from untrusted event data
+
+Prevent open-redirect behavior.
+
+---
+
+# 46. CUSTOMER PRIVACY
+
+Notifications can contain sensitive information.
+
+Do not include unnecessary:
+
+* payment details
+* addresses
+* phone numbers
+* private seller information
+* authentication information
+* internal IDs
+
+Especially avoid exposing sensitive information through push notifications, where device lock screens may display content.
+
+---
+
+# 47. PUSH PRIVACY
+
+Define whether sensitive notification details are allowed in push payloads.
+
+Prefer minimal payloads where necessary.
+
+For sensitive events, consider:
+
+```text
+"You have an update regarding your order."
+```
+
+rather than exposing unnecessary payment/order details.
+
+Follow actual product requirements and privacy architecture.
+
+---
+
+# 48. EMAIL PRIVACY
+
+Email notifications should:
+
+* avoid unnecessary sensitive information
+* use secure links
+* avoid embedding secrets
+* avoid exposing internal IDs
+* respect user preferences where allowed
+
+Do not include passwords or authentication credentials.
+
+---
+
+# 49. NOTIFICATION PREFERENCES AND CRITICAL EVENTS
+
+Define mandatory categories.
+
+For example:
+
+* account security
+* critical payment/account events
+
+may be mandatory.
+
+Promotional notifications should generally respect opt-out preferences.
+
+Do not apply marketing behavior to transactional notifications without explicit product rules.
+
+---
+
+# 50. PROMOTIONAL NOTIFICATIONS
+
+If promotional notifications exist:
+
+* respect opt-in/opt-out requirements
+* separate marketing from transactional notifications
+* implement rate controls
+* prevent accidental promotional delivery to opted-out users
+
+Do not build a marketing automation platform in this volume.
+
+---
+
+# 51. NOTIFICATION FREQUENCY
+
+If notification frequency controls are supported, implement them explicitly.
+
+Potential modes:
+
+* immediate
+* daily digest
+* weekly digest
+
+Do not add digest functionality unless the repository's requirements justify it.
+
+If implemented, use scheduled jobs with clear idempotency and timezone handling.
+
+---
+
+# 52. TIMEZONE HANDLING
+
+If scheduled notifications/digests exist:
+
+* store canonical timestamps in UTC
+* use user-configured timezone where appropriate
+* handle daylight-saving transitions
+* avoid server-local timezone assumptions
+
+Do not create hidden timezone behavior.
+
+---
+
+# 53. LOCALE
+
+If localization exists in the repository:
+
+* use the customer's locale for notification templates
+* define fallback locale
+* prevent missing translations from breaking critical notifications
+
+If localization does not exist, do not invent a complete localization platform.
+
+---
+
+# 54. NOTIFICATION TEMPLATE VERSIONING
+
+Templates may change over time.
+
+Define:
+
+* template identifier
+* version
+* locale
+* channel
+* active/inactive status
+
+Previously created notifications should remain historically understandable.
+
+Do not silently reinterpret historical notification content if the system requires immutable history.
+
+---
+
+# 55. NOTIFICATION HISTORY
+
+Determine whether notification content is immutable after creation.
+
+Prefer immutable historical notification content where required for customer clarity/auditability.
+
+Do not regenerate historical notifications from current templates unless explicitly intended.
+
+---
+
+# 56. EVENT → NOTIFICATION MAPPING
+
+Implement a deterministic mapping layer.
+
+For example:
+
+```text
+OrderShipped
+→ customer
+→ ORDER_SHIPPED
+→ IN_APP
+→ EMAIL if enabled
+→ PUSH if enabled
+```
+
+The exact mapping must follow existing business requirements.
+
+Do not scatter notification creation logic throughout unrelated domain modules.
+
+---
+
+# 57. NOTIFICATION ORCHESTRATION
+
+Create a clear application service responsible for:
+
+1. Receiving a domain event.
+2. Determining notification type.
+3. Determining recipients.
+4. Evaluating preferences.
+5. Creating durable notification records.
+6. Creating delivery attempts/jobs.
+7. Emitting relevant internal events.
+8. Recording failures.
+
+Keep domain logic separate from provider-specific code.
+
+---
+
+# 58. RECIPIENT RESOLUTION
+
+Recipients must be resolved server-side.
+
+Examples:
+
+* order customer
+* seller account owner
+* authorized seller users
+* administrator for operational alerts
+
+Never allow an event payload from an untrusted source to arbitrarily select a recipient.
+
+Validate resource ownership and authorization.
+
+---
+
+# 59. SELLER NOTIFICATIONS
+
+Where seller notifications are required, support events such as:
+
+* new order
+* payment issue
+* fulfillment issue
+* return request
+* review activity
+* seller account status
+
+Seller recipients must be resolved from authorized seller users.
+
+Do not send private customer information unnecessarily.
+
+---
+
+# 60. ADMIN NOTIFICATIONS
+
+Administrative alerts may include:
+
+* payment reconciliation failure
+* fulfillment failure
+* search indexing failure
+* notification provider failure
+* security event
+
+These must use explicit administrative permissions.
+
+Do not send sensitive operational data to ordinary customers.
+
+---
+
+# 61. NOTIFICATION REPORTING
+
+Provide operational visibility into:
+
+* notifications created
+* notifications skipped by preference
+* delivery attempts
+* successful sends
+* failures
+* retry counts
+* invalid device tokens
+* provider latency
+* queue latency
+
+Do not expose operational dashboards to normal users.
+
+---
+
+# 62. OBSERVABILITY
+
+Instrument:
+
+## API
+
+* notification API latency
+* error rate
+* pagination usage
+* unread-count latency
+
+## Workers
+
+* queue depth
+* processing latency
+* failures
+* retries
+* dead-letter count
+
+## Providers
+
+* request latency
+* provider errors
+* rate limits
+* accepted sends
+* permanent failures
+
+## SSE
+
+* active connections
+* connection duration
+* disconnect rate
+* delivery failures
+
+Never log:
+
+* push tokens
+* authentication tokens
+* passwords
+* provider secrets
+* unnecessary notification contents
+
+---
+
+# 63. SECURITY
+
+Threat-model notifications for:
+
+* IDOR
+* notification spoofing
+* recipient manipulation
+* unauthorized read-state changes
+* push-token theft
+* provider credential leakage
+* open redirects
+* template injection
+* XSS
+* sensitive data leakage
+* notification spam
+* queue abuse
+* SSE subscription abuse
+
+Implement server-side controls.
+
+---
+
+# 64. RATE LIMITING
+
+Apply rate limits to:
+
+* notification APIs
+* preference changes
+* device-token registration
+* notification report/feedback endpoints if any
+* administrative notification operations
+
+Use existing Redis rate-limiting infrastructure.
+
+Do not allow clients to create arbitrary notifications.
+
+---
+
+# 65. DEVICE REGISTRATION API
+
+If required, implement APIs such as:
+
+```text
+POST   /api/v1/devices/:deviceId/push-token
+DELETE /api/v1/devices/:deviceId/push-token
+```
+
+Follow actual repository conventions.
+
+Authentication must establish device ownership.
+
+---
+
+# 66. NOTIFICATION PREFERENCE API
+
+Implement APIs such as:
+
+```text
+GET   /api/v1/notification-preferences
+PATCH /api/v1/notification-preferences
+```
+
+or the repository's established resource structure.
+
+Validate:
+
+* category
+* channel
+* enabled state
+* supported combinations
+
+Do not allow arbitrary category/channel strings.
+
+---
+
+# 67. ADMINISTRATIVE CONTROLS
+
+If administrative tooling exists, provide authorized operations for:
+
+* notification inspection
+* delivery status inspection
+* retrying failed notifications
+* provider health
+* queue health
+
+Do not allow arbitrary notification content injection through admin endpoints without proper authorization and audit.
+
+---
+
+# 68. AUDIT
+
+Audit important actions:
+
+* preference changes where required
+* device registration/revocation where appropriate
+* administrative notification actions
+* notification suppression
+* manual retry
+* template changes
+* provider configuration changes if managed by the application
+
+Use existing audit infrastructure.
+
+---
+
+# 69. DATABASE CONSTRAINTS
+
+Add appropriate indexes and constraints.
+
+Consider indexes for:
+
+* recipient
+* createdAt
+* readAt
+* category
+* type
+* status
+* notificationId
+* channel
+* delivery status
+* sourceEventId
+
+Optimize based on actual queries.
+
+Avoid unnecessary indexes.
+
+---
+
+# 70. DATA RETENTION
+
+Define retention behavior for:
+
+* in-app notifications
+* delivery attempts
+* provider metadata
+* push tokens
+* templates
+* audit records
+
+Do not retain notification data indefinitely without justification.
+
+Preserve records required for compliance/audit.
+
+---
+
+# 71. PROVIDER ABSTRACTION
+
+Create provider interfaces such as:
+
+```text
+EmailNotificationProvider
+PushNotificationProvider
+```
+
+without coupling domain logic to a specific vendor.
+
+Provider adapters should handle:
+
+* provider request construction
+* authentication
+* provider response parsing
+* error classification
+
+Domain logic should not depend directly on provider SDK details.
+
+---
+
+# 72. PROVIDER FAILURE ISOLATION
+
+A provider outage must not corrupt notification records.
+
+For example:
+
+```text
+PostgreSQL notification created
+→ push provider unavailable
+→ delivery attempt FAILED/RETRYABLE
+→ queue retries later
+```
+
+Do not roll back durable notification creation merely because an external provider failed.
+
+---
+
+# 73. TRANSACTIONAL BOUNDARIES
+
+Do not hold database transactions open while waiting on:
+
+* email providers
+* FCM
+* APNS
+* SSE
+* external HTTP providers
+
+Use durable state + asynchronous delivery.
+
+---
+
+# 74. RETRY IDEMPOTENCY
+
+A worker may crash after a provider accepts a message but before the database records success.
+
+Design for this failure mode.
+
+Where the provider supports idempotency:
+
+* use it.
+
+Where it does not:
+
+* implement the strongest safe application-level deduplication available
+* accurately document residual duplicate-delivery risk
+
+Never claim exactly-once external delivery unless it is actually guaranteed.
+
+---
+
+# 75. OUTBOX AND DELIVERY JOBS
+
+Where appropriate:
+
+```text
+Domain transaction
+→ outbox event
+→ notification consumer
+→ notification row
+→ delivery job
+→ provider
+→ delivery result
+```
+
+Keep each boundary explicit.
+
+Do not hide asynchronous failure.
+
+---
+
+# 76. SEARCH/REVIEW/ORDER INTEGRATION
+
+Notifications should consume existing events from:
+
+* Orders
+* Payments
+* Fulfillment
+* Returns
+* Reviews
+* Sellers
+* Search/operations where appropriate
+
+Do not directly reach into unrelated databases to determine business state when domain events or APIs already exist.
+
+---
+
+# 77. NOTIFICATION API ERROR CONTRACTS
+
+Use existing standardized errors.
+
+Potential errors:
+
+* NOTIFICATION_NOT_FOUND
+* NOTIFICATION_ACCESS_DENIED
+* INVALID_NOTIFICATION_FILTER
+* INVALID_NOTIFICATION_CURSOR
+* PREFERENCE_NOT_FOUND
+* INVALID_NOTIFICATION_CHANNEL
+* DEVICE_NOT_FOUND
+* DEVICE_ACCESS_DENIED
+* INVALID_PUSH_TOKEN
+
+Do not expose internal provider error details to clients.
+
+---
+
+# 78. PAGINATION AND SORTING
+
+Notification APIs should have deterministic ordering.
+
+Typical order:
+
+```text
+createdAt DESC
+id DESC
+```
+
+Use a stable secondary key.
+
+Do not rely only on timestamps if multiple records can share identical timestamps.
+
+---
+
+# 79. CACHE DESIGN
+
+Redis may be used for:
+
+* unread-count optimization
+* rate limiting
+* short-lived provider coordination
+* deduplication where appropriate
+
+Every cache must define:
+
+* purpose
+* key
+* TTL
+* invalidation
+* stale behavior
+* failure behavior
+
+PostgreSQL remains authoritative.
+
+---
+
+# 80. CACHE FAILURE
+
+If Redis becomes unavailable:
+
+* notification persistence must continue where possible
+* API correctness must remain intact
+* rate limiting should follow existing failure policy
+* unread count should have a database fallback if required
+
+Do not make Redis a single point of failure for notification persistence.
+
+---
+
+# 81. QUEUE FAILURE
+
+If BullMQ/Redis is unavailable:
+
+* durable notification records must not be silently lost
+* asynchronous delivery must be recoverable
+* outbox/event processing must support later retry
+
+Do not report delivery as successful when the job was never durably queued.
+
+---
+
+# 82. EMAIL UNSUBSCRIBE / MARKETING BOUNDARY
+
+If marketing email preferences exist, keep them distinct from mandatory transactional notifications.
+
+Do not accidentally suppress:
+
+* account security
+* critical payment
+* critical order information
+
+when the customer opts out of promotional messaging.
+
+---
+
+# 83. TESTING
+
+Implement real tests.
+
+## Unit tests
+
+Cover:
+
+* notification type mapping
+* recipient resolution
+* preference evaluation
+* channel selection
+* template rendering
+* error classification
+* retry policy
+* deduplication
+
+## Database/integration tests
+
+Cover:
+
+* notification creation
+* uniqueness
+* read state
+* unread counts
+* preference changes
+* device tokens
+* delivery attempts
+* concurrent operations
+
+## API tests
+
+Cover:
+
+* list notifications
+* unread count
+* read/unread
+* read-all
+* preferences
+* device registration
+* authorization
+* pagination
+* validation
+
+## Event tests
+
+Cover:
+
+* domain event consumption
+* duplicate events
+* retries
+* out-of-order events where relevant
+* notification deduplication
+
+## Provider tests
+
+Cover:
+
+* successful delivery
+* transient failure
+* permanent failure
+* invalid token
+* timeout
+* provider response parsing
+
+## Security tests
+
+Cover:
+
+* IDOR
+* unauthorized preference changes
+* cross-user notification access
+* device-token ownership bypass
+* SSE authorization
+* open redirect attempts
+* template injection
+* rate-limit bypass
+
+---
+
+# 84. CONCURRENCY TESTING
+
+Explicitly test:
+
+* two simultaneous notification creation attempts
+* duplicate domain events
+* simultaneous read requests
+* simultaneous preference updates
+* concurrent push-token updates
+* retry after worker crash
+* duplicate delivery jobs
+
+The system must remain consistent.
+
+---
+
+# 85. SSE TESTING
+
+If SSE is implemented:
+
+Test:
+
+* authenticated connection
+* unauthorized connection
+* notification delivery
+* disconnect
+* reconnect
+* missed-event recovery
+* multiple devices
+* connection cleanup
+
+Do not assume SSE alone provides reliable delivery.
+
+---
+
+# 86. LOAD TESTING
+
+Where infrastructure supports it, test:
+
+* notification creation throughput
+* notification list latency
+* unread-count performance
+* queue throughput
+* provider worker concurrency
+* SSE connection scalability
+
+Do not invent benchmark results.
+
+Report only actual measurements.
+
+---
+
+# 87. DOCUMENTATION
+
+Document:
+
+* notification architecture
+* supported channels
+* notification types
+* preference behavior
+* mandatory vs optional notifications
+* templates
+* delivery pipeline
+* provider abstraction
+* queue behavior
+* retry policy
+* deduplication
+* SSE behavior
+* device-token lifecycle
+* APIs
+* operational troubleshooting
+* retention
+
+Documentation must reflect actual implementation.
+
+---
+
+# 88. FILE ORGANIZATION
+
+Follow repository conventions.
+
+Where a Notifications module is introduced, keep clear boundaries between:
+
+* domain
+* application
+* persistence
+* controllers
+* DTOs
+* templates
+* provider adapters
+* queue workers
+* event consumers
+* SSE
+* device registration
+* preference services
+* tests
+
+Do not force an arbitrary directory layout over an existing coherent structure.
+
+---
+
+# 89. CONFIGURATION
+
+Validate notification configuration at startup.
+
+Potential configuration includes:
+
+* email provider
+* FCM
+* APNS
+* provider timeouts
+* retry settings
+* queue settings
+* notification retention
+* SSE settings
+
+Never hardcode secrets.
+
+Use existing environment/secret management.
+
+---
+
+# 90. GRACEFUL SHUTDOWN
+
+Workers and SSE infrastructure must shut down gracefully.
+
+On shutdown:
+
+* stop accepting new work
+* finish safe in-flight operations
+* release resources
+* avoid duplicate processing where possible
+* close provider connections
+* close SSE connections cleanly
+* respect configured shutdown timeout
+
+---
+
+# 91. HEALTH CHECKS
+
+If the repository has health infrastructure, expose notification subsystem health appropriately.
+
+Consider:
+
+* queue availability
+* provider configuration
+* provider reachability where safe
+* notification worker health
+
+Do not make an optional provider outage make unrelated application health appear completely broken.
+
+Distinguish:
+
+* application health
+* notification worker health
+* provider health
+
+---
+
+# 92. SECURITY OF ADMIN OPERATIONS
+
+Administrative notification operations must use least privilege.
+
+Examples:
+
+* VIEW_NOTIFICATION_DELIVERIES
+* RETRY_NOTIFICATION
+* MANAGE_NOTIFICATION_TEMPLATES
+* MANAGE_NOTIFICATION_CONFIGURATION
+
+Use existing permission infrastructure.
+
+Do not introduce unrestricted administrator checks if a granular permission system already exists.
+
+---
+
+# 93. EVENT PAYLOAD PRIVACY
+
+Notification consumers should receive only the data necessary to construct the notification.
+
+Do not place:
+
+* passwords
+* payment credentials
+* authentication tokens
+* unnecessary personal data
+
+inside notification events.
+
+---
+
+# 94. NOTIFICATION CONTENT SAFETY
+
+User-generated fields inserted into notifications must be sanitized/escaped according to channel.
+
+For example:
+
+* HTML email requires HTML escaping
+* plain text requires appropriate normalization
+* push payloads require bounded content
+
+Prevent notification content from becoming an XSS vector.
+
+---
+
+# 95. PROVIDER RATE LIMITS
+
+Respect provider rate limits.
+
+Workers must:
+
+* detect rate-limit responses
+* back off
+* avoid retry storms
+* expose metrics
+
+Do not hammer an unavailable provider.
+
+---
+
+# 96. MULTI-DEVICE BEHAVIOR
+
+Define how notifications behave across multiple devices.
+
+For example:
+
+* in-app notification appears in all authenticated sessions
+* push goes to active registered devices
+* invalid tokens are retired
+* read state synchronizes across devices
+
+Do not create per-device duplicate database notifications unless required.
+
+---
+
+# 97. MULTI-CHANNEL DEDUPLICATION
+
+A single business event may legitimately produce:
+
+* one in-app notification
+* one email
+* one push
+
+These are separate channels, not accidental duplicates.
+
+Deduplication must distinguish:
+
+```text
+same notification + different legitimate channels
+```
+
+from:
+
+```text
+same notification + same channel + repeated processing
+```
+
+---
+
+# 98. NOTIFICATION EXPIRATION
+
+If notifications expire:
+
+* define expiration rules
+* exclude expired notifications from normal lists
+* handle read/unread counts
+* preserve required history
+* clean up safely
+
+Use BullMQ scheduled jobs only if necessary.
+
+---
+
+# 99. CLEANUP JOBS
+
+If cleanup jobs are needed, implement them with:
+
+* bounded batches
+* retry policy
+* observability
+* idempotency
+* safe retention rules
+
+Do not delete audit-critical information.
+
+---
+
+# 100. IMPLEMENTATION BOUNDARY
+
+This volume should implement:
+
+* Notifications bounded context
+* Notification persistence
+* Notification types/categories
+* Notification preferences
+* Device push-token management
+* In-app notifications
+* Read/unread state
+* Unread count
+* REST APIs
+* SSE delivery where appropriate
+* Email provider integration boundary
+* Push provider integration boundary
+* FCM/APNS integration where configured
+* Notification templates
+* Delivery attempts
+* Provider status
+* Idempotency
+* Deduplication
+* BullMQ notification jobs
+* Retry/backoff
+* Failure handling
+* Event consumers
+* Audit
+* Security
+* Privacy
+* Observability
+* Testing
+* Documentation
+
+Do NOT turn this volume into a separate implementation of:
+
+* Recommendations
+* Marketing automation
+* Seller payouts
+* Advanced warehouse management
+* Tax remittance
+* Full carrier integrations
+* Analytics platform
+
+Those remain separate marketplace capabilities.
+
+---
+
+# 101. NON-NEGOTIABLE RULES
+
+Never:
+
+* allow clients to create arbitrary notifications
+* trust client-provided recipients
+* expose another user's notifications
+* expose push tokens
+* expose provider credentials
+* store secrets in source code
+* treat provider acceptance as guaranteed user delivery
+* retry permanent failures forever
+* lose durable notifications when a provider fails
+* lose events silently
+* assume exactly-once delivery
+* assume SSE is durable
+* use Redis as authoritative notification storage
+* send external provider requests inside long database transactions
+* allow arbitrary template execution
+* allow unsafe HTML/script injection
+* create duplicate notification systems
+* create fake provider integrations
+* create placeholder implementations
+* create TODO implementations
+* claim live provider delivery without actual validation
+* claim tests passed when they did not
+
+---
+
+# 102. VALIDATION
+
+After implementation, run the repository's appropriate:
+
+* formatting
+* linting
+* TypeScript compilation
+* Prisma validation
+* Prisma generation
+* migrations
+* unit tests
+* integration tests
+* API tests
+* event-consumer tests
+* queue tests
+* security tests
+* relevant end-to-end tests
+
+Fix actual errors.
+
+If external notification providers cannot be tested because credentials or infrastructure are unavailable, report this accurately.
+
+Do not fabricate successful provider delivery.
+
+---
+
+# 103. BACKWARD COMPATIBILITY
+
+Before modifying existing models, APIs, events, or authentication:
+
+1. Inspect current consumers.
+2. Preserve existing contracts where possible.
+3. Prefer additive migrations.
+4. Maintain compatibility with existing frontend and mobile clients.
+5. Reuse existing event contracts.
+6. Reuse existing user/device identity.
+
+If a breaking change is required, document:
+
+* reason
+* affected systems
+* migration strategy
+* compatibility strategy
+
+---
+
+# 104. FINAL IMPLEMENTATION REPORT
+
+At the end, provide a factual report based only on the resulting repository.
+
+Include:
+
+## Implemented
+
+Exact notification functionality actually implemented.
+
+## Files Added
+
+Actual files added.
+
+## Files Modified
+
+Actual files modified.
+
+## Database Changes
+
+Actual models, migrations, indexes, constraints.
+
+## APIs
+
+Actual notification, preference, and device APIs.
+
+## Events
+
+Actual notification events and consumers.
+
+## Queues and Jobs
+
+Actual BullMQ queues/jobs.
+
+## Providers
+
+Actual email/push integrations and their current test/configuration state.
+
+## SSE
+
+Actual real-time notification functionality.
+
+## Security
+
+Actual controls.
+
+## Observability
+
+Actual metrics, logs, traces, and health checks.
+
+## Tests
+
+Actual tests created or modified.
+
+## Validation
+
+Actual:
+
+* build
+* typecheck
+* lint
+* migration
+* unit tests
+* integration tests
+* API tests
+* event tests
+* queue tests
+* security tests
+
+## Limitations
+
+Anything that could not be completed or tested.
+
+Do not describe planned work as implemented work.
+
+---
+
+# 105. FINAL INSTRUCTION
+
+Inspect the actual repository first.
+
+Then implement the complete **Notifications, Preferences, In-App Delivery, Email, Push, SSE, Device Registration, Templates, Delivery Attempts, Retry, Idempotency, Security, Privacy, Observability, and Operational backend capability** described above.
+
+Make real repository changes.
+
+Reuse existing architecture and contracts.
+
+Do not create a competing implementation.
+
+Do not stop at an outline.
+
+Do not provide pseudo-code instead of implementation.
+
+Do not leave placeholders.
+
+Do not invent provider capabilities.
+
+Validate the implementation.
+
+Report only facts about the resulting repository.
+
+This prompt is a standalone implementation unit of one coherent ecommerce marketplace. The resulting notification system must integrate correctly with the actual customers, sellers, orders, payments, fulfillment, returns, reviews, authentication, devices, events, queues, APIs, and infrastructure already present in the repository.

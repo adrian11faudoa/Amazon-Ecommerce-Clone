@@ -1,4465 +1,2082 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace
 
-Design the complete foundational architecture for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+# ARCHITECTURE PROMPT — VOLUME 1
 
-The platform is an original implementation.
+## Enterprise Ecommerce Marketplace — System, Domain, Data, Security, and API Architecture
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+You are operating as the **Principal Software Architect, Database Architect, Distributed Systems Architect, Security Architect, Cloud Architect, Payments Architect, and Staff Engineering Lead** for an enterprise-grade ecommerce marketplace.
 
-This prompt is completely independent and may be executed in a separate conversation.
+Your task in this phase is to inspect the **actual repository** and produce the complete foundational engineering architecture required to build the platform.
 
-Do not implement backend code.
+## CRITICAL RULE
 
-Do not implement frontend code.
+**DO NOT begin implementation in this phase.**
 
-Do not implement mobile code.
+Your primary task is architecture.
 
-Do not generate infrastructure implementation files.
-
-Do not generate Dockerfiles.
-
-Do not generate Kubernetes manifests.
-
-Do not generate Terraform files.
-
-Do not generate application source code.
-
-Produce architecture, specifications, contracts, diagrams, schemas, ownership rules, engineering decisions, and implementation guidance only.
-
-────────────────────────────────────────
-
-PROJECT
-
-Build a production-ready enterprise ecommerce marketplace capable of supporting:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High product-search traffic
-• High checkout traffic
-• Large inventory volumes
-• Large payment volumes
-• Global operations
-• Multiple currencies
-• Multiple languages
-• Regional taxes
-• Regional shipping
-• Multi-region deployment
-• High availability
-• Horizontal scaling
-• Zero-downtime deployments
-• Disaster recovery
-
-Comparable architectural scope:
-
-• Amazon Marketplace
-• Shopify Marketplace
-• Etsy
-• Mercado Libre
-
-The platform must be:
-
-• Cloud-native
-• Horizontally scalable
-• Modular
-• Maintainable
-• Secure
-• Observable
-• Fault tolerant
-• Cost conscious
-• Ready for long-term enterprise growth
-
-────────────────────────────────────────
-
-PRIMARY TECHNOLOGY STACK
-
-WEB
-
-• Next.js
-• React
-• TypeScript
-• Tailwind CSS
-• shadcn/ui
-• TanStack Query
-• Zustand
-
-MOBILE
-
-• React Native
-• Expo
-• TypeScript
-
-BACKEND
-
-• Node.js
-• NestJS
-• TypeScript
-
-DATABASE
-
-• PostgreSQL
-• Prisma ORM
-
-CACHE
-
-• Redis
-
-SEARCH
-
-• Elasticsearch or OpenSearch
-
-OBJECT STORAGE
-
-• AWS S3-compatible object storage
-
-CDN
-
-• CloudFront or equivalent CDN
-
-PAYMENTS
-
-• Stripe
-• Stripe Connect or approved marketplace-payment architecture
-
-BACKGROUND PROCESSING
-
-• BullMQ
-
-EVENT STREAMING
-
-• Kafka or Redpanda where justified
-
-COMMUNICATION
-
-• REST APIs
-• Webhooks
-• Server-Sent Events where appropriate
-• WebSockets where appropriate
-
-INFRASTRUCTURE
-
-• Docker
-• Kubernetes
-• Helm
-• Terraform
-• GitHub Actions
-
-OBSERVABILITY
-
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
-
-SECRETS
-
-• AWS Secrets Manager
-• HashiCorp Vault or approved cloud-native secret management
-
-────────────────────────────────────────
-
-ARCHITECTURAL APPROACH
-
-Determine whether the platform should initially use:
-
-• Modular Monolith
-• Service-Oriented Architecture
-• Microservices
-
-Do not blindly create a microservice for every domain or database table.
-
-Evaluate:
-
-• Transactional consistency
-• Scalability
-• Latency
-• Deployment independence
-• Failure isolation
-• Operational complexity
-• Cost
-• Team ownership
-• Developer productivity
-• Long-term maintainability
-
-Clearly identify:
-
-• Independently deployable services
-• Shared transactional boundaries
-• Authoritative data ownership
-• Synchronous communication
-• Asynchronous communication
-• Event-driven communication
-• Read models
-• CQRS requirements
-• Strong consistency boundaries
-• Eventual consistency boundaries
-
-Provide a migration strategy for future service extraction where appropriate.
-
-────────────────────────────────────────
-
-APPLICATIONS
-
-Design complete architecture for:
-
-CUSTOMER MARKETPLACE
-
-• Public storefront
-• Authenticated customer experience
-• Product discovery
-• Search
-• Shopping
-• Checkout
-• Orders
-• Account
-
-SELLER PLATFORM
-
-• Seller onboarding
-• Seller dashboard
-• Store management
-• Product management
-• Inventory
-• Orders
-• Fulfillment
-• Analytics
-• Financials
-
-ADMINISTRATION
-
-• Customer administration
-• Seller administration
-• Catalog administration
-• Order administration
-• Payments
-• Refunds
-• Moderation
-• CMS
-• Analytics
-• Feature flags
-• Audit
-
-MOBILE
-
-• Customer mobile application
-• Push notifications
-• Deep linking
-• Offline-aware browsing and cart behavior where appropriate
-
-PUBLIC API
-
-• Customer APIs
-• Seller APIs
-• Administrative APIs where authorized
-
-INTERNAL APIs
-
-• Service-to-service communication
-• Internal operational APIs
-
-────────────────────────────────────────
-
-ROLES
-
-Define a complete RBAC model for:
-
-• Guest
-• Customer
-• Seller
-• Seller Staff
-• Support Agent
-• Moderator
-• Administrator
-• Super Administrator
-• System Services
-
-Create a permissions matrix covering:
-
-• Account management
-• Catalog management
-• Product management
-• Inventory
-• Orders
-• Shipping
-• Payments
-• Refunds
-• Returns
-• Promotions
-• Reviews
-• Messaging
-• Reports
-• Analytics
-• CMS
-• Feature flags
-• System configuration
-• Audit
-
-Define:
-
-• Role ownership
-• Permission assignment
-• Resource-level authorization
-• Seller/store isolation
-• Administrative authorization
-
-Frontend role checks must never be the final authorization boundary.
-
-────────────────────────────────────────
-
-DOMAIN DECOMPOSITION
-
-Define bounded contexts and ownership for:
-
-Identity
-
-Users
-
-Accounts
-
-Authentication
-
-Authorization
-
-Profiles
-
-Addresses
-
-Seller Management
-
-Seller Staff
-
-Stores
-
-Catalog
-
-Categories
-
-Brands
-
-Products
-
-Product Variants
-
-Product Attributes
-
-Product Media
-
-Pricing
-
-Promotions
-
-Coupons
-
-Wishlist
-
-Shopping Cart
-
-Checkout
-
-Taxes
-
-Inventory
-
-Warehouses
-
-Inventory Reservations
-
-Inventory Transfers
-
-Orders
-
-Order Items
-
-Fulfillment
-
-Shipments
-
-Shipping
-
-Payments
-
-Refunds
-
-Returns
-
-Exchanges
-
-Seller Payouts
-
-Marketplace Commissions
-
-Reviews
-
-Ratings
-
-Notifications
-
-Messaging
-
-Search
-
-Recommendations
-
-Analytics
-
-Reporting
-
-CMS
-
-Moderation
-
-Administration
-
-Audit
-
-Feature Flags
-
-System Configuration
-
-For each domain define:
-
-• Responsibility
-• Aggregate roots
-• Entities
-• Value objects
-• Repositories
-• Application services
-• Domain services
-• Domain events
-• Data ownership
-• Consistency requirements
-
-────────────────────────────────────────
-
-CORE BUSINESS FLOWS
-
-Architect the complete lifecycle for:
-
-CUSTOMER
-
-Registration
-→ Verification
-→ Profile
-→ Address
-→ Product Discovery
-→ Product Detail
-→ Cart
-→ Checkout
-→ Payment
-→ Order
-→ Fulfillment
-→ Shipment
-→ Delivery
-→ Review
-→ Return/Refund where applicable
-
-SELLER
-
-Registration
-→ Verification
-→ Store Setup
-→ Product Creation
-→ Product Approval
-→ Inventory
-→ Pricing
-→ Promotion
-→ Order Receipt
-→ Fulfillment
-→ Shipment
-→ Settlement
-→ Payout
-
-ORDER
-
-Cart
-→ Checkout
-→ Inventory Reservation
-→ Payment Authorization
-→ Order Creation
-→ Payment Confirmation
-→ Fulfillment
-→ Shipment
-→ Delivery
-→ Settlement
-
-RETURN
-
-Return Request
-→ Eligibility
-→ Approval
-→ Shipment/Return
-→ Inspection
-→ Refund/Exchange
-→ Seller Settlement Adjustment
-
-Clearly identify transactional boundaries and asynchronous transitions.
-
-────────────────────────────────────────
-
-C4 ARCHITECTURE
-
-Generate:
-
-• System Context Diagram
-• Container Diagram
-• Component Diagram
-• Deployment Diagram
-
-For each major component define:
-
-• Responsibility
-• Inputs
-• Outputs
-• Dependencies
-• Data ownership
-• Scaling model
-• Failure behavior
-• Security boundary
-
-Use clear text-based diagrams.
-
-Do not use images.
-
-────────────────────────────────────────
-
-SERVICE DECOMPOSITION
-
-Evaluate and define appropriate service boundaries for:
-
-API Gateway
-
-Identity Service
-
-Authentication Service
-
-Account Service
-
-Profile Service
-
-Address Service
-
-Seller Service
-
-Store Service
-
-Catalog Service
-
-Category Service
-
-Brand Service
-
-Product Service
-
-Pricing Service
-
-Promotion Service
-
-Coupon Service
-
-Inventory Service
-
-Warehouse Service
-
-Cart Service
-
-Wishlist Service
-
-Checkout Service
-
-Order Service
-
-Fulfillment Service
-
-Shipping Service
-
-Payment Service
-
-Refund Service
-
-Return Service
-
-Review Service
-
-Notification Service
-
-Messaging Service
-
-Search Service
-
-Recommendation Service
-
-Analytics Service
-
-Reporting Service
-
-CMS Service
-
-Moderation Service
-
-Administration Service
-
-Audit Service
-
-Feature Flag Service
-
-Configuration Service
-
-Do not make every item an independent microservice.
-
-Combine cohesive responsibilities where strong consistency, simplicity, or operational efficiency make that preferable.
-
-For every final service define:
-
-• Responsibility
-• Owned data
-• APIs
-• Events produced
-• Events consumed
-• Synchronous dependencies
-• Asynchronous dependencies
-• Scaling requirements
-• Availability requirements
-• Security boundary
-
-────────────────────────────────────────
-
-SERVICE OWNERSHIP MATRIX
-
-Create a complete ownership matrix.
-
-For each major domain identify:
-
-• Authoritative service
-• Database ownership
-• API ownership
-• Event ownership
-• Cache ownership
-• Search/read-model ownership
-• Administrative ownership
-
-Explicitly define which services must never directly modify another service's authoritative data.
-
-────────────────────────────────────────
-
-COMMUNICATION MATRIX
-
-Define communication between major domains and services.
-
-For every important interaction specify:
-
-• Producer
-• Consumer
-• Protocol
-• Direction
-• Synchronous/asynchronous
-• Purpose
-• Consistency requirement
-• Timeout
-• Retry
-• Idempotency
-• Failure behavior
-
-Evaluate:
-
-• REST
-• Webhooks
-• Server-Sent Events
-• WebSockets
-• Kafka/Redpanda
-• BullMQ
-• Redis
-
-Avoid unnecessary synchronous dependencies.
-
-────────────────────────────────────────
-
-MONOREPO ARCHITECTURE
-
-Design a production-ready monorepo.
-
-APPLICATIONS
-
-• Customer Web
-• Seller Dashboard
-• Admin Dashboard
-• Customer Mobile
-
-BACKEND
-
-• API Gateway
-• Domain services
-• Background workers
-• Scheduled workers
-• Event consumers
-
-SHARED PACKAGES
-
-• API contracts
-• Event contracts
-• Shared types
-• Validation
-• Configuration
-• Authentication interfaces
-• Authorization utilities
-• Observability
-• Database abstractions where appropriate
-• Testing utilities
-• Design tokens where appropriate
-
-INFRASTRUCTURE
-
-• Docker
-• Kubernetes
-• Helm
-• Terraform
-• CI/CD
-
-DOCUMENTATION
-
-• Architecture
-• APIs
-• Events
-• Database
-• Security
-• Operations
-• ADRs
-• Runbooks
-
-Do not create uncontrolled shared packages.
-
-Do not share domain implementation logic merely to eliminate duplication.
-
-────────────────────────────────────────
-
-FOLDER HIERARCHY
-
-Generate a detailed production-ready folder hierarchy.
-
-Include:
-
-• Monorepo root
-• Web application
-• Seller application
-• Admin application
-• Mobile application
-• Backend services
-• Workers
-• Shared packages
-• Database
-• Infrastructure
-• Tests
-• Documentation
-• Configuration
-• Migrations
-
-Include major files and directories.
-
-The hierarchy must remain compatible with all future implementation prompts.
-
-Do not generate source code.
-
-────────────────────────────────────────
-
-CORE DOMAIN MODEL
-
-Evaluate and define:
-
-User
-
-Account
-
-Profile
-
-Address
-
-Seller
-
-SellerStaff
-
-Store
-
-Category
-
-Brand
-
-Product
-
-ProductVariant
-
-ProductAttribute
-
-ProductMedia
-
-Price
-
-Promotion
-
-Coupon
-
-Wishlist
-
-WishlistItem
-
-Cart
-
-CartItem
-
-Checkout
-
-CheckoutItem
-
-Tax
-
-Warehouse
-
-InventoryItem
-
-InventoryReservation
-
-InventoryMovement
-
-InventoryTransfer
-
-Order
-
-OrderItem
-
-Fulfillment
-
-Shipment
-
-ShipmentItem
-
-Payment
-
-PaymentAttempt
-
-Refund
-
-Return
-
-ReturnItem
-
-Exchange
-
-SellerBalance
-
-SellerPayout
-
-MarketplaceCommission
-
-Review
-
-Rating
-
-Notification
-
-Conversation
-
-Message
-
-Recommendation
-
-SearchDocument
-
-Report
-
-ModerationCase
-
-AuditLog
-
-FeatureFlag
-
-Do not force every conceptual entity into a separate database table.
-
-Use proper aggregate boundaries.
-
-For each aggregate define:
-
-• Aggregate root
-• Owned entities
-• Invariants
-• Transaction boundary
-• Lifecycle
-• Authoritative service
-
-────────────────────────────────────────
-
-DATABASE ARCHITECTURE
-
-Design PostgreSQL for:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High checkout volume
-• High inventory write volume
-• Large payment history
-• Large audit datasets
-
-Define:
-
-• Database ownership
-• Schema boundaries
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Check constraints
-• Indexes
-• Partitioning
-• Archival
-• Retention
-• Read replicas
-• Connection pooling
-• Backup
-• Recovery
-
-Identify high-growth tables.
-
-Evaluate partitioning candidates for:
-
-• Orders
-• Order items
-• Inventory movements
-• Inventory reservations
-• Payments
-• Audit logs
-• Analytics events
-
-Do not use PostgreSQL for large binary product media.
-
-Do not overload transactional tables with analytical workloads.
-
-────────────────────────────────────────
-
-DATABASE OWNERSHIP
-
-Define:
-
-• Which service owns each schema
-• Which services may directly read
-• Which services must use APIs
-• Which services consume events
-• Which services require read models
-• How cross-domain queries are implemented
-• How migrations are owned
-
-Avoid unrestricted cross-service database access.
-
-────────────────────────────────────────
-
-ERD
-
-Generate a complete text-based ERD.
-
-Include:
-
-• Primary keys
-• Foreign keys
-• Cardinality
-• Ownership
-• Important indexes
-• High-growth tables
-• Partitioning candidates
-
-Clearly show relationships among:
-
-• Customers
-• Sellers
-• Stores
-• Products
-• Variants
-• Categories
-• Inventory
-• Warehouses
-• Carts
-• Checkout
-• Orders
-• Payments
-• Shipments
-• Returns
-• Refunds
-• Reviews
-• Promotions
-• Coupons
-• Seller payouts
-• Commissions
-• Notifications
-
-────────────────────────────────────────
-
-PRISMA STRATEGY
-
-Define:
-
-• Schema organization
-• Service ownership
-• Prisma client strategy
-• Migration ownership
-• Transaction boundaries
-• Read replica considerations
-• Connection pooling
-• Query optimization
-• Indexing rules
-• Migration deployment strategy
-
-Avoid a single uncontrolled shared Prisma schema.
-
-────────────────────────────────────────
-
-REDIS ARCHITECTURE
-
-Design Redis usage for:
-
-• Sessions
-• Rate limiting
-• Product cache
-• Category cache
-• Search cache
-• Recommendation cache
-• Cart acceleration where appropriate
-• Checkout temporary state
-• Distributed locks
-• Idempotency
-• Queue infrastructure
-
-For each use case define:
-
-• Key pattern
-• TTL
-• Invalidation
-• Consistency requirement
-• Failure behavior
-
-Redis must never become the source of truth for:
-
-• Orders
-• Payments
-• Inventory
-• Seller balances
-• Refunds
-
-────────────────────────────────────────
-
-INVENTORY ARCHITECTURE
-
-Inventory is a critical consistency domain.
-
-Design:
-
-• Warehouses
-• Inventory items
-• Available quantity
-• Reserved quantity
-• Safety stock
-• Inventory movements
-• Reservations
-• Reservation expiration
-• Transfers
-• Adjustments
-• Low-stock alerts
-
-Define concurrency strategy.
-
-Support:
-
-• Transactions
-• Optimistic concurrency
-• Row-level locks where justified
-• Idempotency
-• Reservation tokens
-• Reservation expiration
-
-Prevent:
-
-• Overselling
-• Double reservations
-• Negative stock where prohibited
-• Duplicate releases
-• Race-condition corruption
-
-────────────────────────────────────────
-
-CATALOG ARCHITECTURE
-
-Support:
-
-• Categories
-• Brands
-• Products
-• Variants
-• Attributes
-• Product media
-• Product status
-• Seller ownership
-• Catalog moderation
-• Localization
-
-Define:
-
-• Product lifecycle
-• Draft
-• Submitted
-• Approved
-• Published
-• Suspended
-• Archived
-
-Separate product metadata from inventory and transactional price state.
-
-────────────────────────────────────────
-
-PRICING ARCHITECTURE
-
-Design:
-
-• Base price
-• Sale price
-• Regional price
-• Currency
-• Tax treatment
-• Seller pricing
-• Promotions
-• Coupons
-
-Define:
-
-• Price precedence
-• Effective dates
-• Currency conversion boundaries
-• Rounding
-• Precision
-• Audit history
-
-Do not use floating-point arithmetic for monetary values where exact decimal representation is required.
-
-────────────────────────────────────────
-
-PROMOTIONS AND COUPONS
-
-Support:
-
-• Coupons
-• Percentage discounts
-• Fixed discounts
-• Product-level promotions
-• Category promotions
-• Seller promotions
-• Minimum order requirements
-• Usage limits
-• Customer limits
-• Expiration
-• Eligibility rules
-
-Define:
-
-• Validation
-• Atomic redemption
-• Idempotency
-• Abuse prevention
-• Concurrent redemption behavior
-
-────────────────────────────────────────
-
-SHOPPING CART
-
-Design:
-
-• Cart ownership
-• Cart items
-• Variant selection
-• Quantity
-• Saved state
-• Expiration where applicable
-• Multi-device synchronization
-
-Define cart consistency expectations.
-
-The cart must not be treated as the authoritative inventory source.
-
-────────────────────────────────────────
-
-CHECKOUT ARCHITECTURE
-
-Design checkout as a reliable workflow.
-
-Support:
-
-• Cart validation
-• Product availability
-• Price validation
-• Promotion validation
-• Coupon validation
-• Tax calculation
-• Shipping calculation
-• Inventory reservation
-• Payment authorization
-• Order creation
-• Reservation confirmation
-• Failure recovery
-
-Clearly define what happens when:
-
-• Inventory becomes unavailable
-• Price changes during checkout
-• Coupon expires
-• Payment fails
-• Payment succeeds but order creation fails
-• Order creation succeeds but notification fails
-
-────────────────────────────────────────
-
-ORDER ARCHITECTURE
-
-Support:
-
-• Order creation
-• Order items
-• Seller split orders
-• Order status
-• Fulfillment
-• Shipment
-• Delivery
-• Cancellation
-• Partial cancellation
-• Returns
-• Exchanges
-• Refunds
-• Order timeline
-
-Define:
-
-• State machine
-• Allowed transitions
-• Ownership
-• Auditability
-• Idempotency
-
-Order state must not be inferred only from payment state.
-
-────────────────────────────────────────
-
-FULFILLMENT AND SHIPPING
-
-Design:
-
-• Fulfillment orders
-• Seller fulfillment
-• Warehouse fulfillment
-• Shipments
-• Shipment items
-• Shipping methods
-• Tracking
-• Delivery status
-• Shipping providers
-
-Define integration boundaries for external carriers.
-
-Support provider failures without corrupting order state.
-
-────────────────────────────────────────
-
-PAYMENT ARCHITECTURE
-
-Design Stripe integration.
-
-Support:
-
-• Payment Intents
-• Checkout
-• Webhook ingestion
-• Webhook verification
-• Idempotency
-• Payment attempts
-• Refunds
-• Partial refunds
-• Chargebacks where applicable
-• Reconciliation
-• Payment recovery
-
-Separate:
-
-• Payment state
-• Order state
-• Seller settlement state
-
-Never store raw card information unless absolutely required and permitted.
-
-────────────────────────────────────────
-
-MARKETPLACE PAYOUTS
-
-Design seller financial flows.
-
-Support:
-
-• Seller balances
-• Commissions
-• Marketplace fees
-• Payout eligibility
-• Payout creation
-• Payout completion
-• Payout failure
-• Refund adjustments
-• Settlement reconciliation
-
-Define consistency and audit requirements.
-
-────────────────────────────────────────
-
-SEARCH ARCHITECTURE
-
-Design Elasticsearch/OpenSearch architecture for:
-
-• Products
-• Categories
-• Brands
-• Sellers
-• Stores
-
-Support:
-
-• Full-text search
-• Autocomplete
-• Typo tolerance
-• Faceted search
-• Filters
-• Sorting
-• Price range
-• Rating
-• Availability
-• Category
-• Brand
-• Seller
-• Regional availability
-• Ranking
-• Synonyms
-
-Define:
-
-• Index ownership
-• Mapping strategy
-• Indexing pipeline
-• Event-driven updates
-• Reindexing
-• Aliases
-• Versioning
-• Failure recovery
-
-Search must remain derived from authoritative transactional data.
-
-────────────────────────────────────────
-
-RECOMMENDATION ARCHITECTURE
-
-Design an extensible recommendation system supporting:
-
-• Frequently viewed
-• Similar products
-• Related products
-• Recently viewed
-• Personalized recommendations
-• Trending products
-• Seller recommendations
-• Cross-sells
-• Upsells
-
-Define:
-
-• Candidate generation
-• Ranking
-• Signals
-• Event ingestion
-• Batch processing
-• Real-time signals
-• Caching
-• Experimentation
-
-Do not require advanced machine learning for the first implementation if deterministic systems can establish the correct architecture.
-
-────────────────────────────────────────
-
-MEDIA ARCHITECTURE
-
-Design S3 architecture for:
-
-• Product images
-• Product videos
-• Seller logos
-• Store assets
-• Brand assets
-• Documents
-
-Define:
-
-• Upload authorization
-• Direct upload
-• Object naming
-• Metadata
-• Validation
-• Processing
-• Multiple resolutions
-• Thumbnail generation
-• CDN delivery
-• Signed URLs
-• Cleanup
-• Lifecycle policies
-
-────────────────────────────────────────
-
-NOTIFICATION ARCHITECTURE
-
-Support:
-
-• Email
-• Push
-• In-app
-• SMS-ready abstraction where appropriate
-
-Notification events may include:
-
-• Order created
-• Payment succeeded
-• Payment failed
-• Shipment created
-• Shipment delivered
-• Return updated
-• Refund issued
-• Seller order received
-• Low inventory
-• Security event
-• Promotion
-
-Define:
-
-• Preferences
-• Deduplication
-• Scheduling
-• Retry
-• Rate limits
-• Provider failure
-• Multi-channel routing
-
-────────────────────────────────────────
-
-MESSAGING ARCHITECTURE
-
-Design customer-to-seller communication.
-
-Support:
-
-• Conversations
-• Messages
-• Attachments
-• Unread counts
-• Read state
-• Seller staff participation
-• Customer participation
-• Conversation history
-
-Define authorization boundaries.
-
-Business conversations must not automatically grant access to unrelated customer data.
-
-────────────────────────────────────────
-
-REVIEWS AND RATINGS
-
-Support:
-
-• Ratings
-• Verified purchases
-• Reviews
-• Review media
-• Seller responses
-• Review reports
-• Moderation
-• Review aggregation
-
-Define:
-
-• Eligibility
-• Duplicate review prevention
-• Moderation
-• Rating calculation
-• Fraud prevention
-
-────────────────────────────────────────
-
-SECURITY
-
-Design:
-
-Authentication:
-
-• Credentials
-• OAuth where approved
-• MFA-ready architecture
-• Sessions
-• Refresh tokens
-
-Authorization:
-
-• RBAC
-• Seller isolation
-• Resource ownership
-• Administrative permissions
-
-Application:
-
-• Validation
-• Rate limiting
-• Secure headers
-• CORS
-• CSRF where applicable
-• XSS protection
-• SQL injection prevention
-
-Payment:
-
-• Webhook verification
-• Idempotency
-• Secret isolation
-
-Infrastructure:
-
-• IAM
-• Least privilege
-• Secrets management
-• Encryption
-• Audit logging
-
-────────────────────────────────────────
-
-FRAUD AND ABUSE
-
-Design defenses against:
-
-• Fake seller accounts
-• Coupon abuse
-• Promotion abuse
-• Payment fraud
-• Refund abuse
-• Return abuse
-• Review manipulation
-• Bot purchasing
-• Inventory abuse
-• Account takeover
-
-Define:
-
-• Risk signals
-• Rate limits
-• Reputation
-• Device signals
-• Transaction signals
-• Automated controls
-• Manual review
-• Audit
-
-────────────────────────────────────────
-
-EVENT ARCHITECTURE
-
-Define a complete initial event catalog.
-
-Identity:
-
-• UserRegistered
-• UserVerified
-• SessionCreated
-• SessionRevoked
-
-Seller:
-
-• SellerRegistered
-• SellerVerified
-• SellerApproved
-• SellerSuspended
-
-Catalog:
-
-• ProductCreated
-• ProductUpdated
-• ProductPublished
-• ProductSuspended
-• ProductArchived
-• PriceChanged
-
-Inventory:
-
-• InventoryChanged
-• InventoryReserved
-• InventoryReleased
-• InventoryAdjusted
-• InventoryTransferCreated
-
-Cart/Checkout:
-
-• CartCreated
-• CheckoutStarted
-• CheckoutCompleted
-• CheckoutFailed
-
-Orders:
-
-• OrderCreated
-• OrderConfirmed
-• OrderCanceled
-• FulfillmentCreated
-• ShipmentCreated
-• ShipmentDelivered
-
-Payments:
-
-• PaymentAttempted
-• PaymentSucceeded
-• PaymentFailed
-• RefundIssued
-
-Returns:
-
-• ReturnRequested
-• ReturnApproved
-• ReturnReceived
-• ExchangeCreated
-
-Reviews:
-
-• ReviewCreated
-• ReviewApproved
-• ReviewRejected
-
-Notifications:
-
-• NotificationCreated
-• NotificationDelivered
-• NotificationFailed
-
-Seller Finance:
-
-• CommissionCalculated
-• SellerPayoutCreated
-• SellerPayoutCompleted
-• SellerPayoutFailed
-
-Do not duplicate entire database records inside events.
-
-────────────────────────────────────────
-
-QUEUE ARCHITECTURE
-
-Define BullMQ queues for:
-
-• Email
-• Push notification
-• Search indexing
-• Media processing
-• Image processing
-• Recommendation refresh
-• Inventory synchronization
-• Reservation expiration
-• Coupon expiration
-• Promotion activation
-• Promotion expiration
-• Payment reconciliation
-• Seller payout processing
-• Report generation
-• Analytics aggregation
-• Cache invalidation
-• Cleanup
-
-For each queue define:
-
-• Producer
-• Consumer
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter behavior
-• Monitoring
-
-────────────────────────────────────────
-
-API ARCHITECTURE
-
-Define public and internal APIs.
-
-CUSTOMER
-
-• Authentication
-• Profile
-• Addresses
-• Categories
-• Products
-• Search
-• Wishlist
-• Cart
-• Checkout
-• Payments
-• Orders
-• Returns
-• Reviews
-• Notifications
-• Messaging
-
-SELLER
-
-• Onboarding
-• Store
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Promotions
-• Coupons
-• Reviews
-• Analytics
-• Financials
-• Payouts
-
-ADMIN
-
-• Users
-• Sellers
-• Catalog
-• Products
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Moderation
-• CMS
-• Feature flags
-• Audit
-
-Define:
-
-• API versioning
-• Naming conventions
-• Authentication
-• Authorization
-• Pagination
-• Cursor pagination
-• Filtering
-• Sorting
-• Validation
-• Error format
-• Idempotency
-• Rate limiting
-• OpenAPI organization
-
-────────────────────────────────────────
-
-DATA CONSISTENCY
-
-Explicitly define consistency requirements for:
-
-• Accounts
-• Seller approval
-• Product publication
-• Pricing
-• Inventory
-• Cart
-• Checkout
-• Orders
-• Payments
-• Refunds
-• Returns
-• Seller payouts
-• Search indexing
-• Recommendations
-• Notifications
-• Reviews
-• Analytics
-
-Identify where to use:
-
-• Strong consistency
-• Eventual consistency
-• Optimistic concurrency
-• Idempotency
-• Distributed locks
-• Transactional outbox
-• Saga patterns where justified
-
-Avoid distributed transactions where possible.
-
-────────────────────────────────────────
-
-SCALABILITY
-
-Design for:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High search traffic
-• High checkout traffic
-• Large inventory workloads
-
-Analyze scaling for:
-
-• API Gateway
-• Catalog
-• Search
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• Media processing
-• Payments
-• Inventory
-• Orders
-• Notifications
-• CDN
-
-Identify:
-
-• Likely bottlenecks
-• Scaling triggers
-• Horizontal scaling strategies
-• Partitioning
-• Caching
-• Backpressure
-
-────────────────────────────────────────
-
-MULTI-REGION ARCHITECTURE
-
-Design the foundational multi-region architecture.
-
-Define:
-
-• Regional application clusters
-• Global routing
-• Regional data ownership
-• Database replication/failover
-• Event replication
-• Object-storage replication
-• Search recovery
-• Regional failover
-
-Classify data as:
-
-• Region-local
-• Globally replicated
-• Eventually consistent
-• Strongly consistent
-
-Avoid unnecessary cross-region synchronous operations.
-
-────────────────────────────────────────
-
-FAILURE SCENARIOS
-
-Define graceful behavior for:
-
-• PostgreSQL unavailable
-• Redis unavailable
-• Kafka unavailable
-• Search unavailable
-• Stripe unavailable
-• S3 unavailable
-• Shipping provider unavailable
-• Notification provider unavailable
-• Worker failure
-• Region failure
-
-For each define:
-
-• Detection
-• Retry
-• Timeout
-• Fallback
-• Degraded operation
-• Recovery
-• Reconciliation
-
-────────────────────────────────────────
-
-OBSERVABILITY
-
-Design:
-
-• Structured logging
-• Metrics
-• Distributed tracing
-• Correlation IDs
-• Health checks
-• Readiness checks
-• Liveness checks
-• Alerting
-
-Define dashboards for:
-
-• API
-• Search
-• Checkout
-• Inventory
-• Orders
-• Payments
-• Seller payouts
-• Notifications
-• Queues
-• Database
-• Redis
-• Kafka
-• External providers
-
-Never log payment secrets or customer passwords.
-
-────────────────────────────────────────
-
-DISASTER RECOVERY
-
-Define:
-
-• RTO
-• RPO
-• PostgreSQL backup
-• Point-in-time recovery
-• Object storage recovery
-• Redis recovery
-• Kafka recovery
-• Search recovery
-• Infrastructure recovery
-• Regional failover
-
-Create recovery strategies for:
-
-• Database failure
-• Region failure
-• Payment-provider outage
-• Search outage
-• Inventory-system outage
-
-────────────────────────────────────────
-
-TESTING ARCHITECTURE
-
-Define:
-
-UNIT TESTING
-
-• Domain logic
-• Pricing
-• Promotions
-• Coupons
-• Inventory
-• Orders
-• Payments
-• Returns
-• Permissions
-
-INTEGRATION TESTING
-
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• Elasticsearch
-• Stripe
-• S3
-• Shipping providers
-
-CONTRACT TESTING
-
-• REST APIs
-• Webhooks
-• Event schemas
-
-END-TO-END TESTING
-
-• Registration
-• Product discovery
-• Search
-• Cart
-• Checkout
-• Payment
-• Order
-• Fulfillment
-• Shipping
-• Return
-• Refund
-• Review
-• Seller onboarding
-• Seller product creation
-
-PERFORMANCE TESTING
-
-• Search
-• Catalog
-• Cart
-• Checkout
-• Inventory
-• Orders
-• Payment webhooks
-
-SECURITY TESTING
-
-• Authentication
-• Authorization
-• Seller isolation
-• Payment security
-• Webhook verification
-• Coupon abuse
-• Inventory abuse
-• API abuse
-
-────────────────────────────────────────
-
-ARCHITECTURAL DECISION RECORDS
-
-Create ADRs for:
-
-• Architecture style
-• Service decomposition
-• PostgreSQL ownership
-• Prisma
-• Redis
-• Elasticsearch/OpenSearch
-• Kafka/Redpanda
-• BullMQ
-• Stripe marketplace payments
-• Inventory reservation model
-• Checkout architecture
-• Search architecture
-• S3 and CDN
-• Seller payout architecture
-• Multi-region architecture
-• Kubernetes
-• Terraform
-• Observability
-• Secrets management
-
-Each ADR must contain:
-
-• Context
-• Decision
-• Alternatives considered
-• Consequences
-
-────────────────────────────────────────
-
-PROJECT INDEX
-
-Create the initial Project Index containing:
-
-• Project overview
-• Technology stack
-• Domain list
-• Service list
-• Service ownership
-• Database ownership
-• Core entities
-• ERD
-• APIs
-• Events
-• Queues
-• Redis responsibilities
-• Search architecture
-• Payment architecture
-• Inventory architecture
-• Order architecture
-• Seller architecture
-• Security boundaries
-• Infrastructure principles
-• Observability
-• Testing strategy
-• ADRs
-• Implementation dependencies
-• Remaining architecture work
-
-────────────────────────────────────────
-
-ARCHITECTURE VOLUME 1 OUTPUT
-
-Produce:
-
-1. Executive Architecture Overview
-2. System Context
-3. C4 Architecture
-4. Architectural Approach
-5. Application Architecture
-6. Role and Permission Model
-7. Domain Decomposition
-8. Service Decomposition
-9. Service Ownership Matrix
-10. Communication Matrix
-11. Monorepo Architecture
-12. Detailed Folder Hierarchy
-13. Core Domain Model
-14. Aggregate Boundaries
-15. Core Business Flows
-16. PostgreSQL Architecture
-17. Database Ownership
-18. Complete Text-Based ERD
-19. Prisma Strategy
-20. Redis Architecture
-21. Catalog Architecture
-22. Pricing Architecture
-23. Promotions and Coupons
-24. Inventory Architecture
-25. Cart Architecture
-26. Checkout Architecture
-27. Order Architecture
-28. Fulfillment and Shipping
-29. Payment Architecture
-30. Marketplace Payout Architecture
-31. Search Architecture
-32. Recommendation Architecture
-33. Media Architecture
-34. Notification Architecture
-35. Messaging Architecture
-36. Reviews and Ratings
-37. Security Architecture
-38. Fraud and Abuse Prevention
-39. Event Architecture
-40. Queue Architecture
-41. API Architecture
-42. Data Consistency Strategy
-43. Scalability Strategy
-44. Multi-Region Foundation
-45. Failure Scenario Analysis
-46. Observability Architecture
-47. Disaster Recovery Strategy
-48. Testing Architecture
-49. Architectural Decision Records
-50. Complete Project Index
-
-────────────────────────────────────────
-
-QUALITY REQUIREMENTS
-
-Every architectural decision must evaluate:
-
-• Scalability
-• Availability
-• Security
-• Privacy
-• Latency
-• Data consistency
-• Operational complexity
-• Cost
-• Developer productivity
-• Maintainability
-• Future extensibility
-
-Prefer:
-
-• Explicit ownership
-• Clear bounded contexts
-• Stateless application services where possible
-• Event-driven communication where appropriate
-• Idempotent consumers
-• Transactional outbox
-• Horizontal scaling
-• Strong inventory consistency
-• Strong payment idempotency
-• Secure payment-provider integration
-• Observable systems
-• Graceful degradation
-
-Avoid:
-
-• Unnecessary microservices
-• Shared database ownership
-• Distributed transactions where avoidable
-• Tight coupling
-• Single points of failure
-• Redis as a system of record
-• Search as a transactional source of truth
-• Application servers proxying large media
-• Floating-point money calculations
-• Frontend-only security
-• Unnecessary cross-region synchronous dependencies
-• Premature complexity
-
-────────────────────────────────────────
-
-OUTPUT RULES
-
-This is an architecture document only.
-
-Do not generate source code.
+Do not generate production source code.
 
 Do not generate placeholder implementations.
 
-Do not generate Dockerfiles.
+Do not create fake implementations merely to demonstrate an architecture.
+
+Produce a complete engineering blueprint consisting of:
+
+* architecture
+* specifications
+* domain boundaries
+* data models
+* API contracts
+* event contracts
+* security decisions
+* consistency rules
+* reliability decisions
+* infrastructure requirements
+* testing requirements
+* operational requirements
+* engineering constraints
+
+The resulting architecture must be sufficiently detailed that future implementation phases can implement the system without inventing conflicting contracts.
+
+---
+
+# 1. PROJECT CONTEXT
 
-Do not generate Kubernetes manifests.
+Design an original **Amazon-style ecommerce marketplace**.
 
-Do not generate Terraform files.
+The platform must support a production-grade customer shopping experience and, where applicable, marketplace functionality involving multiple sellers.
 
-Do not generate frontend components.
+The platform may include:
 
-Do not generate mobile components.
+* customer accounts
+* authentication
+* profiles
+* addresses
+* product catalog
+* categories
+* brands
+* attributes
+* products
+* product variants
+* SKUs
+* seller offers
+* pricing
+* inventory
+* shopping carts
+* wishlists
+* checkout
+* orders
+* payments
+* refunds
+* shipping
+* tracking
+* coupons
+* promotions
+* reviews
+* ratings
+* search
+* recommendations
+* notifications
+* seller management
+* seller fulfillment
+* administration
+* moderation
+* analytics
+* customer support
 
-Do not implement backend services.
+The exact scope must be reconciled with the actual repository.
 
-Provide detailed:
+Do not architect functionality that contradicts existing implementation.
 
-• Architecture specifications
-• Domain boundaries
-• Service responsibilities
-• Ownership rules
-• Database architecture
-• ERD
-• API contracts
-• Event contracts
-• Queue definitions
-• Inventory consistency rules
-• Checkout consistency rules
-• Payment contracts
-• Seller settlement rules
-• Search architecture
-• Security boundaries
-• Scalability strategies
-• Failure strategies
-• Disaster recovery
-• Testing strategy
-• ADRs
-• Project Index
+---
 
-The architecture must be sufficiently detailed that independent backend, frontend, mobile, infrastructure, DevOps, and QA teams can implement the complete ecommerce marketplace without making major architectural decisions themselve
+# 2. TECHNOLOGY BASELINE
 
-You are operating in Senior Engineering Team Mode.
+Use this technology baseline unless the actual repository already contains an equivalent compatible implementation that should be preserved.
 
-Design the complete foundational architecture for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+## Web
 
-The platform is an original implementation.
+* Next.js 15+
+* React 19+
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Query
+* Zustand
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+## Mobile
 
-This prompt is completely independent and may be executed in a separate conversation.
+* React Native
+* Expo
+* TypeScript
+* TanStack Query
+* Zustand
+* React Navigation
+
+## Backend
+
+* Node.js
+* NestJS
+* TypeScript
+
+## Database
 
-Do not implement backend code.
+* PostgreSQL
+* Prisma ORM
 
-Do not implement frontend code.
+## Cache and ephemeral state
 
-Do not implement mobile code.
+* Redis
 
-Do not generate infrastructure implementation files.
+## Search
 
-Do not generate Dockerfiles.
+* Elasticsearch or OpenSearch
 
-Do not generate Kubernetes manifests.
+## Object storage
 
-Do not generate Terraform files.
+* AWS S3
 
-Do not generate application source code.
+## CDN
 
-Produce architecture, specifications, contracts, diagrams, schemas, ownership rules, engineering decisions, and implementation guidance only.
+* AWS CloudFront
 
-────────────────────────────────────────
+## Payments
 
-PROJECT
+* Stripe
 
-Build a production-ready enterprise ecommerce marketplace capable of supporting:
+## Background processing
 
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High product-search traffic
-• High checkout traffic
-• Large inventory volumes
-• Large payment volumes
-• Global operations
-• Multiple currencies
-• Multiple languages
-• Regional taxes
-• Regional shipping
-• Multi-region deployment
-• High availability
-• Horizontal scaling
-• Zero-downtime deployments
-• Disaster recovery
+* BullMQ
+* Redis
 
-Comparable architectural scope:
+## API
 
-• Amazon Marketplace
-• Shopify Marketplace
-• Etsy
-• Mercado Libre
+* REST
+* OpenAPI / Swagger
 
-The platform must be:
+## Asynchronous communication
 
-• Cloud-native
-• Horizontally scalable
-• Modular
-• Maintainable
-• Secure
-• Observable
-• Fault tolerant
-• Cost conscious
-• Ready for long-term enterprise growth
+* Webhooks
+* Server-Sent Events where useful
+* Kafka/Redpanda where asynchronous event architecture materially benefits the platform
 
-────────────────────────────────────────
+## Infrastructure
 
-PRIMARY TECHNOLOGY STACK
+* Docker
+* Terraform/OpenTofu where infrastructure-as-code is required
+* AWS
+* Kubernetes where justified by actual project scale and architecture
+* CI/CD
 
-WEB
+Do not blindly introduce every technology.
 
-• Next.js
-• React
-• TypeScript
-• Tailwind CSS
-• shadcn/ui
-• TanStack Query
-• Zustand
+Every component must have an explicit responsibility.
 
-MOBILE
+---
 
-• React Native
-• Expo
-• TypeScript
+# 3. REPOSITORY-FIRST ARCHITECTURE AUDIT
 
-BACKEND
+Before designing the architecture, inspect the repository.
 
-• Node.js
-• NestJS
-• TypeScript
+Determine:
 
-DATABASE
-
-• PostgreSQL
-• Prisma ORM
-
-CACHE
-
-• Redis
-
-SEARCH
-
-• Elasticsearch or OpenSearch
-
-OBJECT STORAGE
-
-• AWS S3-compatible object storage
-
-CDN
-
-• CloudFront or equivalent CDN
-
-PAYMENTS
-
-• Stripe
-• Stripe Connect or approved marketplace-payment architecture
-
-BACKGROUND PROCESSING
-
-• BullMQ
-
-EVENT STREAMING
-
-• Kafka or Redpanda where justified
-
-COMMUNICATION
-
-• REST APIs
-• Webhooks
-• Server-Sent Events where appropriate
-• WebSockets where appropriate
-
-INFRASTRUCTURE
-
-• Docker
-• Kubernetes
-• Helm
-• Terraform
-• GitHub Actions
-
-OBSERVABILITY
-
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
-
-SECRETS
-
-• AWS Secrets Manager
-• HashiCorp Vault or approved cloud-native secret management
-
-────────────────────────────────────────
-
-ARCHITECTURAL APPROACH
-
-Determine whether the platform should initially use:
-
-• Modular Monolith
-• Service-Oriented Architecture
-• Microservices
-
-Do not blindly create a microservice for every domain or database table.
-
-Evaluate:
-
-• Transactional consistency
-• Scalability
-• Latency
-• Deployment independence
-• Failure isolation
-• Operational complexity
-• Cost
-• Team ownership
-• Developer productivity
-• Long-term maintainability
-
-Clearly identify:
-
-• Independently deployable services
-• Shared transactional boundaries
-• Authoritative data ownership
-• Synchronous communication
-• Asynchronous communication
-• Event-driven communication
-• Read models
-• CQRS requirements
-• Strong consistency boundaries
-• Eventual consistency boundaries
-
-Provide a migration strategy for future service extraction where appropriate.
-
-────────────────────────────────────────
-
-APPLICATIONS
-
-Design complete architecture for:
-
-CUSTOMER MARKETPLACE
-
-• Public storefront
-• Authenticated customer experience
-• Product discovery
-• Search
-• Shopping
-• Checkout
-• Orders
-• Account
-
-SELLER PLATFORM
-
-• Seller onboarding
-• Seller dashboard
-• Store management
-• Product management
-• Inventory
-• Orders
-• Fulfillment
-• Analytics
-• Financials
-
-ADMINISTRATION
-
-• Customer administration
-• Seller administration
-• Catalog administration
-• Order administration
-• Payments
-• Refunds
-• Moderation
-• CMS
-• Analytics
-• Feature flags
-• Audit
-
-MOBILE
-
-• Customer mobile application
-• Push notifications
-• Deep linking
-• Offline-aware browsing and cart behavior where appropriate
-
-PUBLIC API
-
-• Customer APIs
-• Seller APIs
-• Administrative APIs where authorized
-
-INTERNAL APIs
-
-• Service-to-service communication
-• Internal operational APIs
-
-────────────────────────────────────────
-
-ROLES
-
-Define a complete RBAC model for:
-
-• Guest
-• Customer
-• Seller
-• Seller Staff
-• Support Agent
-• Moderator
-• Administrator
-• Super Administrator
-• System Services
-
-Create a permissions matrix covering:
-
-• Account management
-• Catalog management
-• Product management
-• Inventory
-• Orders
-• Shipping
-• Payments
-• Refunds
-• Returns
-• Promotions
-• Reviews
-• Messaging
-• Reports
-• Analytics
-• CMS
-• Feature flags
-• System configuration
-• Audit
-
-Define:
-
-• Role ownership
-• Permission assignment
-• Resource-level authorization
-• Seller/store isolation
-• Administrative authorization
-
-Frontend role checks must never be the final authorization boundary.
-
-────────────────────────────────────────
-
-DOMAIN DECOMPOSITION
-
-Define bounded contexts and ownership for:
-
-Identity
-
-Users
-
-Accounts
-
-Authentication
-
-Authorization
-
-Profiles
-
-Addresses
-
-Seller Management
-
-Seller Staff
-
-Stores
-
-Catalog
-
-Categories
-
-Brands
-
-Products
-
-Product Variants
-
-Product Attributes
-
-Product Media
-
-Pricing
-
-Promotions
-
-Coupons
-
-Wishlist
-
-Shopping Cart
-
-Checkout
-
-Taxes
-
-Inventory
-
-Warehouses
-
-Inventory Reservations
-
-Inventory Transfers
-
-Orders
-
-Order Items
-
-Fulfillment
-
-Shipments
-
-Shipping
-
-Payments
-
-Refunds
-
-Returns
-
-Exchanges
-
-Seller Payouts
-
-Marketplace Commissions
-
-Reviews
-
-Ratings
-
-Notifications
-
-Messaging
-
-Search
-
-Recommendations
-
-Analytics
-
-Reporting
-
-CMS
-
-Moderation
-
-Administration
-
-Audit
-
-Feature Flags
-
-System Configuration
-
-For each domain define:
-
-• Responsibility
-• Aggregate roots
-• Entities
-• Value objects
-• Repositories
-• Application services
-• Domain services
-• Domain events
-• Data ownership
-• Consistency requirements
-
-────────────────────────────────────────
-
-CORE BUSINESS FLOWS
-
-Architect the complete lifecycle for:
-
-CUSTOMER
-
-Registration
-→ Verification
-→ Profile
-→ Address
-→ Product Discovery
-→ Product Detail
-→ Cart
-→ Checkout
-→ Payment
-→ Order
-→ Fulfillment
-→ Shipment
-→ Delivery
-→ Review
-→ Return/Refund where applicable
-
-SELLER
-
-Registration
-→ Verification
-→ Store Setup
-→ Product Creation
-→ Product Approval
-→ Inventory
-→ Pricing
-→ Promotion
-→ Order Receipt
-→ Fulfillment
-→ Shipment
-→ Settlement
-→ Payout
-
-ORDER
-
-Cart
-→ Checkout
-→ Inventory Reservation
-→ Payment Authorization
-→ Order Creation
-→ Payment Confirmation
-→ Fulfillment
-→ Shipment
-→ Delivery
-→ Settlement
-
-RETURN
-
-Return Request
-→ Eligibility
-→ Approval
-→ Shipment/Return
-→ Inspection
-→ Refund/Exchange
-→ Seller Settlement Adjustment
-
-Clearly identify transactional boundaries and asynchronous transitions.
-
-────────────────────────────────────────
-
-C4 ARCHITECTURE
-
-Generate:
-
-• System Context Diagram
-• Container Diagram
-• Component Diagram
-• Deployment Diagram
-
-For each major component define:
-
-• Responsibility
-• Inputs
-• Outputs
-• Dependencies
-• Data ownership
-• Scaling model
-• Failure behavior
-• Security boundary
-
-Use clear text-based diagrams.
-
-Do not use images.
-
-────────────────────────────────────────
-
-SERVICE DECOMPOSITION
-
-Evaluate and define appropriate service boundaries for:
-
-API Gateway
-
-Identity Service
-
-Authentication Service
-
-Account Service
-
-Profile Service
-
-Address Service
-
-Seller Service
-
-Store Service
-
-Catalog Service
-
-Category Service
-
-Brand Service
-
-Product Service
-
-Pricing Service
-
-Promotion Service
-
-Coupon Service
-
-Inventory Service
-
-Warehouse Service
-
-Cart Service
-
-Wishlist Service
-
-Checkout Service
-
-Order Service
-
-Fulfillment Service
-
-Shipping Service
-
-Payment Service
-
-Refund Service
-
-Return Service
-
-Review Service
-
-Notification Service
-
-Messaging Service
-
-Search Service
-
-Recommendation Service
-
-Analytics Service
-
-Reporting Service
-
-CMS Service
-
-Moderation Service
-
-Administration Service
-
-Audit Service
-
-Feature Flag Service
-
-Configuration Service
-
-Do not make every item an independent microservice.
-
-Combine cohesive responsibilities where strong consistency, simplicity, or operational efficiency make that preferable.
-
-For every final service define:
-
-• Responsibility
-• Owned data
-• APIs
-• Events produced
-• Events consumed
-• Synchronous dependencies
-• Asynchronous dependencies
-• Scaling requirements
-• Availability requirements
-• Security boundary
-
-────────────────────────────────────────
-
-SERVICE OWNERSHIP MATRIX
-
-Create a complete ownership matrix.
-
-For each major domain identify:
-
-• Authoritative service
-• Database ownership
-• API ownership
-• Event ownership
-• Cache ownership
-• Search/read-model ownership
-• Administrative ownership
-
-Explicitly define which services must never directly modify another service's authoritative data.
-
-────────────────────────────────────────
-
-COMMUNICATION MATRIX
-
-Define communication between major domains and services.
-
-For every important interaction specify:
-
-• Producer
-• Consumer
-• Protocol
-• Direction
-• Synchronous/asynchronous
-• Purpose
-• Consistency requirement
-• Timeout
-• Retry
-• Idempotency
-• Failure behavior
-
-Evaluate:
-
-• REST
-• Webhooks
-• Server-Sent Events
-• WebSockets
-• Kafka/Redpanda
-• BullMQ
-• Redis
-
-Avoid unnecessary synchronous dependencies.
-
-────────────────────────────────────────
-
-MONOREPO ARCHITECTURE
-
-Design a production-ready monorepo.
-
-APPLICATIONS
-
-• Customer Web
-• Seller Dashboard
-• Admin Dashboard
-• Customer Mobile
-
-BACKEND
-
-• API Gateway
-• Domain services
-• Background workers
-• Scheduled workers
-• Event consumers
-
-SHARED PACKAGES
-
-• API contracts
-• Event contracts
-• Shared types
-• Validation
-• Configuration
-• Authentication interfaces
-• Authorization utilities
-• Observability
-• Database abstractions where appropriate
-• Testing utilities
-• Design tokens where appropriate
-
-INFRASTRUCTURE
-
-• Docker
-• Kubernetes
-• Helm
-• Terraform
-• CI/CD
-
-DOCUMENTATION
-
-• Architecture
-• APIs
-• Events
-• Database
-• Security
-• Operations
-• ADRs
-• Runbooks
-
-Do not create uncontrolled shared packages.
-
-Do not share domain implementation logic merely to eliminate duplication.
-
-────────────────────────────────────────
-
-FOLDER HIERARCHY
-
-Generate a detailed production-ready folder hierarchy.
-
-Include:
-
-• Monorepo root
-• Web application
-• Seller application
-• Admin application
-• Mobile application
-• Backend services
-• Workers
-• Shared packages
-• Database
-• Infrastructure
-• Tests
-• Documentation
-• Configuration
-• Migrations
-
-Include major files and directories.
-
-The hierarchy must remain compatible with all future implementation prompts.
-
-Do not generate source code.
-
-────────────────────────────────────────
-
-CORE DOMAIN MODEL
-
-Evaluate and define:
-
-User
-
-Account
-
-Profile
-
-Address
-
-Seller
-
-SellerStaff
-
-Store
-
-Category
-
-Brand
-
-Product
-
-ProductVariant
-
-ProductAttribute
-
-ProductMedia
-
-Price
-
-Promotion
-
-Coupon
-
-Wishlist
-
-WishlistItem
-
-Cart
-
-CartItem
-
-Checkout
-
-CheckoutItem
-
-Tax
-
-Warehouse
-
-InventoryItem
-
-InventoryReservation
-
-InventoryMovement
-
-InventoryTransfer
-
-Order
-
-OrderItem
-
-Fulfillment
-
-Shipment
-
-ShipmentItem
-
-Payment
-
-PaymentAttempt
-
-Refund
-
-Return
-
-ReturnItem
-
-Exchange
-
-SellerBalance
-
-SellerPayout
-
-MarketplaceCommission
-
-Review
-
-Rating
-
-Notification
-
-Conversation
-
-Message
-
-Recommendation
-
-SearchDocument
-
-Report
-
-ModerationCase
-
-AuditLog
-
-FeatureFlag
-
-Do not force every conceptual entity into a separate database table.
-
-Use proper aggregate boundaries.
-
-For each aggregate define:
-
-• Aggregate root
-• Owned entities
-• Invariants
-• Transaction boundary
-• Lifecycle
-• Authoritative service
-
-────────────────────────────────────────
-
-DATABASE ARCHITECTURE
-
-Design PostgreSQL for:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High checkout volume
-• High inventory write volume
-• Large payment history
-• Large audit datasets
-
-Define:
-
-• Database ownership
-• Schema boundaries
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Check constraints
-• Indexes
-• Partitioning
-• Archival
-• Retention
-• Read replicas
-• Connection pooling
-• Backup
-• Recovery
-
-Identify high-growth tables.
-
-Evaluate partitioning candidates for:
-
-• Orders
-• Order items
-• Inventory movements
-• Inventory reservations
-• Payments
-• Audit logs
-• Analytics events
-
-Do not use PostgreSQL for large binary product media.
-
-Do not overload transactional tables with analytical workloads.
-
-────────────────────────────────────────
-
-DATABASE OWNERSHIP
-
-Define:
-
-• Which service owns each schema
-• Which services may directly read
-• Which services must use APIs
-• Which services consume events
-• Which services require read models
-• How cross-domain queries are implemented
-• How migrations are owned
-
-Avoid unrestricted cross-service database access.
-
-────────────────────────────────────────
-
-ERD
-
-Generate a complete text-based ERD.
-
-Include:
-
-• Primary keys
-• Foreign keys
-• Cardinality
-• Ownership
-• Important indexes
-• High-growth tables
-• Partitioning candidates
-
-Clearly show relationships among:
-
-• Customers
-• Sellers
-• Stores
-• Products
-• Variants
-• Categories
-• Inventory
-• Warehouses
-• Carts
-• Checkout
-• Orders
-• Payments
-• Shipments
-• Returns
-• Refunds
-• Reviews
-• Promotions
-• Coupons
-• Seller payouts
-• Commissions
-• Notifications
-
-────────────────────────────────────────
-
-PRISMA STRATEGY
-
-Define:
-
-• Schema organization
-• Service ownership
-• Prisma client strategy
-• Migration ownership
-• Transaction boundaries
-• Read replica considerations
-• Connection pooling
-• Query optimization
-• Indexing rules
-• Migration deployment strategy
-
-Avoid a single uncontrolled shared Prisma schema.
-
-────────────────────────────────────────
-
-REDIS ARCHITECTURE
-
-Design Redis usage for:
-
-• Sessions
-• Rate limiting
-• Product cache
-• Category cache
-• Search cache
-• Recommendation cache
-• Cart acceleration where appropriate
-• Checkout temporary state
-• Distributed locks
-• Idempotency
-• Queue infrastructure
-
-For each use case define:
-
-• Key pattern
-• TTL
-• Invalidation
-• Consistency requirement
-• Failure behavior
-
-Redis must never become the source of truth for:
-
-• Orders
-• Payments
-• Inventory
-• Seller balances
-• Refunds
-
-────────────────────────────────────────
-
-INVENTORY ARCHITECTURE
-
-Inventory is a critical consistency domain.
-
-Design:
-
-• Warehouses
-• Inventory items
-• Available quantity
-• Reserved quantity
-• Safety stock
-• Inventory movements
-• Reservations
-• Reservation expiration
-• Transfers
-• Adjustments
-• Low-stock alerts
-
-Define concurrency strategy.
-
-Support:
-
-• Transactions
-• Optimistic concurrency
-• Row-level locks where justified
-• Idempotency
-• Reservation tokens
-• Reservation expiration
-
-Prevent:
-
-• Overselling
-• Double reservations
-• Negative stock where prohibited
-• Duplicate releases
-• Race-condition corruption
-
-────────────────────────────────────────
-
-CATALOG ARCHITECTURE
-
-Support:
-
-• Categories
-• Brands
-• Products
-• Variants
-• Attributes
-• Product media
-• Product status
-• Seller ownership
-• Catalog moderation
-• Localization
-
-Define:
-
-• Product lifecycle
-• Draft
-• Submitted
-• Approved
-• Published
-• Suspended
-• Archived
-
-Separate product metadata from inventory and transactional price state.
-
-────────────────────────────────────────
-
-PRICING ARCHITECTURE
-
-Design:
-
-• Base price
-• Sale price
-• Regional price
-• Currency
-• Tax treatment
-• Seller pricing
-• Promotions
-• Coupons
-
-Define:
-
-• Price precedence
-• Effective dates
-• Currency conversion boundaries
-• Rounding
-• Precision
-• Audit history
-
-Do not use floating-point arithmetic for monetary values where exact decimal representation is required.
-
-────────────────────────────────────────
-
-PROMOTIONS AND COUPONS
-
-Support:
-
-• Coupons
-• Percentage discounts
-• Fixed discounts
-• Product-level promotions
-• Category promotions
-• Seller promotions
-• Minimum order requirements
-• Usage limits
-• Customer limits
-• Expiration
-• Eligibility rules
-
-Define:
-
-• Validation
-• Atomic redemption
-• Idempotency
-• Abuse prevention
-• Concurrent redemption behavior
-
-────────────────────────────────────────
-
-SHOPPING CART
-
-Design:
-
-• Cart ownership
-• Cart items
-• Variant selection
-• Quantity
-• Saved state
-• Expiration where applicable
-• Multi-device synchronization
-
-Define cart consistency expectations.
-
-The cart must not be treated as the authoritative inventory source.
-
-────────────────────────────────────────
-
-CHECKOUT ARCHITECTURE
-
-Design checkout as a reliable workflow.
-
-Support:
-
-• Cart validation
-• Product availability
-• Price validation
-• Promotion validation
-• Coupon validation
-• Tax calculation
-• Shipping calculation
-• Inventory reservation
-• Payment authorization
-• Order creation
-• Reservation confirmation
-• Failure recovery
-
-Clearly define what happens when:
-
-• Inventory becomes unavailable
-• Price changes during checkout
-• Coupon expires
-• Payment fails
-• Payment succeeds but order creation fails
-• Order creation succeeds but notification fails
-
-────────────────────────────────────────
-
-ORDER ARCHITECTURE
-
-Support:
-
-• Order creation
-• Order items
-• Seller split orders
-• Order status
-• Fulfillment
-• Shipment
-• Delivery
-• Cancellation
-• Partial cancellation
-• Returns
-• Exchanges
-• Refunds
-• Order timeline
-
-Define:
-
-• State machine
-• Allowed transitions
-• Ownership
-• Auditability
-• Idempotency
-
-Order state must not be inferred only from payment state.
-
-────────────────────────────────────────
-
-FULFILLMENT AND SHIPPING
-
-Design:
-
-• Fulfillment orders
-• Seller fulfillment
-• Warehouse fulfillment
-• Shipments
-• Shipment items
-• Shipping methods
-• Tracking
-• Delivery status
-• Shipping providers
-
-Define integration boundaries for external carriers.
-
-Support provider failures without corrupting order state.
-
-────────────────────────────────────────
-
-PAYMENT ARCHITECTURE
-
-Design Stripe integration.
-
-Support:
-
-• Payment Intents
-• Checkout
-• Webhook ingestion
-• Webhook verification
-• Idempotency
-• Payment attempts
-• Refunds
-• Partial refunds
-• Chargebacks where applicable
-• Reconciliation
-• Payment recovery
-
-Separate:
-
-• Payment state
-• Order state
-• Seller settlement state
-
-Never store raw card information unless absolutely required and permitted.
-
-────────────────────────────────────────
-
-MARKETPLACE PAYOUTS
-
-Design seller financial flows.
-
-Support:
-
-• Seller balances
-• Commissions
-• Marketplace fees
-• Payout eligibility
-• Payout creation
-• Payout completion
-• Payout failure
-• Refund adjustments
-• Settlement reconciliation
-
-Define consistency and audit requirements.
-
-────────────────────────────────────────
-
-SEARCH ARCHITECTURE
-
-Design Elasticsearch/OpenSearch architecture for:
-
-• Products
-• Categories
-• Brands
-• Sellers
-• Stores
-
-Support:
-
-• Full-text search
-• Autocomplete
-• Typo tolerance
-• Faceted search
-• Filters
-• Sorting
-• Price range
-• Rating
-• Availability
-• Category
-• Brand
-• Seller
-• Regional availability
-• Ranking
-• Synonyms
-
-Define:
-
-• Index ownership
-• Mapping strategy
-• Indexing pipeline
-• Event-driven updates
-• Reindexing
-• Aliases
-• Versioning
-• Failure recovery
-
-Search must remain derived from authoritative transactional data.
-
-────────────────────────────────────────
-
-RECOMMENDATION ARCHITECTURE
-
-Design an extensible recommendation system supporting:
-
-• Frequently viewed
-• Similar products
-• Related products
-• Recently viewed
-• Personalized recommendations
-• Trending products
-• Seller recommendations
-• Cross-sells
-• Upsells
-
-Define:
-
-• Candidate generation
-• Ranking
-• Signals
-• Event ingestion
-• Batch processing
-• Real-time signals
-• Caching
-• Experimentation
-
-Do not require advanced machine learning for the first implementation if deterministic systems can establish the correct architecture.
-
-────────────────────────────────────────
-
-MEDIA ARCHITECTURE
-
-Design S3 architecture for:
-
-• Product images
-• Product videos
-• Seller logos
-• Store assets
-• Brand assets
-• Documents
-
-Define:
-
-• Upload authorization
-• Direct upload
-• Object naming
-• Metadata
-• Validation
-• Processing
-• Multiple resolutions
-• Thumbnail generation
-• CDN delivery
-• Signed URLs
-• Cleanup
-• Lifecycle policies
-
-────────────────────────────────────────
-
-NOTIFICATION ARCHITECTURE
-
-Support:
-
-• Email
-• Push
-• In-app
-• SMS-ready abstraction where appropriate
-
-Notification events may include:
-
-• Order created
-• Payment succeeded
-• Payment failed
-• Shipment created
-• Shipment delivered
-• Return updated
-• Refund issued
-• Seller order received
-• Low inventory
-• Security event
-• Promotion
-
-Define:
-
-• Preferences
-• Deduplication
-• Scheduling
-• Retry
-• Rate limits
-• Provider failure
-• Multi-channel routing
-
-────────────────────────────────────────
-
-MESSAGING ARCHITECTURE
-
-Design customer-to-seller communication.
-
-Support:
-
-• Conversations
-• Messages
-• Attachments
-• Unread counts
-• Read state
-• Seller staff participation
-• Customer participation
-• Conversation history
-
-Define authorization boundaries.
-
-Business conversations must not automatically grant access to unrelated customer data.
-
-────────────────────────────────────────
-
-REVIEWS AND RATINGS
-
-Support:
-
-• Ratings
-• Verified purchases
-• Reviews
-• Review media
-• Seller responses
-• Review reports
-• Moderation
-• Review aggregation
-
-Define:
-
-• Eligibility
-• Duplicate review prevention
-• Moderation
-• Rating calculation
-• Fraud prevention
-
-────────────────────────────────────────
-
-SECURITY
-
-Design:
-
-Authentication:
-
-• Credentials
-• OAuth where approved
-• MFA-ready architecture
-• Sessions
-• Refresh tokens
-
-Authorization:
-
-• RBAC
-• Seller isolation
-• Resource ownership
-• Administrative permissions
-
-Application:
-
-• Validation
-• Rate limiting
-• Secure headers
-• CORS
-• CSRF where applicable
-• XSS protection
-• SQL injection prevention
-
-Payment:
-
-• Webhook verification
-• Idempotency
-• Secret isolation
-
-Infrastructure:
-
-• IAM
-• Least privilege
-• Secrets management
-• Encryption
-• Audit logging
-
-────────────────────────────────────────
-
-FRAUD AND ABUSE
-
-Design defenses against:
-
-• Fake seller accounts
-• Coupon abuse
-• Promotion abuse
-• Payment fraud
-• Refund abuse
-• Return abuse
-• Review manipulation
-• Bot purchasing
-• Inventory abuse
-• Account takeover
-
-Define:
-
-• Risk signals
-• Rate limits
-• Reputation
-• Device signals
-• Transaction signals
-• Automated controls
-• Manual review
-• Audit
-
-────────────────────────────────────────
-
-EVENT ARCHITECTURE
-
-Define a complete initial event catalog.
-
-Identity:
-
-• UserRegistered
-• UserVerified
-• SessionCreated
-• SessionRevoked
-
-Seller:
-
-• SellerRegistered
-• SellerVerified
-• SellerApproved
-• SellerSuspended
-
-Catalog:
-
-• ProductCreated
-• ProductUpdated
-• ProductPublished
-• ProductSuspended
-• ProductArchived
-• PriceChanged
-
-Inventory:
-
-• InventoryChanged
-• InventoryReserved
-• InventoryReleased
-• InventoryAdjusted
-• InventoryTransferCreated
-
-Cart/Checkout:
-
-• CartCreated
-• CheckoutStarted
-• CheckoutCompleted
-• CheckoutFailed
-
-Orders:
-
-• OrderCreated
-• OrderConfirmed
-• OrderCanceled
-• FulfillmentCreated
-• ShipmentCreated
-• ShipmentDelivered
-
-Payments:
-
-• PaymentAttempted
-• PaymentSucceeded
-• PaymentFailed
-• RefundIssued
-
-Returns:
-
-• ReturnRequested
-• ReturnApproved
-• ReturnReceived
-• ExchangeCreated
-
-Reviews:
-
-• ReviewCreated
-• ReviewApproved
-• ReviewRejected
-
-Notifications:
-
-• NotificationCreated
-• NotificationDelivered
-• NotificationFailed
-
-Seller Finance:
-
-• CommissionCalculated
-• SellerPayoutCreated
-• SellerPayoutCompleted
-• SellerPayoutFailed
-
-Do not duplicate entire database records inside events.
-
-────────────────────────────────────────
-
-QUEUE ARCHITECTURE
-
-Define BullMQ queues for:
-
-• Email
-• Push notification
-• Search indexing
-• Media processing
-• Image processing
-• Recommendation refresh
-• Inventory synchronization
-• Reservation expiration
-• Coupon expiration
-• Promotion activation
-• Promotion expiration
-• Payment reconciliation
-• Seller payout processing
-• Report generation
-• Analytics aggregation
-• Cache invalidation
-• Cleanup
-
-For each queue define:
-
-• Producer
-• Consumer
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter behavior
-• Monitoring
-
-────────────────────────────────────────
-
-API ARCHITECTURE
-
-Define public and internal APIs.
-
-CUSTOMER
-
-• Authentication
-• Profile
-• Addresses
-• Categories
-• Products
-• Search
-• Wishlist
-• Cart
-• Checkout
-• Payments
-• Orders
-• Returns
-• Reviews
-• Notifications
-• Messaging
-
-SELLER
-
-• Onboarding
-• Store
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Promotions
-• Coupons
-• Reviews
-• Analytics
-• Financials
-• Payouts
-
-ADMIN
-
-• Users
-• Sellers
-• Catalog
-• Products
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Moderation
-• CMS
-• Feature flags
-• Audit
-
-Define:
-
-• API versioning
-• Naming conventions
-• Authentication
-• Authorization
-• Pagination
-• Cursor pagination
-• Filtering
-• Sorting
-• Validation
-• Error format
-• Idempotency
-• Rate limiting
-• OpenAPI organization
-
-────────────────────────────────────────
-
-DATA CONSISTENCY
-
-Explicitly define consistency requirements for:
-
-• Accounts
-• Seller approval
-• Product publication
-• Pricing
-• Inventory
-• Cart
-• Checkout
-• Orders
-• Payments
-• Refunds
-• Returns
-• Seller payouts
-• Search indexing
-• Recommendations
-• Notifications
-• Reviews
-• Analytics
-
-Identify where to use:
-
-• Strong consistency
-• Eventual consistency
-• Optimistic concurrency
-• Idempotency
-• Distributed locks
-• Transactional outbox
-• Saga patterns where justified
-
-Avoid distributed transactions where possible.
-
-────────────────────────────────────────
-
-SCALABILITY
-
-Design for:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High search traffic
-• High checkout traffic
-• Large inventory workloads
-
-Analyze scaling for:
-
-• API Gateway
-• Catalog
-• Search
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• Media processing
-• Payments
-• Inventory
-• Orders
-• Notifications
-• CDN
+* existing applications
+* frontend structure
+* backend structure
+* mobile structure
+* shared packages
+* database
+* Prisma schema
+* migrations
+* API modules
+* authentication
+* catalog implementation
+* cart implementation
+* checkout implementation
+* payment integration
+* order implementation
+* inventory implementation
+* search implementation
+* media implementation
+* workers
+* queues
+* Redis usage
+* event infrastructure
+* infrastructure
+* CI/CD
+* tests
+* configuration
+* documentation
 
 Identify:
 
-• Likely bottlenecks
-• Scaling triggers
-• Horizontal scaling strategies
-• Partitioning
-• Caching
-• Backpressure
+### Already implemented
 
-────────────────────────────────────────
+### Partially implemented
 
-MULTI-REGION ARCHITECTURE
+### Missing
 
-Design the foundational multi-region architecture.
+### Architecturally inconsistent
+
+### Potentially dangerous
+
+The architecture must describe how to evolve the actual repository rather than designing an unrelated application.
+
+---
+
+# 4. ARCHITECTURAL OBJECTIVES
+
+The architecture must optimize for:
+
+* correctness
+* transactional integrity
+* scalability
+* security
+* reliability
+* observability
+* maintainability
+* testability
+* deployment safety
+* extensibility
+
+The architecture must support growth from an initial production deployment toward significantly higher traffic and data volume without requiring a complete rewrite.
+
+Avoid premature distributed complexity.
+
+Use asynchronous infrastructure only where it provides clear value.
+
+---
+
+# 5. HIGH-LEVEL SYSTEM ARCHITECTURE
+
+Define the complete logical architecture.
+
+Describe:
+
+* web client
+* mobile client
+* API layer
+* authentication
+* domain/application layer
+* persistence
+* cache
+* search
+* object storage
+* CDN
+* payment provider
+* background workers
+* event broker
+* notification providers
+* analytics
+* administration
+* observability
+* infrastructure
+
+Clearly identify:
+
+### Synchronous request paths
+
+### Asynchronous paths
+
+### Transactional boundaries
+
+### Eventually consistent projections
+
+### External system boundaries
+
+### Sources of truth
+
+---
+
+# 6. SOURCE-OF-TRUTH MATRIX
+
+Create a formal source-of-truth matrix.
+
+For every major domain object identify:
+
+* authoritative system
+* read model
+* cache
+* search projection
+* event source
+* external provider
+* synchronization mechanism
+
+At minimum cover:
+
+* users
+* sessions
+* addresses
+* products
+* variants
+* SKUs
+* seller offers
+* prices
+* inventory
+* carts
+* orders
+* payments
+* refunds
+* shipments
+* reviews
+* media
+* search documents
+* notifications
+
+Explicitly state what is authoritative.
+
+---
+
+# 7. DOMAIN-DRIVEN DESIGN
+
+Define bounded contexts and their responsibilities.
+
+At minimum evaluate:
+
+## Identity
+
+Responsible for:
+
+* users
+* authentication
+* sessions
+* account security
+
+## Customer
+
+Responsible for:
+
+* customer profile
+* addresses
+* preferences
+
+## Catalog
+
+Responsible for:
+
+* products
+* categories
+* brands
+* attributes
+* variants
+* SKUs
+* product media
+
+## Seller
+
+Responsible for:
+
+* seller identity
+* seller catalog ownership
+* seller offers
+* seller configuration
+
+## Pricing
+
+Responsible for:
+
+* prices
+* discounts
+* promotions
+* coupons
+
+## Inventory
+
+Responsible for:
+
+* stock
+* reservations
+* movements
+* availability
+
+## Cart
+
+Responsible for:
+
+* carts
+* cart items
+* quantity
+* cart state
+
+## Checkout
+
+Responsible for:
+
+* checkout orchestration
+* validation
+* pricing verification
+* inventory verification
+* shipping selection
+* tax calculation
+* payment initiation
+
+## Orders
+
+Responsible for:
+
+* order creation
+* lifecycle
+* cancellations
+* returns
+* refunds
+
+## Payments
+
+Responsible for:
+
+* payment intents
+* authorization
+* capture
+* failures
+* refunds
+* reconciliation
+* webhooks
+
+## Fulfillment
+
+Responsible for:
+
+* shipments
+* packages
+* carriers
+* tracking
+* delivery state
+
+## Reviews
+
+Responsible for:
+
+* ratings
+* reviews
+* verification
+* moderation
+
+## Search
+
+Responsible for:
+
+* indexing
+* search
+* autocomplete
+* filtering
+* ranking
+
+## Notifications
+
+Responsible for:
+
+* email
+* push
+* in-app notifications
+
+## Administration
+
+Responsible for:
+
+* moderation
+* catalog administration
+* seller administration
+* order administration
+* customer support
+
+Adjust these boundaries based on actual repository structure.
+
+---
+
+# 8. DOMAIN DEPENDENCY RULES
+
+Define which domains may depend on which other domains.
+
+Prevent:
+
+* circular dependencies
+* direct database access across domains
+* business logic leakage
+* shared mutable domain state
+* uncontrolled imports
+
+Specify allowed interfaces between domains.
+
+For example:
+
+Catalog should not directly manipulate payment records.
+
+Inventory should not directly own order lifecycle.
+
+Payment should not trust frontend totals.
+
+Checkout may orchestrate multiple domains but must preserve their ownership boundaries.
+
+---
+
+# 9. CORE ENTITY MODEL
+
+Design the conceptual data model.
+
+At minimum analyze:
+
+### Identity
+
+* User
+* Credential
+* Session
+* Device where applicable
+
+### Customer
+
+* CustomerProfile
+* Address
+
+### Catalog
+
+* Product
+* ProductVariant
+* SKU
+* Category
+* Brand
+* ProductAttribute
+* ProductMedia
+
+### Marketplace
+
+* Seller
+* SellerUser
+* SellerOffer
+
+### Pricing
+
+* Price
+* Promotion
+* Coupon
+* CouponRedemption
+
+### Inventory
+
+* InventoryItem
+* InventoryLocation
+* InventoryReservation
+* InventoryMovement
+
+### Cart
+
+* Cart
+* CartItem
+
+### Checkout
+
+* CheckoutSession
+
+### Orders
+
+* Order
+* OrderItem
+* OrderStatusHistory
+
+### Payments
+
+* Payment
+* PaymentAttempt
+* Refund
+* PaymentWebhookEvent
+
+### Fulfillment
+
+* Shipment
+* ShipmentItem
+* TrackingEvent
+
+### Reviews
+
+* Review
+* ReviewMedia
+* ReviewReport
+
+### Media
+
+* MediaAsset
+* MediaProcessingJob
+
+### Notifications
+
+* Notification
+* NotificationPreference
+* DevicePushToken
+
+### Audit
+
+* AuditEvent
+
+Do not assume every entity must become a table.
+
+Determine lifecycle, ownership, and persistence requirements.
+
+---
+
+# 10. ENTITY OWNERSHIP
+
+For every major entity define:
+
+* owning domain
+* identifier
+* lifecycle
+* mutable fields
+* immutable fields
+* relationships
+* authorization boundary
+* deletion policy
+* retention policy
+
+No domain should modify another domain's entities through undocumented database manipulation.
+
+---
+
+# 11. PRODUCT MODELING
+
+Define a robust catalog model.
+
+Explicitly distinguish:
+
+### Product
+
+The conceptual item.
+
+### Variant
+
+A purchasable variation.
+
+### SKU
+
+The concrete inventory/purchasable identifier.
+
+### Seller Offer
+
+A seller-specific commercial offer for a product/SKU.
+
+### Inventory
+
+Physical or logical stock owned by a seller/location.
+
+### Price
+
+Commercial price with currency and validity semantics.
+
+Explain relationships between these concepts.
+
+Prevent catalog ambiguity.
+
+---
+
+# 12. CATALOG ATTRIBUTES
+
+Define support for:
+
+* product attributes
+* variant attributes
+* category-specific attributes
+* searchable attributes
+* filterable attributes
+* sortable attributes
+
+Avoid creating an uncontrolled generic attribute system that makes validation and indexing impossible.
+
+Where dynamic attributes are required, define explicit validation and schema semantics.
+
+---
+
+# 13. CATEGORY ARCHITECTURE
 
 Define:
 
-• Regional application clusters
-• Global routing
-• Regional data ownership
-• Database replication/failover
-• Event replication
-• Object-storage replication
-• Search recovery
-• Regional failover
+* category hierarchy
+* parent/child relationship
+* category visibility
+* category ordering
+* category-specific attributes
+* product assignment
+* SEO metadata
+* deletion/archival behavior
 
-Classify data as:
+Prevent cyclic category relationships.
 
-• Region-local
-• Globally replicated
-• Eventually consistent
-• Strongly consistent
+---
 
-Avoid unnecessary cross-region synchronous operations.
+# 14. SELLER ARCHITECTURE
 
-────────────────────────────────────────
+If marketplace functionality is supported, define:
 
-FAILURE SCENARIOS
+* seller account
+* seller users
+* seller roles
+* seller offers
+* seller inventory
+* seller orders
+* seller fulfillment
+* seller financial state
+* seller isolation
 
-Define graceful behavior for:
+A seller must never be able to access another seller's private information.
 
-• PostgreSQL unavailable
-• Redis unavailable
-• Kafka unavailable
-• Search unavailable
-• Stripe unavailable
-• S3 unavailable
-• Shipping provider unavailable
-• Notification provider unavailable
-• Worker failure
-• Region failure
+Define platform-vs-seller ownership explicitly.
 
-For each define:
+---
 
-• Detection
-• Retry
-• Timeout
-• Fallback
-• Degraded operation
-• Recovery
-• Reconciliation
-
-────────────────────────────────────────
-
-OBSERVABILITY
-
-Design:
-
-• Structured logging
-• Metrics
-• Distributed tracing
-• Correlation IDs
-• Health checks
-• Readiness checks
-• Liveness checks
-• Alerting
-
-Define dashboards for:
-
-• API
-• Search
-• Checkout
-• Inventory
-• Orders
-• Payments
-• Seller payouts
-• Notifications
-• Queues
-• Database
-• Redis
-• Kafka
-• External providers
-
-Never log payment secrets or customer passwords.
-
-────────────────────────────────────────
-
-DISASTER RECOVERY
+# 15. PRICING ARCHITECTURE
 
 Define:
 
-• RTO
-• RPO
-• PostgreSQL backup
-• Point-in-time recovery
-• Object storage recovery
-• Redis recovery
-• Kafka recovery
-• Search recovery
-• Infrastructure recovery
-• Regional failover
+* base price
+* sale price
+* promotional price
+* seller-specific price
+* currency
+* validity period
+* price history
+* discount
+* coupon
+* promotion
 
-Create recovery strategies for:
+Clarify which price is authoritative during checkout.
 
-• Database failure
-• Region failure
-• Payment-provider outage
-• Search outage
-• Inventory-system outage
+Define how prices are snapshotted into orders.
 
-────────────────────────────────────────
+Never reconstruct historical order totals from mutable current catalog prices.
 
-TESTING ARCHITECTURE
+---
+
+# 16. MONEY MODEL
+
+All financial values must use exact arithmetic.
 
 Define:
 
-UNIT TESTING
+* amount representation
+* currency
+* rounding
+* tax precision
+* discount precision
+* shipping precision
+* refund precision
 
-• Domain logic
-• Pricing
-• Promotions
-• Coupons
-• Inventory
-• Orders
-• Payments
-• Returns
-• Permissions
+Do not use floating-point values for authoritative monetary calculations.
 
-INTEGRATION TESTING
+---
 
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• Elasticsearch
-• Stripe
-• S3
-• Shipping providers
+# 17. INVENTORY ARCHITECTURE
 
-CONTRACT TESTING
+Define:
 
-• REST APIs
-• Webhooks
-• Event schemas
+* available stock
+* reserved stock
+* sold stock
+* damaged/unavailable stock where relevant
+* inventory locations
+* reservations
+* releases
+* adjustments
+* movements
 
-END-TO-END TESTING
+Define how inventory prevents overselling.
 
-• Registration
-• Product discovery
-• Search
-• Cart
-• Checkout
-• Payment
-• Order
-• Fulfillment
-• Shipping
-• Return
-• Refund
-• Review
-• Seller onboarding
-• Seller product creation
+Specify transaction boundaries and concurrency controls.
 
-PERFORMANCE TESTING
+Define reservation expiration behavior.
 
-• Search
-• Catalog
-• Cart
-• Checkout
-• Inventory
-• Orders
-• Payment webhooks
+---
 
-SECURITY TESTING
+# 18. CART ARCHITECTURE
 
-• Authentication
-• Authorization
-• Seller isolation
-• Payment security
-• Webhook verification
-• Coupon abuse
-• Inventory abuse
-• API abuse
+Define:
 
-────────────────────────────────────────
+* cart ownership
+* cart persistence
+* cart item identity
+* quantity
+* price snapshot behavior
+* inventory validation
+* seller boundaries
+* expiration where appropriate
+* merging anonymous/authenticated carts if supported
 
-ARCHITECTURAL DECISION RECORDS
+Specify what happens when:
 
-Create ADRs for:
+* price changes
+* product is deleted
+* inventory becomes unavailable
+* promotion expires
+* seller removes an offer
 
-• Architecture style
-• Service decomposition
-• PostgreSQL ownership
-• Prisma
-• Redis
-• Elasticsearch/OpenSearch
-• Kafka/Redpanda
-• BullMQ
-• Stripe marketplace payments
-• Inventory reservation model
-• Checkout architecture
-• Search architecture
-• S3 and CDN
-• Seller payout architecture
-• Multi-region architecture
-• Kubernetes
-• Terraform
-• Observability
-• Secrets management
+---
 
-Each ADR must contain:
+# 19. CHECKOUT ARCHITECTURE
 
-• Context
-• Decision
-• Alternatives considered
-• Consequences
+Define checkout as an orchestrated business workflow.
 
-────────────────────────────────────────
+The architecture must verify:
 
-PROJECT INDEX
+* customer identity
+* address
+* cart
+* current price
+* promotion
+* inventory
+* seller
+* shipping
+* tax
+* payment
 
-Create the initial Project Index containing:
+The client must never be authoritative for:
 
-• Project overview
-• Technology stack
-• Domain list
-• Service list
-• Service ownership
-• Database ownership
-• Core entities
-• ERD
-• APIs
-• Events
-• Queues
-• Redis responsibilities
-• Search architecture
-• Payment architecture
-• Inventory architecture
-• Order architecture
-• Seller architecture
-• Security boundaries
-• Infrastructure principles
-• Observability
-• Testing strategy
-• ADRs
-• Implementation dependencies
-• Remaining architecture work
+* subtotal
+* discount
+* tax
+* shipping
+* total
+* inventory
+* payment state
 
-────────────────────────────────────────
+Define idempotency behavior.
 
-ARCHITECTURE VOLUME 1 OUTPUT
+---
 
-Produce:
+# 20. ORDER ARCHITECTURE
 
-1. Executive Architecture Overview
-2. System Context
-3. C4 Architecture
-4. Architectural Approach
-5. Application Architecture
-6. Role and Permission Model
-7. Domain Decomposition
-8. Service Decomposition
-9. Service Ownership Matrix
-10. Communication Matrix
-11. Monorepo Architecture
-12. Detailed Folder Hierarchy
-13. Core Domain Model
-14. Aggregate Boundaries
-15. Core Business Flows
-16. PostgreSQL Architecture
-17. Database Ownership
-18. Complete Text-Based ERD
-19. Prisma Strategy
-20. Redis Architecture
-21. Catalog Architecture
-22. Pricing Architecture
-23. Promotions and Coupons
-24. Inventory Architecture
-25. Cart Architecture
-26. Checkout Architecture
-27. Order Architecture
-28. Fulfillment and Shipping
-29. Payment Architecture
-30. Marketplace Payout Architecture
-31. Search Architecture
-32. Recommendation Architecture
-33. Media Architecture
-34. Notification Architecture
-35. Messaging Architecture
-36. Reviews and Ratings
-37. Security Architecture
-38. Fraud and Abuse Prevention
-39. Event Architecture
-40. Queue Architecture
-41. API Architecture
-42. Data Consistency Strategy
-43. Scalability Strategy
-44. Multi-Region Foundation
-45. Failure Scenario Analysis
-46. Observability Architecture
-47. Disaster Recovery Strategy
-48. Testing Architecture
-49. Architectural Decision Records
-50. Complete Project Index
+Define:
 
-────────────────────────────────────────
+* order identity
+* order number if applicable
+* customer
+* seller
+* order items
+* price snapshots
+* address snapshot
+* tax
+* shipping
+* total
+* payment state
+* fulfillment state
+* cancellation
+* return
+* refund
 
-QUALITY REQUIREMENTS
+Define immutable historical information.
 
-Every architectural decision must evaluate:
+Define legal state transitions.
 
-• Scalability
-• Availability
-• Security
-• Privacy
-• Latency
-• Data consistency
-• Operational complexity
-• Cost
-• Developer productivity
-• Maintainability
-• Future extensibility
+---
 
-Prefer:
+# 21. ORDER STATE MACHINE
 
-• Explicit ownership
-• Clear bounded contexts
-• Stateless application services where possible
-• Event-driven communication where appropriate
-• Idempotent consumers
-• Transactional outbox
-• Horizontal scaling
-• Strong inventory consistency
-• Strong payment idempotency
-• Secure payment-provider integration
-• Observable systems
-• Graceful degradation
+Create explicit state machines for:
 
-Avoid:
+### Order
 
-• Unnecessary microservices
-• Shared database ownership
-• Distributed transactions where avoidable
-• Tight coupling
-• Single points of failure
-• Redis as a system of record
-• Search as a transactional source of truth
-• Application servers proxying large media
-• Floating-point money calculations
-• Frontend-only security
-• Unnecessary cross-region synchronous dependencies
-• Premature complexity
+For example:
 
-────────────────────────────────────────
+* pending
+* confirmed
+* processing
+* shipped
+* delivered
+* cancelled
+* returned
+* refunded
 
-OUTPUT RULES
+Do not blindly use these exact states if repository requirements differ.
 
-This is an architecture document only.
+For each state define:
 
-Do not generate source code.
+* valid transitions
+* invalid transitions
+* triggering operation
+* authorization
+* side effects
+* emitted events
 
-Do not generate placeholder implementations.
+---
 
-Do not generate Dockerfiles.
+# 22. PAYMENT ARCHITECTURE
 
-Do not generate Kubernetes manifests.
+Define the relationship between:
 
-Do not generate Terraform files.
+* checkout
+* payment intent
+* payment
+* order
+* webhook
+* refund
 
-Do not generate frontend components.
+Stripe is external to the authoritative order database.
 
-Do not generate mobile components.
+Define:
 
-Do not implement backend services.
+* idempotency
+* webhook verification
+* duplicate webhook handling
+* payment reconciliation
+* provider failure
+* timeout
+* partial failure
+* refund behavior
 
-Provide detailed:
+Payment status must never depend solely on client-side claims.
 
-• Architecture specifications
-• Domain boundaries
-• Service responsibilities
-• Ownership rules
-• Database architecture
-• ERD
-• API contracts
-• Event contracts
-• Queue definitions
-• Inventory consistency rules
-• Checkout consistency rules
-• Payment contracts
-• Seller settlement rules
-• Search architecture
-• Security boundaries
-• Scalability strategies
-• Failure strategies
-• Disaster recovery
-• Testing strategy
-• ADRs
-• Project Index
+---
 
-The architecture must be sufficiently detailed that independent backend, frontend, mobile, infrastructure, DevOps, and QA teams can implement the complete ecommerce marketplace without making major architectural decisions themselves.
+# 23. WEBHOOK ARCHITECTURE
+
+Define secure webhook processing.
+
+Every webhook should have:
+
+* provider event ID
+* event type
+* received timestamp
+* processing status
+* correlation ID
+* idempotency semantics
+
+Define:
+
+* signature validation
+* duplicate handling
+* retries
+* dead-letter/recovery behavior
+* auditability
+
+---
+
+# 24. SHIPPING ARCHITECTURE
+
+Define:
+
+* shipment ownership
+* package
+* shipment items
+* carrier
+* tracking
+* shipment state
+* delivery events
+
+Separate order state from shipment state.
+
+A shipment update must not arbitrarily mutate unrelated order data.
+
+---
+
+# 25. RETURNS AND REFUNDS
+
+Define:
+
+* return eligibility
+* return request
+* return state
+* refund relationship
+* inventory impact
+* seller/platform responsibility
+* authorization
+
+Ensure refunds are idempotent.
+
+Never allow duplicate refunds caused by retries or duplicate webhooks.
+
+---
+
+# 26. REVIEWS ARCHITECTURE
+
+Define:
+
+* review ownership
+* product association
+* order association
+* verified purchase
+* rating
+* content
+* media
+* moderation
+* reporting
+* deletion
+
+Define controls against fraudulent review creation.
+
+---
+
+# 27. SEARCH ARCHITECTURE
+
+PostgreSQL remains authoritative.
+
+Search engine data is a projection.
+
+Define:
+
+* indexing pipeline
+* index document model
+* index version
+* aliases
+* indexing events
+* deletion propagation
+* reindexing
+* replay
+* eventual consistency
+
+Search must enforce catalog visibility and authorization rules.
+
+---
+
+# 28. SEARCH QUERY MODEL
+
+Define:
+
+* text search
+* autocomplete
+* filters
+* facets
+* price ranges
+* categories
+* brands
+* attributes
+* seller
+* rating
+* availability
+* sorting
+* pagination
+
+Define which filters are authoritative and how stale search data is handled.
+
+---
+
+# 29. MEDIA ARCHITECTURE
+
+Define the lifecycle:
+
+upload authorization → upload → persistence → processing → variants → CDN → cleanup.
+
+Define:
+
+* S3 object naming
+* ownership
+* access control
+* MIME validation
+* file-size limits
+* processing states
+* image transformation
+* thumbnails
+* CDN access
+* expiration
+* deletion
+
+Treat uploads as untrusted.
+
+---
+
+# 30. CACHE ARCHITECTURE
+
+For every Redis-backed cache define:
+
+* key
+* namespace
+* value
+* TTL
+* invalidation trigger
+* stale behavior
+* rebuild behavior
+* failure behavior
+
+Potential cache targets:
+
+* product detail
+* categories
+* search metadata
+* sessions
+* rate limits
+* temporary checkout state
+* other safe read-heavy data
+
+Never cache authorization-sensitive information without explicit key isolation and invalidation semantics.
+
+---
+
+# 31. EVENT ARCHITECTURE
+
+Define domain events such as appropriate:
+
+* ProductCreated
+* ProductUpdated
+* ProductDeleted
+* InventoryChanged
+* InventoryReserved
+* InventoryReleased
+* OrderCreated
+* OrderConfirmed
+* PaymentAuthorized
+* PaymentFailed
+* PaymentRefunded
+* ShipmentCreated
+* ShipmentUpdated
+* ReviewCreated
+
+Do not create events merely because a CRUD operation exists.
+
+Each event must represent a meaningful business fact.
+
+---
+
+# 32. EVENT CONTRACT
+
+Every event should define:
+
+* event ID
+* event type
+* schema version
+* aggregate/entity ID
+* producer
+* timestamp
+* correlation ID
+* trace context
+* payload
+
+Assume at-least-once delivery.
+
+Consumers must be idempotent.
+
+---
+
+# 33. TRANSACTIONAL OUTBOX
+
+Where database state and event publication must remain consistent, define a transactional outbox.
+
+Document:
+
+* outbox table
+* transaction boundary
+* publication worker
+* retry
+* duplicate handling
+* event status
+* cleanup
+* replay
+* dead-letter handling
+
+Do not rely on:
+
+database commit → separate network call → hope event publishes.
+
+---
+
+# 34. API ARCHITECTURE
+
+Define REST resources and responsibilities.
+
+At minimum consider:
+
+### Authentication
+
+* register
+* login
+* logout
+* refresh/session
+
+### Customers
+
+* profile
+* addresses
+
+### Catalog
+
+* products
+* categories
+* brands
+* variants
+* offers
+
+### Cart
+
+* current cart
+* add
+* update
+* remove
+
+### Checkout
+
+* checkout session
+* validation
+* payment initialization
+
+### Orders
+
+* create
+* retrieve
+* list
+* cancellation
+* returns
+
+### Payments
+
+* payment state
+* refunds where authorized
+
+### Reviews
+
+* create
+* update
+* delete
+* report
+
+### Search
+
+* search
+* autocomplete
+
+### Sellers
+
+* seller management
+* seller catalog
+* seller orders
+
+### Administration
+
+* moderation
+* catalog
+* sellers
+* orders
+
+Actual endpoints must be defined according to repository scope.
+
+---
+
+# 35. API CONTRACT PRINCIPLES
+
+Every endpoint must define:
+
+* HTTP method
+* path
+* authentication
+* authorization
+* request schema
+* response schema
+* validation
+* errors
+* pagination
+* idempotency
+* rate limits
+* side effects
+
+Use DTOs rather than exposing database models directly.
+
+---
+
+# 36. PAGINATION
+
+Define consistent pagination.
+
+For high-volume resources prefer cursor-based pagination where appropriate.
+
+Define:
+
+* cursor format
+* sort order
+* stable ordering
+* page size
+* maximum page size
+* invalid cursor behavior
+
+Avoid offset pagination for extremely large mutable datasets when cursor pagination is more appropriate.
+
+---
+
+# 37. ERROR MODEL
+
+Define a consistent error contract.
+
+Include:
+
+* HTTP status
+* stable application error code
+* safe message
+* validation information
+* request/correlation ID
+
+Do not expose:
+
+* SQL
+* stack traces
+* secrets
+* internal infrastructure
+* payment credentials
+
+---
+
+# 38. AUTHENTICATION ARCHITECTURE
+
+Define:
+
+* credential storage
+* session/token model
+* access-token lifetime
+* refresh semantics
+* logout
+* session revocation
+* account security
+* device/session tracking if applicable
+
+Do not place sensitive authentication state in insecure client storage.
+
+---
+
+# 39. AUTHORIZATION ARCHITECTURE
+
+Define authorization policies for:
+
+* customer
+* seller
+* seller administrator
+* seller staff
+* platform administrator
+* support personnel
+* moderator
+
+Authorization must be enforced server-side.
+
+Explicitly identify resource ownership checks.
+
+---
+
+# 40. RATE LIMITING
+
+Define rate-limit policies for:
+
+* authentication
+* checkout
+* payment operations
+* order operations
+* search
+* reviews
+* seller operations
+* uploads
+* administrative operations
+* public APIs
+
+Define:
+
+* scope
+* limit
+* window
+* storage
+* response behavior
+* distributed semantics
+
+Do not make limits arbitrary.
+
+---
+
+# 41. SECURITY ARCHITECTURE
+
+Perform threat modeling for:
+
+* customers
+* sellers
+* administrators
+* anonymous users
+* compromised accounts
+* malicious API clients
+* malicious uploads
+* payment attackers
+* scraping
+* coupon abuse
+* inventory abuse
+
+Explicitly address:
+
+* IDOR/BOLA
+* privilege escalation
+* injection
+* XSS
+* CSRF
+* SSRF
+* command injection
+* path traversal
+* malicious files
+* credential stuffing
+* replay
+* webhook forgery
+* payment manipulation
+* rate-limit bypass
+* secret leakage
+
+---
+
+# 42. PRIVACY ARCHITECTURE
+
+Define protection for:
+
+* customer identity
+* addresses
+* order history
+* payment-related metadata
+* seller information
+* support information
+* analytics data
+
+Specify where sensitive data may appear in:
+
+* API
+* logs
+* events
+* search
+* caches
+* notifications
+* analytics
+
+---
+
+# 43. AUDIT ARCHITECTURE
+
+Identify operations requiring auditability.
+
+Examples:
+
+* administrator actions
+* seller permission changes
+* catalog modifications
+* inventory adjustments
+* order state changes
+* refunds
+* payment reconciliation
+* account security changes
+* moderation
+
+Define:
+
+* actor
+* action
+* resource
+* timestamp
+* correlation ID
+* relevant metadata
+
+Do not store unnecessary sensitive payloads.
+
+---
+
+# 44. OBSERVABILITY ARCHITECTURE
+
+Define:
+
+### Logs
+
+Structured and searchable.
+
+### Metrics
+
+Include:
+
+* request rate
+* latency
+* errors
+* database performance
+* Redis
+* queue depth
+* worker failures
+* payment failures
+* inventory failures
+* search failures
+
+### Traces
+
+Trace:
+
+* API
+* database
+* Redis
+* events
+* queues
+* external providers
+
+Define correlation propagation.
+
+---
+
+# 45. RELIABILITY ARCHITECTURE
+
+Define behavior for:
+
+* database failure
+* Redis failure
+* search failure
+* S3 failure
+* Stripe failure
+* notification provider failure
+* queue backlog
+* event broker failure
+* worker failure
+
+Critical transactional functionality should degrade safely.
+
+For example:
+
+Search failure should not corrupt catalog state.
+
+Notification failure should not cancel a successful order.
+
+Search indexing failure should not make PostgreSQL data disappear.
+
+---
+
+# 46. CONCURRENCY MODEL
+
+Explicitly define concurrency protection for:
+
+* inventory reservation
+* checkout
+* order creation
+* coupon redemption
+* payment creation
+* refund
+* order transitions
+* seller inventory updates
+
+Document:
+
+* transaction boundaries
+* locking strategy
+* unique constraints
+* idempotency
+* retry behavior
+
+---
+
+# 47. IDEMPOTENCY MODEL
+
+Identify all operations requiring idempotency.
+
+At minimum consider:
+
+* checkout
+* order creation
+* payment creation
+* payment webhook
+* refund
+* inventory reservation
+* inventory release
+* shipment creation
+* asynchronous jobs
+
+Define idempotency-key behavior.
+
+---
+
+# 48. BACKGROUND JOB ARCHITECTURE
+
+Define BullMQ queues and workers.
+
+For each queue specify:
+
+* purpose
+* producer
+* payload
+* priority
+* concurrency
+* timeout
+* retry
+* backoff
+* idempotency
+* DLQ
+* observability
+* shutdown behavior
+
+Potential queues:
+
+* search indexing
+* media processing
+* notifications
+* cleanup
+* reconciliation
+* analytics
+
+Only define queues justified by actual architecture.
+
+---
+
+# 49. FRONTEND ARCHITECTURE
+
+Define:
+
+* application shell
+* routing
+* server state
+* client state
+* authentication state
+* API client
+* error handling
+* cache invalidation
+* product browsing
+* search
+* cart
+* checkout
+* order history
+* account
+* seller/admin applications if included
+
+Use TanStack Query for server state where appropriate.
+
+Use Zustand only for genuine client-side state.
+
+---
+
+# 50. MOBILE ARCHITECTURE
+
+If mobile exists:
+
+Define:
+
+* navigation
+* authentication
+* API client
+* persistent session
+* product browsing
+* search
+* cart
+* checkout
+* orders
+* notifications
+* account
+
+Do not duplicate backend business logic in mobile.
+
+---
+
+# 51. SEO ARCHITECTURE
+
+For web:
+
+Define:
+
+* product URLs
+* category URLs
+* metadata
+* canonical URLs
+* structured product data
+* sitemap
+* robots
+* indexability
+
+Ensure SEO does not expose private customer/seller information.
+
+---
+
+# 52. ACCESSIBILITY ARCHITECTURE
+
+Define requirements for:
+
+* keyboard navigation
+* screen readers
+* semantic HTML
+* accessible forms
+* dialogs
+* menus
+* focus
+* error announcements
+* contrast
+* touch targets
+* reduced motion
+
+---
+
+# 53. DATA RETENTION
+
+Define retention behavior for:
+
+* users
+* orders
+* payments
+* refunds
+* reviews
+* logs
+* audit records
+* media
+* search indexes
+* analytics
+* temporary checkout state
+
+Separate operational deletion from legally/business-required retention.
+
+---
+
+# 54. SCALABILITY MODEL
+
+Define scaling characteristics for:
+
+* API
+* web
+* workers
+* database
+* Redis
+* search
+* object storage
+* CDN
+* event broker
+
+Identify:
+
+* stateless services
+* horizontally scalable components
+* bottlenecks
+* partitioning requirements
+* caching opportunities
+* asynchronous boundaries
+
+Do not introduce sharding or microservices without demonstrated need.
+
+---
+
+# 55. INFRASTRUCTURE REQUIREMENTS
+
+Define logical infrastructure requirements for:
+
+* AWS networking
+* compute
+* Kubernetes if justified
+* PostgreSQL
+* Redis
+* search
+* S3
+* CloudFront
+* Stripe connectivity
+* workers
+* queues
+* secrets
+* DNS
+* TLS
+* WAF
+* monitoring
+* backups
+
+This phase defines requirements, not infrastructure implementation.
+
+---
+
+# 56. ENVIRONMENT STRATEGY
+
+Define:
+
+* local
+* test
+* development
+* staging
+* production
+
+Each environment must have appropriate:
+
+* databases
+* storage
+* credentials
+* payment mode
+* search
+* queues
+* monitoring
+
+Production data must never accidentally enter development/test environments.
+
+---
+
+# 57. TESTING ARCHITECTURE
+
+Define a complete test strategy covering:
+
+* unit
+* integration
+* database
+* API
+* contract
+* event
+* queue
+* security
+* accessibility
+* frontend
+* mobile
+* E2E
+* performance
+* concurrency
+* resilience
+* disaster recovery
+
+Critical domains require stronger test coverage.
+
+---
+
+# 58. API AND EVENT VERSIONING
+
+Define compatibility rules for:
+
+* API versions
+* DTOs
+* events
+* queue payloads
+* search documents
+* database migrations
+
+Consumers must tolerate safe schema evolution.
+
+---
+
+# 59. FAILURE MATRIX
+
+Create a failure matrix covering at least:
+
+| Dependency   | Failure     | Expected Behavior                     | Data Risk   | Recovery          |
+| ------------ | ----------- | ------------------------------------- | ----------- | ----------------- |
+| PostgreSQL   | unavailable | fail safely                           | high        | reconnect/recover |
+| Redis        | unavailable | degrade according to feature          | low/medium  | reconnect         |
+| Search       | unavailable | browsing remains available            | low         | reindex           |
+| S3           | unavailable | media operations degrade              | medium      | retry             |
+| Stripe       | unavailable | payment remains pending/failed safely | high        | reconciliation    |
+| Worker       | crashed     | queued jobs recover                   | medium      | restart           |
+| Event broker | unavailable | outbox retains events                 | medium/high | republish         |
+
+Adapt this matrix to actual architecture.
+
+---
+
+# 60. SECURITY BOUNDARY MATRIX
+
+Define authorization boundaries for:
+
+* anonymous customer
+* authenticated customer
+* seller
+* seller staff
+* support
+* moderator
+* administrator
+* internal worker
+
+For every major resource define who may:
+
+* create
+* read
+* update
+* delete
+* administer
+
+---
+
+# 61. CRITICAL BUSINESS INVARIANTS
+
+Document invariants such as:
+
+### Inventory
+
+Inventory cannot become negative unless explicitly supported.
+
+### Payment
+
+A payment cannot be treated as successful solely from client state.
+
+### Order
+
+Historical order totals cannot change when catalog prices change.
+
+### Refund
+
+A refund cannot exceed refundable amount.
+
+### Seller isolation
+
+Seller A cannot access Seller B's private data.
+
+### Authorization
+
+Ownership and role checks occur server-side.
+
+### Idempotency
+
+Retries cannot unintentionally duplicate durable financial/business effects.
+
+### Search
+
+Search cannot expose hidden/private products.
+
+### Cart
+
+Checkout must revalidate mutable pricing and inventory.
+
+---
+
+# 62. ARCHITECTURE DECISION RECORDS
+
+Identify important architectural decisions requiring explicit records.
+
+Examples:
+
+* monolith vs modular monolith
+* microservices boundary
+* PostgreSQL authority
+* Redis usage
+* search projection
+* event broker usage
+* transactional outbox
+* payment model
+* inventory reservation
+* seller architecture
+* media architecture
+* authentication
+* infrastructure model
+
+For each major decision explain:
+
+* decision
+* alternatives
+* rationale
+* trade-offs
+* consequences
+
+---
+
+# 63. ARCHITECTURE QUALITY REQUIREMENTS
+
+The resulting architecture must be:
+
+* internally consistent
+* implementable
+* testable
+* observable
+* secure
+* scalable
+* operationally realistic
+
+Do not produce vague statements such as:
+
+* "use caching"
+* "make it scalable"
+* "secure the API"
+* "use microservices"
+
+Instead specify:
+
+* what
+* where
+* why
+* lifecycle
+* ownership
+* failure behavior
+* security boundary
+* operational behavior
+
+---
+
+# 64. REQUIRED ARCHITECTURE DELIVERABLE
+
+Produce a complete architecture document containing:
+
+1. Repository audit
+2. System overview
+3. Component architecture
+4. Domain boundaries
+5. Domain dependency rules
+6. Source-of-truth matrix
+7. Entity model
+8. Entity ownership
+9. Product/catalog architecture
+10. Seller architecture
+11. Pricing architecture
+12. Inventory architecture
+13. Cart architecture
+14. Checkout architecture
+15. Order architecture
+16. Payment architecture
+17. Shipping architecture
+18. Review architecture
+19. Search architecture
+20. Media architecture
+21. Redis architecture
+22. Event architecture
+23. Outbox architecture
+24. Queue architecture
+25. API architecture
+26. Authentication architecture
+27. Authorization architecture
+28. Security architecture
+29. Privacy architecture
+30. Audit architecture
+31. Observability architecture
+32. Reliability architecture
+33. Concurrency model
+34. Idempotency model
+35. Frontend architecture
+36. Mobile architecture where applicable
+37. SEO architecture
+38. Accessibility architecture
+39. Infrastructure requirements
+40. Environment strategy
+41. Testing architecture
+42. Versioning strategy
+43. Failure matrix
+44. Security boundary matrix
+45. Business invariants
+46. Architecture decisions
+47. Implementation dependencies
+48. Architecture risks
+49. Final architecture validation
+
+---
+
+# 65. ARCHITECTURE VALIDATION
+
+Before finishing this architecture phase, perform a consistency review.
+
+Verify that:
+
+* every domain has clear ownership
+* every major entity has an authoritative source
+* every financial operation has transactional semantics
+* inventory has concurrency protection
+* checkout validates mutable state
+* orders preserve historical data
+* payments are webhook-safe
+* seller isolation is explicit
+* search is treated as a projection
+* Redis is not incorrectly authoritative
+* asynchronous jobs are idempotent
+* events are versioned
+* API contracts are explicit
+* authorization is server-side
+* privacy boundaries are defined
+* observability is possible
+* failures have defined behavior
+* infrastructure requirements are realistic
+* testing can validate critical workflows
+
+Resolve contradictions before completing the document.
+
+---
+
+# 66. IMPLEMENTATION PHASE BOUNDARY
+
+Do not implement application source code during this architecture phase.
+
+The output must be the architectural source of truth that future implementation phases can execute against.
+
+Do not leave critical architectural decisions as unexplained TODOs.
+
+Where an implementation detail depends on repository inspection, explicitly describe the repository-derived decision.
+
+---
+
+# 67. STANDALONE REQUIREMENT
+
+This prompt is completely standalone.
+
+It must be executable in a fresh Claude session with access to the actual repository.
+
+It must not depend on:
+
+* another prompt
+* a previous conversation
+* a previously generated architecture
+* an approved document
+* hidden context
+
+All relevant requirements are contained in this prompt.
+
+The actual repository is the only external project context that may be relied upon.
+
+# END OF ARCHITECTURE PROMPT — VOLUME 1

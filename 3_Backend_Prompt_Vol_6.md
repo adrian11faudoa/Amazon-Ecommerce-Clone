@@ -1,1462 +1,1546 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Backend Prompt — Volume 6
+
+## Role
+
+You are the senior backend engineering team responsible for implementing the production-grade fulfillment, shipping, returns, and post-order lifecycle subsystem of an original Amazon-style ecommerce marketplace.
+
+Act as:
+
+* Principal Software Architect
+* Staff Backend Engineer
+* Distributed Systems Engineer
+* Fulfillment Systems Engineer
+* Database Architect
+* Security Engineer
+* QA Engineer
+* DevOps Engineer
+
+This is an implementation task, not a tutorial.
+
+You must inspect the actual repository and make real production-quality changes.
+
+---
+
+# 1. Project Context
+
+Build an original production-grade ecommerce marketplace supporting:
+
+* customers
+* products
+* variants
+* SKUs
+* sellers
+* seller offers
+* pricing
+* promotions
+* coupons
+* inventory
+* carts
+* checkout
+* orders
+* payments
+* fulfillment
+* shipping
+* returns
+* refunds
+* reviews
+* search
+* notifications
+* administration
+* analytics
+
+Technology baseline:
+
+* Node.js
+* NestJS
+* TypeScript
+* PostgreSQL
+* Prisma
+* Redis
+* Elasticsearch/OpenSearch
+* BullMQ
+* AWS S3
+* AWS CloudFront
+* Stripe
+* REST
+* OpenAPI / Swagger
+* Webhooks
+* Kafka/Redpanda where justified
+* Docker
+* Terraform/OpenTofu
+* AWS
+* Kubernetes where justified
+
+Architectural principles:
+
+* Clean Architecture
+* Domain-Driven Design
+* SOLID
+* Repository Pattern
+* Service Layer
+* Strong typing
+* Explicit bounded contexts
+* Transactional consistency
+* Idempotency
+* Server-side authorization
+* Secure external integrations
+* Production-grade observability and reliability
+
+The actual repository is the source of truth.
+
+---
+
+# 2. Repository-First Requirement
+
+Before modifying anything:
+
+1. Inspect the complete repository.
+2. Inspect backend modules and domain boundaries.
+3. Inspect Prisma schema and migrations.
+4. Inspect authentication and authorization.
+5. Inspect Customer.
+6. Inspect Seller.
+7. Inspect Product/SKU/Offer.
+8. Inspect Pricing.
+9. Inspect Inventory and Reservations.
+10. Inspect Cart.
+11. Inspect Checkout.
+12. Inspect Orders.
+13. Inspect Payments and Refunds.
+14. Inspect Stripe integration.
+15. Inspect existing event/outbox infrastructure.
+16. Inspect Redis.
+17. Inspect BullMQ.
+18. Inspect S3/media infrastructure.
+19. Inspect API conventions.
+20. Inspect tests.
+21. Inspect configuration and environment handling.
+
+Do not assume functionality exists merely because this prompt describes it.
 
-Build the production-ready backend for search, recommendations, reviews, ratings, notifications, customer/seller messaging, analytics, reporting, and related marketplace intelligence for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+Reuse compatible existing implementations.
 
-The platform is an original implementation.
+Do not create duplicate models, services, repositories, queues, event systems, or APIs.
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+If existing implementation differs from this specification, preserve working behavior and make the smallest safe change necessary.
 
-This prompt is completely independent and may be executed in a separate conversation.
+---
 
-The backend must follow the established ecommerce architecture, database ownership model, seller-isolation rules, catalog architecture, pricing architecture, inventory architecture, checkout architecture, order architecture, payment architecture, API conventions, event architecture, queue architecture, and security model.
+# 3. Scope of This Volume
 
-Do not redesign the architecture.
+Implement the production-grade backend subsystem for:
 
-Do not generate frontend code.
+1. Fulfillment
+2. Fulfillment groups
+3. Shipment creation
+4. Shipment items
+5. Shipping addresses
+6. Shipping methods
+7. Tracking
+8. Shipment lifecycle
+9. Multi-seller order fulfillment
+10. Seller fulfillment boundaries
+11. Inventory-to-fulfillment integration
+12. Order-to-shipment integration
+13. Returns
+14. Return requests
+15. Return items
+16. Return eligibility
+17. Return state machine
+18. Return inspection/outcome boundary
+19. Refund integration
+20. Inventory restoration for returns
+21. Cancellation integration
+22. Post-order lifecycle
+23. Fulfillment background jobs
+24. Tracking synchronization boundary
+25. Fulfillment/return events
+26. Security
+27. Observability
+28. Testing
+29. Operational documentation
 
-Do not generate mobile code.
+Do not implement reviews, notifications, search, or analytics in this volume except for minimal compatibility integrations.
 
-Do not generate Kubernetes manifests.
+---
 
-Do not generate Terraform.
+# 4. Fulfillment Domain
 
-Do not generate infrastructure implementation code.
+Create or extend an explicit Fulfillment bounded context.
 
-Do not generate CI/CD workflows.
+Fulfillment is responsible for converting confirmed orders into operational shipment units.
 
-────────────────────────────────────────
+Do not make the Order aggregate responsible for all warehouse/shipping implementation details.
 
-MISSION
+Keep:
 
-Implement the production-ready backend required for:
+* Order
+* Payment
+* Inventory
+* Fulfillment
+* Shipment
+* Return
 
-• Product search
-• Category search
-• Brand search
-• Seller/store search
-• Autocomplete
-• Search suggestions
-• Faceted search
-• Search filters
-• Search ranking
-• Search analytics
-• Search indexing
-• Recommendations
-• Personalization
-• Recently viewed products
-• Similar products
-• Related products
-• Frequently bought together
-• Trending products
-• Cross-sells
-• Upsells
-• Reviews
-• Ratings
-• Verified-purchase reviews
-• Review moderation
-• Seller responses
-• Customer notifications
-• Seller notifications
-• In-app notifications
-• Email notifications
-• Push notifications
-• Customer-seller messaging
-• Order-related messaging
-• Analytics events
-• Aggregated marketplace analytics
-• Reporting foundations
+as distinct domain responsibilities.
 
-The implementation must support:
+---
 
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of search requests
-• Large review volumes
-• Large notification volumes
-• Large analytics event volumes
-• High recommendation traffic
-• Multi-region deployment
-• Horizontal scaling
-• High availability
+# 5. Fulfillment Groups
 
-────────────────────────────────────────
+Support orders containing:
 
-TECHNOLOGY STACK
+* multiple sellers
+* multiple SKUs
+* multiple inventory locations
+* potentially multiple shipments
 
-Backend:
+A single customer order must not be assumed to equal one shipment.
 
-• Node.js
-• NestJS
-• TypeScript
+Create a fulfillment-group abstraction where appropriate.
 
-Database:
+A fulfillment group should identify:
 
-• PostgreSQL
-• Prisma ORM
+* order
+* seller
+* inventory location
+* fulfillment status
+* associated order items
+* shipment relationship
+* timestamps
 
-Cache:
+Do not duplicate order-item ownership information unnecessarily.
 
-• Redis
+---
 
-Search:
+# 6. Seller Fulfillment Isolation
 
-• Elasticsearch or OpenSearch
+Marketplace sellers must only access fulfillment data belonging to their own offers/order items.
 
-Event Streaming:
+Seller users must never be able to:
 
-• Kafka or Redpanda where justified
+* inspect another seller's shipments
+* modify another seller's fulfillment
+* access unrelated customer data
+* alter platform-owned fulfillment state
 
-Background Processing:
+Use explicit authorization.
 
-• BullMQ
+Do not rely on:
 
-Object Storage:
+* seller ID in URLs
+* frontend restrictions
+* hidden UI elements
 
-• AWS S3-compatible object storage where review/media assets require it
+for security.
 
-CDN:
+Validate seller ownership server-side for every seller operation.
 
-• CloudFront or equivalent
+---
 
-Notifications:
+# 7. Fulfillment State Machine
 
-• Email provider abstraction
-• Firebase Cloud Messaging
-• Apple Push Notification Service
+Implement an explicit fulfillment lifecycle.
 
-Observability:
+Possible states:
 
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
+* PENDING
+* ALLOCATED
+* READY
+* PROCESSING
+* SHIPPED
+* PARTIALLY_SHIPPED
+* DELIVERED
+* CANCELLED
+* FAILED
 
-Testing:
-
-• Jest
-• Supertest
-• Integration and contract testing tools
-
-────────────────────────────────────────
-
-IMPLEMENTATION RULES
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO comments.
-
-Never omit implementations.
-
-Never say:
-
-- "implement similarly"
-- "left as an exercise"
-- "for brevity"
-- "remaining code omitted"
-
-Every generated file must be complete.
-
-Every generated file must compile.
-
-Never regenerate unchanged files.
-
-Only modify existing files when required.
-
-Use strict TypeScript.
-
-Use dependency injection.
-
-Keep controllers thin.
-
-Keep business rules outside controllers.
-
-Use repositories for persistence.
-
-Use DTOs for external contracts.
-
-Use centralized validation.
-
-Use centralized error handling.
-
-Use structured logging.
-
-Use the established observability infrastructure.
-
-────────────────────────────────────────
-
-DOMAIN OWNERSHIP
-
-Maintain clear boundaries between:
-
-Search
-
-Search Indexing
-
-Search Analytics
-
-Recommendations
-
-Personalization
-
-Reviews
-
-Ratings
-
-Notifications
-
-Customer Messaging
-
-Seller Messaging
-
-Analytics
-
-Reporting
-
-Do not use search as the transactional source of truth.
-
-Do not store recommendation state exclusively in Redis.
-
-Do not mix analytics workloads into transactional order tables without explicit justification.
-
-Do not expose unrestricted customer data to sellers through messaging.
-
-────────────────────────────────────────
-
-SEARCH ARCHITECTURE
-
-Implement the production-ready product search backend.
-
-Support:
-
-• Product search
-• Category search
-• Brand search
-• Seller/store search
-• Autocomplete
-• Suggestions
-• Typo tolerance
-• Synonyms
-• Filters
-• Facets
-• Sorting
-• Price ranges
-• Ratings
-• Availability
-• Category
-• Brand
-• Seller
-• Regional availability
-• Ranking
-• Pagination
-
-Use Elasticsearch or OpenSearch as the derived search system.
-
-PostgreSQL remains authoritative for transactional catalog data.
-
-────────────────────────────────────────
-
-SEARCH INDEXES
-
-Create appropriate indexes for:
-
-• Products
-• Categories
-• Brands
-• Sellers/stores
+Use only states required by the actual architecture.
 
 Define:
 
-• Mapping strategy
-• Analyzer strategy
-• Language support
-• Synonyms
-• Search fields
-• Sort fields
-• Facet fields
-• Ranking fields
-• Versioning
+* valid transitions
+* actor/source
+* authorization
+* side effects
+* event emission
+* failure behavior
 
-Use aliases to support safe index migrations.
+Do not permit arbitrary state mutation.
 
-────────────────────────────────────────
+---
 
-SEARCH INDEXING
+# 8. Order Fulfillment Eligibility
 
-Implement indexing based on domain events.
+A fulfillment operation must validate:
 
-Support:
+* order exists
+* order is eligible for fulfillment
+* payment state permits fulfillment
+* order item is not already fulfilled
+* inventory has been consumed/allocated appropriately
+* seller is eligible
+* fulfillment group is valid
 
-• Product indexing
-• Product updates
-• Product publication
-• Product suspension
-• Product archival
-• Category updates
-• Brand updates
-• Seller/store changes
-• Price changes
-• Availability changes where appropriate
+Do not fulfill an unpaid or invalid order unless the business architecture explicitly permits a different payment model.
 
-Indexing must be:
+---
 
-• Idempotent
-• Retryable
-• Observable
+# 9. Inventory Integration
 
-────────────────────────────────────────
+Integrate fulfillment with the existing inventory subsystem.
 
-SEARCH REINDEXING
+The implementation must distinguish:
 
-Implement safe reindexing.
+* reserved inventory
+* consumed inventory
+* allocated inventory
+* shipped inventory
 
-Support:
+Do not create a second inventory system.
 
-• Full reindex
-• Incremental reindex
-• Versioned indexes
-• Alias switching
-• Bulk indexing
-• Reindex monitoring
-• Failed-document retry
-• Partial failure handling
+Inventory consumption must occur exactly once.
 
-Do not block transactional catalog operations while reindexing.
+Shipment cancellation or return must use explicit inventory operations.
 
-────────────────────────────────────────
+Never directly manipulate inventory quantities from fulfillment code without going through the inventory domain contract.
 
-SEARCH AUTHORIZATION
+---
 
-Search results must respect:
+# 10. Shipment Model
 
-• Product publication state
-• Seller state
-• Product moderation state
-• Regional availability
-• Catalog visibility
-• Seller restrictions
+Implement or extend a Shipment model.
 
-Never expose unpublished or suspended products to unauthorized customers.
+A shipment should capture appropriate information such as:
 
-────────────────────────────────────────
+* shipment ID
+* order ID
+* fulfillment group
+* seller where applicable
+* origin location
+* shipping address snapshot/reference
+* shipping method
+* carrier
+* tracking number
+* tracking URL where appropriate
+* status
+* shipped timestamp
+* delivered timestamp
+* estimated delivery
+* timestamps
 
-SEARCH ANALYTICS
+Protect sensitive information.
+
+Do not expose internal operational fields to customers unnecessarily.
+
+---
+
+# 11. Shipment Items
+
+Shipment items must reference order items.
 
 Track:
 
-• Search queries
-• Search result counts
-• Click-through
-• Add-to-cart after search
-• Conversion after search
-• Zero-result queries
-• Popular searches
-• Search abandonment
+* shipment
+* order item
+* quantity
+* fulfillment state
+* timestamps
 
-Do not store unnecessary personal information in search analytics.
+A shipment must never contain a quantity greater than the unfulfilled quantity of its order item.
 
-────────────────────────────────────────
+Prevent duplicate shipment allocation.
 
-SEARCH CACHE
+---
 
-Use Redis only where beneficial.
+# 12. Partial Shipments
 
-Cache:
+Support partial shipments where the marketplace architecture requires them.
 
-• Popular searches
-• Autocomplete results where appropriate
-• Stable category queries
-• Frequently repeated public searches
+Example:
 
-Define:
+An order contains:
 
-• Key pattern
-• TTL
-• Invalidation
-• Cache warming
-• Failure behavior
+* 3 units of SKU A
+* 2 units of SKU B
 
-Do not cache highly personalized results without appropriate user-scoped keys.
+SKU A may ship separately from SKU B.
 
-────────────────────────────────────────
+The system must maintain:
 
-RECOMMENDATION DOMAIN
+* ordered quantity
+* fulfilled quantity
+* shipped quantity
+* remaining quantity
 
-Implement the initial recommendation architecture.
+Do not mark the entire order delivered when only one shipment is delivered.
 
-Support:
+---
 
-• Personalized recommendations
-• Recently viewed
-• Similar products
-• Related products
-• Frequently bought together
-• Trending
-• Popular products
-• Category recommendations
-• Seller recommendations
-• Cross-sells
-• Upsells
+# 13. Multi-Seller Orders
 
-The first implementation may use deterministic and heuristic ranking.
+An order may contain products from multiple sellers.
 
-The architecture must allow future ML systems without redesigning the API contract.
+The fulfillment subsystem must correctly isolate:
 
-────────────────────────────────────────
+* seller fulfillment groups
+* seller shipment data
+* seller permissions
+* customer-facing shipment representation
+* platform-level order status
 
-RECOMMENDATION PIPELINE
+Do not assume one seller per order.
 
-Define:
+Do not expose one seller's commercial data to another seller.
 
-• Candidate generation
-• Candidate filtering
-• Ranking
-• Personalization
-• Business rules
-• Eligibility
-• Fallback
+---
 
-Fallbacks must exist when:
+# 14. Shipping Methods
 
-• Personalization data is unavailable
-• Recommendation service is unavailable
-• User has insufficient history
-• Search is unavailable
+Implement a shipping method abstraction.
 
-────────────────────────────────────────
+A shipping method may include:
 
-PERSONALIZATION
+* code
+* name
+* carrier/service
+* estimated delivery window
+* price
+* currency
+* eligibility
+* active/inactive state
 
-Support customer-level signals such as:
+Do not hardcode shipping behavior throughout the fulfillment system.
 
-• Viewed products
-• Added to cart
-• Purchased products
-• Search behavior
-• Categories
-• Brands
-• Seller interactions
-• Price preferences
+If a carrier integration is not yet configured, implement a provider boundary rather than inventing external carrier behavior.
 
-Do not expose private behavioral data to sellers unless explicitly permitted.
+---
 
-────────────────────────────────────────
+# 15. Shipping Address
 
-RECOMMENDATION EVENTS
+Shipments must preserve the address required for operational fulfillment.
 
-Consume events such as:
+Use the order's immutable shipping snapshot as the historical commercial source.
 
-• ProductViewed
-• SearchPerformed
-• ProductAddedToCart
-• ProductPurchased
-• WishlistItemAdded
-• ReviewCreated
-• ProductRated
+Do not allow later customer address edits to modify an already-created shipment.
 
-Define appropriate retention and privacy policies.
+Minimize exposure of sensitive address information.
 
-────────────────────────────────────────
+---
 
-RECOMMENDATION CACHE
+# 16. Shipment Creation
 
-Use Redis for:
-
-• Personalized feed cache
-• Similar-product cache
-• Trending cache
-• Frequently-bought-together cache
-
-Define:
-
-• Key format
-• TTL
-• Invalidation
-• Regeneration
-• Failure fallback
-
-Recommendations must never block core checkout functionality.
-
-────────────────────────────────────────
-
-REVIEWS DOMAIN
-
-Implement:
-
-• Review creation
-• Review retrieval
-• Review update where allowed
-• Review deletion where policy permits
-• Verified purchase validation
-• Review media references
-• Seller responses
-• Review reports
-• Moderation status
-
-Support review states:
-
-• Pending
-• Published
-• Hidden
-• Rejected
-• Removed
-
-────────────────────────────────────────
-
-REVIEW ELIGIBILITY
-
-Only allow reviews when appropriate.
+Shipment creation must be transactional.
 
 Validate:
 
-• Customer identity
-• Order ownership
-• Product ownership
-• Purchase status
-• Delivered/eligible order state
-• Review policy
-• Duplicate-review rules
+1. order state
+2. fulfillment group
+3. seller ownership where applicable
+4. order-item quantity
+5. inventory/fulfillment eligibility
+6. shipping method
+7. destination
+8. duplicate shipment risk
 
-Never trust the client to claim a verified purchase.
+Then:
 
-────────────────────────────────────────
+* create shipment
+* create shipment items
+* update fulfillment state
+* create status history
+* create outbox events
 
-RATINGS
+Do not publish shipment-created events before commit.
 
-Implement:
+---
 
-• Rating submission
-• Rating updates where permitted
-• Rating aggregation
-• Product rating summary
-• Seller rating summary where applicable
+# 17. Shipment Idempotency
 
-Use appropriate strategies for large-scale aggregation.
+Shipment creation must be idempotent.
 
-Avoid recalculating millions of review records synchronously for every new rating.
-
-────────────────────────────────────────
-
-REVIEW MODERATION
-
-Support:
-
-• Automatic checks
-• Report review
-• Manual moderation
-• Hide/reject
-• Appeal
-• Audit trail
-
-Define policy boundaries for:
-
-• Spam
-• Abuse
-• Manipulation
-• Malicious content
-• Personal information
-
-────────────────────────────────────────
-
-SELLER RESPONSES
-
-Allow authorized sellers to:
-
-• Respond to reviews
-• Edit response where permitted
-• Delete response where permitted
-
-Seller responses must be scoped to the seller's own products.
-
-────────────────────────────────────────
-
-REVIEW MEDIA
-
-Support review attachments:
-
-• Images
-• Videos where supported
+A retry must not create duplicate shipments.
 
 Use:
 
-• Direct upload
-• Signed URLs
-• Media validation
-• Processing
-• CDN delivery
-• Cleanup
+* unique constraints
+* deterministic fulfillment references
+* application idempotency
+* transaction boundaries
 
-Do not store binary assets in PostgreSQL.
+A repeated request with conflicting data must fail rather than create an inconsistent second shipment.
 
-────────────────────────────────────────
+---
 
-NOTIFICATION DOMAIN
+# 18. Shipment State Machine
 
-Implement notification orchestration.
+Implement explicit shipment states.
 
-Support:
+Possible states:
 
-• Push
-• Email
-• In-app
-• SMS-ready architecture where appropriate
+* CREATED
+* LABEL_PENDING
+* LABEL_CREATED
+* READY_TO_SHIP
+* SHIPPED
+* IN_TRANSIT
+* OUT_FOR_DELIVERY
+* DELIVERED
+* DELIVERY_FAILED
+* RETURNED
+* CANCELLED
+* LOST
 
-Notification types:
+Only implement states needed by the repository.
 
-• Order created
-• Payment succeeded
-• Payment failed
-• Shipment created
-• Shipment delivered
-• Return update
-• Refund issued
-• Seller order received
-• Low inventory
-• Seller verification
-• Security event
-• Promotion
-• Recommendation
+Tracking updates must use valid transitions.
 
-────────────────────────────────────────
+Do not let customers or sellers arbitrarily change shipment status.
 
-NOTIFICATION PREFERENCES
+---
 
-Implement:
+# 19. Tracking Events
 
-• Global notification settings
-• Per-channel settings
-• Per-category settings
-• Promotional settings
-• Security notification rules
-• Seller notification settings
+Implement immutable tracking events.
 
-Security-critical notifications must not be silently disabled by ordinary marketing preferences.
+A tracking event should contain:
 
-────────────────────────────────────────
+* shipment ID
+* carrier
+* provider event/reference
+* status
+* location where appropriate
+* event timestamp
+* received timestamp
+* source
+* raw/sanitized provider reference where appropriate
 
-PUSH NOTIFICATIONS
+Provider tracking events must be deduplicated.
 
-Implement:
+Do not overwrite historical tracking events.
 
-• Device token registration
-• FCM integration
-• APNS integration
-• Token rotation
-• Invalid-token cleanup
-• Retry
-• Backoff
-• Provider failures
-• Deduplication
+---
 
-Support multiple devices per customer.
+# 20. Tracking Synchronization Boundary
 
-Avoid duplicate notifications when deterministic deduplication is possible.
+Create a clean abstraction for external carrier/tracking integrations.
 
-────────────────────────────────────────
+The system must support future providers without coupling domain logic to one carrier SDK.
 
-EMAIL NOTIFICATIONS
+Provider integration must handle:
 
-Implement an email provider abstraction.
+* timeouts
+* retries
+* rate limits
+* duplicate events
+* provider outages
+* malformed responses
 
-Support:
+Do not invent carrier APIs.
 
-• Templates
-• Localization
-• Retry
-• Delivery status
-• Failure
-• Bounce handling where supported
-• Rate limits
+If no provider is configured, do not claim external tracking functionality exists.
 
-Do not hard-code a single email vendor into the domain layer.
+---
 
-────────────────────────────────────────
+# 21. Tracking Webhooks
 
-IN-APP NOTIFICATIONS
+If the repository supports carrier webhooks, implement the foundation for:
 
-Implement:
+* signature verification where supported
+* event persistence
+* duplicate detection
+* safe processing
+* status transition
+* event publication
 
-• Notification creation
-• Notification list
-• Read/unread
-• Bulk mark as read
-• Notification categories
-• Deep-link targets
+Do not create a generic insecure webhook endpoint.
 
-Persist notification state in PostgreSQL.
+---
 
-Use Redis only for acceleration where appropriate.
+# 22. Delivery Confirmation
 
-────────────────────────────────────────
+When a shipment becomes delivered:
 
-NOTIFICATION QUEUES
+* validate shipment state
+* persist delivery timestamp
+* update fulfillment state
+* update relevant order-level state
+* create events
+* preserve tracking history
 
-Use BullMQ for:
+Do not mark the entire order delivered until all required shipments/items are fulfilled according to the business rules.
 
-• Push delivery
-• Email delivery
-• Notification retries
-• Notification cleanup
-• Promotional notification scheduling
+---
 
-Every worker must implement:
+# 23. Order Status Integration
 
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter handling
-• Metrics
+Order status must be derived from authoritative lifecycle events rather than arbitrary direct mutation.
 
-────────────────────────────────────────
+For example:
 
-CUSTOMER/SELLER MESSAGING
+* all required shipments created → fulfillment progresses
+* shipment delivered → fulfillment progresses
+* all fulfillments delivered → order may become completed
 
-Implement secure marketplace messaging.
+The exact state mapping must follow the repository's order state machine.
 
-Support:
+Do not create conflicting order and fulfillment state machines.
 
-• Customer-to-seller conversation
-• Seller-to-customer conversation
-• Order-linked conversations
-• Message creation
-• Message retrieval
-• Read state
-• Unread counts
-• Attachments
-• Seller staff participation
+---
 
-Do not expose unrelated customer information.
+# 24. Cancellation Integration
 
-────────────────────────────────────────
+Integrate cancellation with:
 
-MESSAGING AUTHORIZATION
+* order
+* payment
+* inventory
+* fulfillment
 
-Messaging access must verify:
+A shipment that has already been handed to a carrier may not be cancellable in the same way as an unfulfilled order item.
 
-• Customer identity
-• Seller ownership
-• Store ownership
-• Relevant order relationship
-• Conversation membership
-• Seller staff permission
-• Account status
+Define cancellation eligibility explicitly.
 
-A seller must not access conversations belonging to another seller.
+Do not implement arbitrary cancellation after shipment.
 
-────────────────────────────────────────
+---
 
-MESSAGE MEDIA
+# 25. Return Domain
 
-Support:
+Create or extend a Returns bounded context.
 
-• Images
-• Documents
-• Attachments
+Returns must be independent from the original cart.
 
-Use direct S3 upload where appropriate.
+A return request references the historical order/item being returned.
 
-Validate:
+---
 
-• File type
-• File size
-• Ownership
-• Access scope
+# 26. Return Request
 
-Use signed URLs for private media.
+Implement ReturnRequest.
 
-────────────────────────────────────────
+Appropriate fields include:
 
-MESSAGE RETENTION
+* return ID
+* order ID
+* customer ID
+* reason
+* status
+* requested timestamp
+* approval timestamp
+* received timestamp
+* inspection timestamp
+* completion timestamp
+* cancellation timestamp
+* notes/reference fields
+* timestamps
 
-Define retention strategy for marketplace messaging.
+Do not store unnecessary sensitive information.
 
-Support:
+---
 
-• Retention periods
-• Archival where appropriate
-• Deletion
-• Legal/administrative holds where required
-• Audit requirements
+# 27. Return Items
 
-Do not retain message content indefinitely without a justified policy.
-
-────────────────────────────────────────
-
-ANALYTICS DOMAIN
-
-Implement marketplace analytics foundations.
+Implement ReturnItem.
 
 Track:
 
-CUSTOMER
+* return request
+* order item
+* requested quantity
+* approved quantity
+* received quantity
+* accepted quantity
+* rejected quantity
+* reason
+* condition/outcome where appropriate
 
-• Product views
-• Search behavior
-• Add-to-cart
-• Checkout
-• Purchases
-• Wishlist
-• Returns
+Quantities must never exceed the quantity originally purchased or the quantity still eligible for return.
 
-PRODUCT
+---
 
-• Views
-• Add-to-cart
-• Conversion
-• Revenue
-• Returns
-• Ratings
+# 28. Return Eligibility
 
-SELLER
+Create a deterministic return eligibility service.
 
-• Orders
-• Revenue
-• Conversion
-• Inventory turnover
-• Cancellation
-• Return rate
-• Reviews
+Consider:
 
-MARKETPLACE
+* order state
+* delivery state
+* return window
+* item category restrictions
+* quantity already returned
+* seller policy where applicable
+* promotional constraints
+* payment/refund state
 
-• GMV
-• Revenue
-• Take rate
-• AOV
-• Orders
-• Conversion
-• Search success
-• Fulfillment performance
+Do not allow customers to bypass return policy by modifying request payloads.
 
-────────────────────────────────────────
+---
 
-ANALYTICS INGESTION
+# 29. Return State Machine
 
-Use Kafka or equivalent event infrastructure.
+Possible states:
 
-Support:
+* REQUESTED
+* APPROVED
+* REJECTED
+* LABEL_PENDING
+* IN_TRANSIT
+* RECEIVED
+* INSPECTING
+* APPROVED_FOR_REFUND
+* REFUNDED
+* CANCELLED
+* CLOSED
 
-• Event ingestion
-• Validation
-• Aggregation
-• Stream processing where appropriate
-• Batch aggregation
-• Data retention
+Use only necessary states.
 
-Do not run large analytical aggregations directly against production transaction tables.
+Every transition must be explicit.
 
-────────────────────────────────────────
+---
 
-ANALYTICS PRIVACY
+# 30. Return Authorization
 
-Minimize personal information.
+Customers may create return requests only for their own orders.
 
-Define:
+Sellers may only manage returns involving their own items where marketplace rules permit.
 
-• Data retention
-• Aggregation
-• Access control
-• Anonymization/pseudonymization where appropriate
-• Seller-visible metrics
-• Platform-only metrics
+Platform administrators may have broader permissions.
 
-Seller analytics must not expose other sellers' confidential business data.
+Every operation must validate ownership.
 
-────────────────────────────────────────
+Prevent IDOR using order IDs, return IDs, or item IDs.
 
-REPORTING
+---
 
-Implement reporting foundations.
+# 31. Return Quantity Safety
 
-Support:
+Prevent:
 
-• Sales reports
-• Order reports
-• Inventory reports
-• Seller reports
-• Customer reports where authorized
-• Financial reports
-• Product reports
-• Promotion reports
+* returning more than purchased
+* returning already fully returned quantity
+* duplicate return items
+* simultaneous requests exceeding eligible quantity
 
-Reports may be generated asynchronously.
+Use database transactions and appropriate locking/constraints.
 
-Use BullMQ for long-running report generation.
+Concurrent return requests must not exceed eligible quantity.
 
-────────────────────────────────────────
+---
 
-REPORT GENERATION
+# 32. Return Reasons
 
-Support:
+Support structured return reasons.
 
-• Report definition
-• Parameters
-• Generation status
-• Progress
-• Completion
-• Failure
-• Download authorization
-• Expiration
+Examples:
 
-Generated report files should use secure object storage.
+* DAMAGED
+* DEFECTIVE
+* WRONG_ITEM
+* NOT_AS_DESCRIBED
+* CHANGED_MIND
+* SIZE_ISSUE
+* OTHER
 
-────────────────────────────────────────
+Use repository conventions where available.
 
-EVENTS
+Do not let free-form reason text replace required business classification.
 
-Publish/consume appropriate events.
+---
 
-SEARCH:
+# 33. Return Inspection Boundary
 
-• SearchPerformed
-• SearchIndexed
-• SearchIndexFailed
+Create a return inspection abstraction.
 
-RECOMMENDATIONS:
+It should allow future handling of:
 
-• RecommendationGenerated
-• RecommendationServed
-• RecommendationClicked
+* item condition
+* accepted/rejected quantity
+* damage
+* missing components
+* resale eligibility
+* refund eligibility
 
-REVIEWS:
+Do not build a warehouse inspection application in this volume.
 
-• ReviewCreated
-• ReviewUpdated
-• ReviewApproved
-• ReviewRejected
-• ReviewReported
+Create the correct domain contract.
 
-NOTIFICATIONS:
+---
 
-• NotificationCreated
-• NotificationQueued
-• NotificationDelivered
-• NotificationFailed
-• NotificationRead
+# 34. Return Shipping
 
-MESSAGING:
+Create a return-shipping abstraction supporting:
 
-• ConversationCreated
-• MessageCreated
-• MessageRead
+* return shipment reference
+* carrier
+* tracking number
+* shipping label reference where supported
+* status
+* timestamps
 
-ANALYTICS:
+Do not invent carrier integrations.
 
-• AnalyticsEventRecorded
-• AnalyticsAggregationCompleted
+Protect provider credentials.
 
-REPORTING:
+---
 
-• ReportCreated
-• ReportCompleted
-• ReportFailed
+# 35. Return Refund Integration
 
-Use the established event envelope.
+Integrate returns with the existing payment/refund subsystem.
 
-Never duplicate complete database records unnecessarily.
+A return approval must not automatically imply an unlimited refund.
 
-────────────────────────────────────────
+Calculate the refundable amount from authoritative order/payment/return data.
 
-BACKGROUND JOBS
+Validate:
 
-Implement BullMQ jobs for:
+* eligible quantity
+* paid amount
+* previous refunds
+* return outcome
+* refund policy
 
-• Search indexing
-• Bulk reindexing
-• Recommendation refresh
-• Trending calculation
-• Rating aggregation
-• Review moderation
-• Push notification delivery
-• Email delivery
-• Notification cleanup
-• Analytics aggregation
-• Report generation
-• Report cleanup
-• Message retention
-• Search cache invalidation
+Use the existing Refund domain.
 
-Every job must support:
+Do not create a second refund implementation.
 
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter behavior
-• Metrics
-• Structured logging
+---
 
-────────────────────────────────────────
+# 36. Return Inventory Integration
 
-DATABASE
+When a return is accepted:
 
-Implement Prisma models and migrations for appropriate entities.
+* determine whether inventory can be restored
+* use the inventory domain
+* create the correct inventory movement
+* restore only eligible quantity
+* preserve audit history
 
-Include:
+Do not automatically return defective/damaged goods to sellable inventory.
 
-• Search query analytics references where required
-• RecommendationCache metadata where appropriate
-• RecommendationEvent references where appropriate
-• Review
-• ReviewMedia
-• ReviewResponse
-• ReviewReport
-• ProductRatingAggregate
-• Notification
-• NotificationPreference
-• NotificationDelivery
-• PushToken
-• Conversation
-• ConversationParticipant
-• Message
-• MessageAttachment
-• Report
-• AnalyticsReference
-• ReportJob
+Use explicit inventory states or movement semantics.
 
-Do not store search indexes inside PostgreSQL.
+---
 
-Do not store large analytics event streams in transactional tables.
-
-Do not create unnecessary database entities for derived data.
-
-────────────────────────────────────────
-
-API
-
-Implement production-ready APIs.
-
-SEARCH
-
-• Search products
-• Search categories
-• Search brands
-• Search sellers
-• Autocomplete
-• Search suggestions
-• Search filters
-• Search facets
-
-RECOMMENDATIONS
-
-• Home recommendations
-• Similar products
-• Related products
-• Frequently bought together
-• Trending
-• Recently viewed
-
-REVIEWS
-
-• Create review
-• Get reviews
-• Update review where allowed
-• Report review
-• Respond to review
-• Rating summary
-
-NOTIFICATIONS
-
-• List notifications
-• Read notification
-• Mark all read
-• Notification preferences
-• Register push token
-
-MESSAGING
-
-• Create conversation
-• List conversations
-• Get messages
-• Send message
-• Mark read
-• Upload attachment
-
-ANALYTICS
-
-• Seller analytics
-• Product analytics
-• Order analytics
-• Inventory analytics
-• Financial summaries where authorized
-
-REPORTING
-
-• Create report
-• Get report status
-• Download report
-
-Every endpoint must include:
-
-• Authentication
-• Authorization
-• Validation
-• Rate limiting
-• Pagination
-• Cursor pagination where appropriate
-• OpenAPI documentation
-• Consistent errors
-• Idempotency where appropriate
-
-────────────────────────────────────────
-
-SELLER ISOLATION
-
-Seller-scoped features must enforce isolation for:
-
-• Reviews
-• Seller analytics
-• Seller reports
-• Seller messaging
-• Notifications
-• Product analytics
-• Order analytics
-• Inventory analytics
-
-Never allow a seller to query another seller's private data.
-
-────────────────────────────────────────
-
-SECURITY
+# 37. Return Concurrency
 
 Protect against:
 
-• Search enumeration
-• Review manipulation
-• Notification abuse
-• Messaging abuse
-• Report abuse
-• Analytics data leakage
-• Seller cross-tenant access
-• Unauthorized report downloads
-• Unauthorized notification access
-• Attachment access bypass
+* duplicate return requests
+* duplicate refund
+* duplicate inventory restoration
+* simultaneous return approval
+* simultaneous return cancellation
 
 Use:
 
-• Authentication
-• Authorization
-• Rate limiting
-• Object ownership checks
-• Signed URLs
-• Secure report downloads
-• Audit logging
-
-────────────────────────────────────────
-
-OBSERVABILITY
-
-Instrument:
-
-• Search requests
-• Search latency
-• Search index lag
-• Recommendation latency
-• Recommendation cache hit rate
-• Review creation
-• Notification delivery
-• Push failures
-• Email failures
-• Messaging latency
-• Report generation
-• Analytics processing
+* database constraints
+* transactions
+* idempotency
+* explicit state transitions
 
-Track:
+Never rely on frontend state.
 
-• Search success rate
-• Zero-result rate
-• Recommendation latency
-• Notification delivery rate
-• Queue depth
-• Message delivery latency
-• Report generation duration
+---
 
-────────────────────────────────────────
+# 38. Return APIs
 
-TESTING
+Implement appropriate REST APIs for:
 
-UNIT TESTS
+### Customer
 
-Test:
+* create return request
+* retrieve return
+* list returns
+* cancel eligible return
+* submit required return information
 
-• Search query construction
-• Ranking logic
-• Recommendation rules
-• Review eligibility
-• Rating aggregation
-• Notification routing
-• Messaging authorization
-• Report authorization
-• Analytics aggregation
-
-INTEGRATION TESTS
-
-Test:
-
-• Elasticsearch/OpenSearch
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• S3
-• FCM/APNS abstractions
-• Email provider abstraction
-
-SEARCH TESTS
-
-Test:
-
-• Autocomplete
-• Filters
-• Facets
-• Sorting
-• Typo tolerance
-• Index updates
-• Reindexing
-• Authorization
-
-RECOMMENDATION TESTS
-
-Test:
-
-• Candidate generation
-• Ranking
-• Fallbacks
-• Cache behavior
-• Personalization boundaries
-
-REVIEW TESTS
-
-Test:
-
-• Verified purchase
-• Duplicate review
-• Rating aggregation
-• Seller response
-• Moderation
+### Seller
 
-NOTIFICATION TESTS
+* list seller-relevant returns
+* review return where authorized
+* approve/reject where business rules permit
+* inspect return state
 
-Test:
+### Administration
 
-• Preferences
-• Deduplication
-• Retry
-• Provider failures
-• Multi-device delivery
+* inspect returns
+* override supported states with explicit permission
+* manage return operations
 
-MESSAGING TESTS
+All endpoints must enforce server-side authorization.
 
-Test:
+---
 
-• Conversation authorization
-• Seller isolation
-• Message persistence
-• Attachment authorization
-• Read state
+# 39. Fulfillment APIs
 
-ANALYTICS TESTS
+Implement appropriate APIs for:
 
-Test:
+* customer shipment listing
+* customer shipment retrieval
+* seller fulfillment listing
+* seller shipment management
+* shipment creation where authorized
+* tracking retrieval
+* administrative fulfillment management
 
-• Event ingestion
-• Aggregation
-• Seller isolation
-• Report generation
+Do not expose internal warehouse data unnecessarily.
 
-────────────────────────────────────────
+---
 
-DOCUMENTATION
+# 40. Pagination
 
-Generate:
+All potentially large collections must support pagination.
 
-• Search architecture
-• Index mappings
-• Reindex strategy
-• Recommendation architecture
-• Personalization
-• Review model
-• Rating aggregation
-• Notification architecture
-• Messaging architecture
-• Analytics architecture
-• Reporting architecture
-• Privacy model
-• Seller isolation
-• API contracts
-• Event contracts
-• Queue architecture
-• Database schema
-• Testing strategy
+Relevant collections include:
 
-────────────────────────────────────────
+* shipments
+* tracking events
+* returns
+* return items
+* seller fulfillment queues
+* order fulfillment groups
 
-PROJECT INDEX
+Use existing cursor/offset conventions.
 
-Update the backend Project Index with:
+Do not introduce incompatible pagination formats.
 
-• Search modules
-• Recommendation modules
-• Review modules
-• Rating modules
-• Notification modules
-• Messaging modules
-• Analytics modules
-• Reporting modules
-• Database objects
-• Search indexes
-• Kafka topics
-• BullMQ queues
-• Workers
-• API endpoints
-• Events
-• Tests
-• Generated files
-• Remaining work
-• Current milestone
-• Dependencies
+---
 
-────────────────────────────────────────
+# 41. Events
 
-IMPLEMENTATION MILESTONES
+Integrate with the existing event architecture.
 
-BACKEND MILESTONE 1
+Potential events:
 
-Search domain, Elasticsearch/OpenSearch client, indexes, mappings, and query infrastructure.
+* fulfillment.created
+* fulfillment.allocated
+* fulfillment.ready
+* fulfillment.shipped
+* shipment.created
+* shipment.shipped
+* shipment.in_transit
+* shipment.out_for_delivery
+* shipment.delivered
+* shipment.delivery_failed
+* shipment.returned
+* return.requested
+* return.approved
+* return.rejected
+* return.received
+* return.inspected
+* return.approved_for_refund
+* return.completed
+* return.cancelled
 
-BACKEND MILESTONE 2
+Use existing naming conventions if present.
 
-Search indexing, autocomplete, filters, facets, ranking, aliases, and reindexing.
+Events must be emitted after authoritative state commits.
 
-BACKEND MILESTONE 3
+---
 
-Recommendation domain, deterministic ranking, personalization signals, and caching.
-
-BACKEND MILESTONE 4
-
-Reviews, verified purchase validation, ratings, aggregation, and moderation.
-
-BACKEND MILESTONE 5
-
-Notifications, preferences, push tokens, FCM/APNS integration, and email abstraction.
-
-BACKEND MILESTONE 6
-
-Customer-seller messaging, conversations, messages, attachments, and authorization.
-
-BACKEND MILESTONE 7
-
-Analytics events, aggregation, seller analytics, marketplace analytics, and retention.
-
-BACKEND MILESTONE 8
-
-Reporting jobs, secure report generation, downloads, and expiration.
-
-BACKEND MILESTONE 9
-
-Cross-domain events, queues, observability, cache strategies, and operational hardening.
-
-BACKEND MILESTONE 10
-
-Integration, performance, security, privacy, and production-readiness testing.
-
-Each milestone should contain approximately 20–40 files where practical.
-
-Every milestone must compile before proceeding.
-
-────────────────────────────────────────
-
-OUTPUT FORMAT
-
-For every generated file provide:
-
-1. Exact file path
-2. Complete file contents
-
-Never truncate code.
-
-Never summarize source code instead of generating it.
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO implementations.
-
-When modifying an existing file:
-
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
-
-Never regenerate unchanged files.
-
-────────────────────────────────────────
-
-SCOPE RESTRICTION
-
-This volume covers:
-
-• Search
-• Search indexing
-• Search analytics
-• Recommendations
-• Personalization
-• Reviews
-• Ratings
-• Review moderation
-• Notifications
-• Push notifications
-• Email notifications
-• Customer-seller messaging
-• Analytics
-• Reporting
-
-Do not implement:
-
-• Infrastructure
-• Kubernetes
-• Terraform
-• CI/CD
-• Frontend
-• Mobile
-
-Do not redesign existing catalog, inventory, checkout, order, payment, or seller architectures.
-
-────────────────────────────────────────
-
-QUALITY BAR
-
-Treat search, recommendations, reviews, notifications, messaging, and analytics as high-scale production systems.
+# 42. Event Reliability
 
 Assume:
 
-• Millions of search requests
-• Millions of products
-• Large recommendation traffic
-• Large review volumes
-• Large notification volumes
-• High messaging traffic
-• Large analytics event volumes
-• Hundreds of thousands of sellers
-• Global operations
+* duplicate delivery
+* delayed delivery
+* retry
+* replay
+* consumer failure
+* partial system failure
 
-Prioritize:
+Consumers must be idempotent.
 
-• Search relevance
-• Low latency
-• Data privacy
-• Seller isolation
-• Recommendation resilience
-• Notification reliability
-• Messaging authorization
-• Analytics correctness
-• Horizontal scaling
-• Observability
-• Fault tolerance
-• Maintainability
-• Production readiness
+Do not assume exactly-once processing.
+
+Use transactional outbox integration.
+
+---
+
+# 43. BullMQ Jobs
+
+Implement appropriate background jobs for:
+
+* fulfillment processing
+* shipment tracking synchronization where applicable
+* stale shipment detection
+* return expiration
+* return tracking synchronization
+* return cleanup
+* reconciliation tasks where justified
+
+Every job must define:
+
+* queue
+* job name
+* payload
+* retry count
+* timeout
+* backoff
+* concurrency
+* idempotency
+* observability
+* failure handling
+
+Do not create unbounded retry loops.
+
+---
+
+# 44. Redis
+
+Redis may be used for:
+
+* rate limiting
+* short-lived tracking caches
+* temporary operational state
+* provider throttling
+* job coordination where appropriate
+
+PostgreSQL remains authoritative.
+
+Do not store shipment/return state only in Redis.
+
+For each Redis key define:
+
+* namespace
+* TTL
+* invalidation
+* stale behavior
+* failure behavior
+
+---
+
+# 45. Database Design
+
+Extend Prisma safely.
+
+Potential models include:
+
+* FulfillmentGroup
+* Shipment
+* ShipmentItem
+* TrackingEvent
+* ShippingMethod
+* ReturnRequest
+* ReturnItem
+* ReturnShipment
+* ReturnStatusHistory
+* FulfillmentStatusHistory
+
+Only create models that are required by the actual architecture.
+
+Use:
+
+* foreign keys
+* unique constraints
+* composite indexes
+* lifecycle indexes
+* provider-reference uniqueness
+* timestamps
+* immutable history records
+
+---
+
+# 46. Database Constraints
+
+Protect invariants such as:
+
+* shipment quantity <= order quantity
+* return quantity <= purchased/eligible quantity
+* tracking provider event uniqueness
+* shipment references
+* return ownership relationships
+* seller ownership relationships
+
+Where a business invariant cannot be fully represented as a database constraint, enforce it transactionally in domain/application services.
+
+---
+
+# 47. Transaction Boundaries
+
+Use transactions for:
+
+* fulfillment allocation
+* shipment creation
+* shipment state transition
+* delivery confirmation
+* return approval
+* return quantity allocation
+* return inventory restoration
+* refund integration state changes
+* outbox insertion
+
+Do not make external carrier/payment calls inside long database transactions.
+
+---
+
+# 48. External Provider Reliability
+
+Carrier integrations must handle:
+
+* timeout
+* network failure
+* rate limiting
+* provider outage
+* malformed response
+* duplicate response
+* changed tracking status
+
+Use:
+
+* bounded retries
+* exponential backoff
+* idempotency
+* circuit-breaking/degradation where appropriate
+* reconciliation
+
+Do not block core order access because a carrier API is temporarily unavailable.
+
+---
+
+# 49. Security
+
+Threat-model:
+
+* shipment IDOR
+* return IDOR
+* seller fulfillment isolation bypass
+* unauthorized shipment modification
+* unauthorized return approval
+* refund abuse
+* tracking enumeration
+* sensitive address exposure
+* provider credential leakage
+* webhook forgery
+* replay
+* privilege escalation
+
+All authorization must happen server-side.
+
+---
+
+# 50. Privacy
+
+Customer-facing shipment/return responses should expose only necessary information.
+
+Protect:
+
+* shipping addresses
+* phone numbers
+* customer contact information
+* seller operational information
+* internal fulfillment metadata
+
+Seller views must be limited to data required to fulfill their own products.
+
+---
+
+# 51. Observability
+
+Instrument:
+
+### Fulfillment
+
+* fulfillment creation
+* allocation failures
+* processing latency
+* shipment creation
+* shipment failures
+
+### Shipping
+
+* provider latency
+* tracking synchronization
+* tracking failures
+* delivery confirmation
+
+### Returns
+
+* return requests
+* approvals/rejections
+* inspection outcomes
+* refund integration
+* inventory restoration
+
+### Jobs
+
+* processing success/failure
+* retries
+* dead-letter conditions
+
+Use distributed tracing across:
+
+* HTTP
+* PostgreSQL
+* Redis
+* BullMQ
+* event infrastructure
+* external providers
+
+Never log secrets or unnecessary customer data.
+
+---
+
+# 52. Audit Logging
+
+Audit:
+
+* seller fulfillment actions
+* administrative shipment changes
+* return approval/rejection
+* manual inspection outcomes
+* refund-triggering return actions
+* inventory restoration from returns
+* administrative overrides
+
+Audit records must be immutable.
+
+---
+
+# 53. Testing
+
+Implement comprehensive tests.
+
+## Unit Tests
+
+Test:
+
+* fulfillment state machine
+* shipment state machine
+* return state machine
+* fulfillment eligibility
+* return eligibility
+* quantity rules
+* refund eligibility
+* inventory restoration rules
+
+## Integration Tests
+
+Test:
+
+* shipment persistence
+* partial shipment behavior
+* multi-seller fulfillment
+* tracking events
+* return persistence
+* inventory restoration
+* refund integration
+* transactional outbox
+* idempotency
+
+## API Tests
+
+Test:
+
+* customer shipment access
+* seller fulfillment access
+* cross-seller isolation
+* customer return access
+* seller return access
+* administrative access
+* pagination
+* invalid transitions
+
+## Security Tests
+
+Explicitly test:
+
+* cross-customer shipment access
+* cross-customer return access
+* cross-seller fulfillment access
+* forged seller IDs
+* unauthorized shipment mutation
+* unauthorized return approval
+* tracking enumeration
+* refund abuse
+
+## Concurrency Tests
+
+Test:
+
+* concurrent shipment creation
+* concurrent return requests
+* concurrent return approval
+* duplicate tracking event processing
+* concurrent inventory restoration
+* refund/return races
+
+Verify no duplicated shipment, refund, or inventory restoration occurs.
+
+---
+
+# 54. Performance
+
+Review:
+
+* customer shipment queries
+* seller fulfillment queues
+* tracking history
+* return listing
+* return eligibility
+* order fulfillment summaries
+
+Prevent:
+
+* N+1 queries
+* unbounded tracking retrieval
+* unbounded seller queues
+* unnecessary relation loading
+
+Use appropriate indexes and pagination.
+
+---
+
+# 55. API Documentation
+
+Update OpenAPI/Swagger with:
+
+* fulfillment endpoints
+* shipment endpoints
+* tracking endpoints
+* return endpoints
+* DTOs
+* status transitions
+* authorization
+* pagination
+* error contracts
+
+Document only actual implemented behavior.
+
+---
+
+# 56. Migration Safety
+
+Create safe Prisma migrations.
+
+Verify:
+
+* foreign keys
+* unique constraints
+* indexes
+* seller relationships
+* order relationships
+* return relationships
+* shipment relationships
+* provider references
+
+Do not reset existing databases.
+
+Do not destroy historical order, payment, shipment, or return data.
+
+---
+
+# 57. Backward Compatibility
+
+Preserve existing:
+
+* order APIs
+* payment APIs
+* inventory APIs
+* checkout APIs
+* seller APIs
+* customer APIs
+
+If existing contracts must change:
+
+1. inspect all consumers
+2. preserve compatibility where possible
+3. update consumers
+4. add regression tests
+5. document actual changes
+
+---
+
+# 58. Explicitly Defer
+
+Do not implement complete:
+
+* review/rating system
+* notification system
+* recommendation system
+* search system
+* analytics system
+* seller payout/settlement system
+* advanced warehouse management
+* carrier-specific integrations without configured providers
+
+Create clean integration boundaries instead.
+
+---
+
+# 59. Documentation
+
+Update technical documentation for:
+
+* fulfillment lifecycle
+* shipment lifecycle
+* tracking
+* multi-seller fulfillment
+* returns
+* return eligibility
+* inventory restoration
+* refund integration
+* authorization
+* background jobs
+* provider integrations
+* operational troubleshooting
+
+Documentation must reflect actual repository behavior.
+
+---
+
+# 60. Implementation Requirements
+
+You must:
+
+1. Inspect the actual repository first.
+2. Reuse existing compatible infrastructure.
+3. Implement the complete scope of this volume.
+4. Create/update Prisma migrations.
+5. Implement fulfillment.
+6. Implement shipments.
+7. Implement tracking.
+8. Implement returns.
+9. Integrate inventory.
+10. Integrate payments/refunds.
+11. Implement events.
+12. Implement background jobs.
+13. Implement authorization.
+14. Implement idempotency.
+15. Implement audit logging.
+16. Implement observability.
+17. Implement tests.
+18. Update API documentation.
+19. Update operational documentation.
+20. Run formatting.
+21. Run lint.
+22. Run type checking.
+23. Run tests.
+24. Run build validation.
+25. Validate migrations.
+26. Verify no secrets were introduced.
+27. Verify no placeholders remain.
+
+Do not merely describe what should be implemented.
+
+Actually modify the repository.
+
+---
+
+# 61. Final Validation
+
+Verify:
+
+### Fulfillment
+
+* multi-seller orders work
+* fulfillment groups are correct
+* seller isolation is enforced
+* partial fulfillment is supported where required
+* inventory integration is correct
+
+### Shipping
+
+* shipment quantities are correct
+* shipment state transitions are valid
+* tracking is immutable
+* duplicate provider events are safe
+* delivery updates are reliable
+
+### Returns
+
+* eligibility is enforced
+* return quantities are safe
+* return state transitions are valid
+* refunds integrate correctly
+* inventory restoration is correct
+
+### Reliability
+
+* operations are idempotent
+* jobs are retry-safe
+* provider failures degrade safely
+* outbox events are reliable
+* historical records remain immutable
+
+### Security
+
+* no IDOR
+* no cross-seller access
+* no unauthorized return/refund actions
+* no sensitive address leakage
+* no provider credential leakage
+
+### Testing
+
+* unit tests pass
+* integration tests pass
+* API tests pass
+* security tests pass
+* concurrency tests pass
+
+### Code Quality
+
+* lint passes
+* typecheck passes
+* build passes
+* migrations are valid
+* no duplicate implementations exist
+
+---
+
+# 62. Final Report
+
+When finished, report only facts about the actual repository.
+
+Include:
+
+1. Fulfillment implementation.
+2. Shipment implementation.
+3. Tracking implementation.
+4. Return implementation.
+5. Inventory integration.
+6. Refund integration.
+7. Database models/migrations.
+8. APIs.
+9. Events.
+10. BullMQ jobs.
+11. Security controls.
+12. Observability.
+13. Tests.
+14. Validation commands and actual results.
+15. Genuine remaining limitations or blockers.
+
+Do not claim an external carrier integration exists unless it was actually implemented and configured.
+
+Do not claim functionality was tested if it could not actually be tested.
+
+The repository is the final source of truth.
+
+---
+
+# 63. Non-Negotiable Rules
+
+* No pseudo-code.
+* No TODOs.
+* No FIXME markers.
+* No placeholder implementations.
+* No fake carrier APIs.
+* No invented provider behavior.
+* No hardcoded secrets.
+* No arbitrary shipment state changes.
+* No arbitrary return state changes.
+* No duplicate shipments.
+* No duplicate refunds.
+* No duplicate inventory restoration.
+* No cross-customer shipment access.
+* No cross-customer return access.
+* No cross-seller fulfillment access.
+* No frontend-only authorization.
+* No unnecessary regeneration of unchanged files.
+* No competing implementations.
+* No false completion claims.
+
+Most importantly:
+
+**Inspect the actual repository first, then implement the complete Fulfillment + Shipping + Tracking + Returns backend implementation unit as a production-grade extension of the existing ecommerce marketplace.**

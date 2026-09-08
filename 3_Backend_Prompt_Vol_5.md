@@ -1,1628 +1,1487 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Backend Prompt — Volume 5
+
+## Role
+
+You are the senior backend engineering team responsible for implementing the production-grade payment subsystem of an original Amazon-style ecommerce marketplace.
+
+Act as:
+
+* Principal Software Architect
+* Staff Backend Engineer
+* Payment Systems Engineer
+* Distributed Systems Engineer
+* Database Architect
+* Security Engineer
+* QA Engineer
+* DevOps Engineer
+
+This is an implementation task, not a tutorial.
+
+You must inspect the actual repository and make real production-quality changes.
+
+---
+
+# 1. Project Context
+
+Build an original, production-grade ecommerce marketplace supporting:
+
+* customers
+* products
+* variants
+* SKUs
+* sellers
+* seller offers
+* pricing
+* promotions
+* coupons
+* inventory
+* carts
+* checkout
+* orders
+* payments
+* refunds
+* fulfillment
+* reviews
+* search
+* notifications
+* administration
+* analytics
+
+Technology baseline:
+
+* Node.js
+* NestJS
+* TypeScript
+* PostgreSQL
+* Prisma
+* Redis
+* Elasticsearch/OpenSearch
+* BullMQ
+* AWS S3
+* AWS CloudFront
+* Stripe
+* REST
+* OpenAPI / Swagger
+* Webhooks
+* Kafka/Redpanda where justified
+* Docker
+* Terraform/OpenTofu
+* AWS
+* Kubernetes where justified
+
+Architectural principles:
+
+* Clean Architecture
+* Domain-Driven Design
+* SOLID
+* Repository Pattern
+* Service Layer
+* Explicit bounded contexts
+* Strong typing
+* Transactional consistency
+* Idempotency
+* Secure provider integration
+* Server-side authorization
+* Production-grade observability
+* Failure recovery
+
+The actual repository is the source of truth.
+
+---
+
+# 2. Repository-First Requirement
+
+Before making changes:
+
+1. Inspect the complete backend repository.
+2. Inspect package configuration.
+3. Inspect Prisma schema and migrations.
+4. Inspect authentication and authorization.
+5. Inspect Customer.
+6. Inspect Seller.
+7. Inspect Product/SKU/Offer.
+8. Inspect Pricing.
+9. Inspect Inventory.
+10. Inspect Cart.
+11. Inspect Checkout.
+12. Inspect Order.
+13. Inspect existing payment-related code.
+14. Inspect existing Stripe dependencies/configuration.
+15. Inspect webhook infrastructure.
+16. Inspect Redis.
+17. Inspect outbox/event infrastructure.
+18. Inspect BullMQ.
+19. Inspect API conventions.
+20. Inspect tests and documentation.
+
+Do not assume a payment implementation exists merely because the project requirements mention Stripe.
+
+Reuse compatible code.
+
+Do not create duplicate payment models, services, webhook controllers, configuration systems, or event pipelines.
+
+If the repository differs from this specification, preserve existing working behavior and make the smallest safe change necessary.
+
+---
+
+# 3. Scope of This Volume
+
+Implement the complete production-grade payment subsystem covering:
+
+1. Payment domain
+2. Payment records
+3. Payment attempts
+4. Stripe integration
+5. Stripe PaymentIntents
+6. Payment authorization
+7. Payment confirmation
+8. Payment failure handling
+9. Stripe webhook ingestion
+10. Webhook signature verification
+11. Webhook idempotency
+12. Payment reconciliation
+13. Payment state synchronization
+14. Refunds
+15. Partial refunds
+16. Refund idempotency
+17. Payment/order consistency
+18. Payment failure recovery
+19. Payment background jobs
+20. Payment events
+21. Payment audit
+22. Security
+23. Observability
+24. Testing
+25. Operational documentation
 
-Build the production-ready backend for orders, fulfillment, shipments, payments, refunds, returns, exchanges, marketplace commissions, seller balances, seller payouts, and financial reconciliation for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+Do not implement the complete fulfillment, shipping, returns, reviews, notifications, or analytics systems.
 
-The platform is an original implementation.
+---
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+# 4. Payment Domain
+
+Create or extend an explicit Payments bounded context.
+
+The payment domain must distinguish:
+
+* internal payment state
+* provider state
+* payment attempt state
+* refund state
+* order state
 
-This prompt is completely independent and may be executed in a separate conversation.
+Do not collapse all payment behavior into a single boolean such as:
 
-The backend must follow the established ecommerce architecture, database ownership model, seller-isolation rules, catalog architecture, pricing architecture, inventory architecture, checkout architecture, API conventions, event architecture, payment boundaries, and security model.
+`isPaid`
 
-Do not redesign the architecture.
+The system must preserve sufficient history to investigate payment problems.
 
-Do not generate frontend code.
+---
 
-Do not generate mobile code.
+# 5. Payment Aggregate
 
-Do not generate Kubernetes manifests.
+Implement or extend a Payment model representing the payment associated with an order.
 
-Do not generate Terraform.
+It should contain appropriate fields such as:
 
-Do not generate infrastructure implementation code.
+* payment ID
+* order ID
+* customer ID where appropriate
+* currency
+* amount
+* status
+* provider
+* provider customer reference where appropriate
+* provider payment reference
+* authorized amount
+* captured amount
+* refunded amount
+* timestamps
+* metadata/reference fields
+* version/concurrency information where appropriate
 
-Do not generate CI/CD workflows.
+Do not expose provider secrets.
 
-────────────────────────────────────────
+---
 
-MISSION
+# 6. Payment State Machine
 
-Implement the production-ready backend required for:
+Implement explicit payment states.
 
-• Orders
-• Order items
-• Seller orders
-• Split orders
-• Fulfillment
-• Fulfillment orders
-• Shipments
-• Shipment tracking
-• Delivery status
-• Payment intents
-• Payment attempts
-• Payment confirmation
-• Payment failures
-• Payment webhooks
-• Refunds
-• Partial refunds
-• Returns
-• Return eligibility
-• Return approval
-• Return processing
-• Exchanges
-• Marketplace commissions
-• Seller balances
-• Seller settlements
-• Seller payouts
-• Payout failures
-• Financial reconciliation
-• Order timelines
-• Financial auditability
+Possible states include:
 
-The implementation must support:
+* REQUIRES_PAYMENT
+* REQUIRES_ACTION
+* PROCESSING
+* AUTHORIZED
+* CAPTURED
+* FAILED
+* CANCELLED
+* PARTIALLY_REFUNDED
+* REFUNDED
 
-• Millions of orders
-• Multiple sellers per customer order
-• Multiple shipments per order
-• Multiple fulfillment locations
-• Partial cancellation
-• Partial refund
-• Partial return
-• Marketplace commissions
-• Seller payouts
-• High payment traffic
-• High checkout traffic
-• Duplicate webhooks
-• Provider retries
-• Multi-region operation
-• Strong financial consistency
-• High availability
+Use the repository's conventions if equivalent states already exist.
 
-────────────────────────────────────────
+Do not introduce arbitrary transitions.
 
-TECHNOLOGY STACK
+Define allowed transitions.
 
-Backend:
+For each transition determine:
 
-• Node.js
-• NestJS
-• TypeScript
+* triggering event
+* authorized actor
+* provider verification requirement
+* database transaction
+* event emission
+* failure behavior
 
-Database:
+---
 
-• PostgreSQL
-• Prisma ORM
+# 7. Payment Attempts
 
-Cache:
+Implement immutable payment-attempt records.
 
-• Redis
+A payment may have multiple attempts because:
 
-Event Streaming:
+* card authentication can fail
+* payment method can fail
+* customer can retry
+* provider can return temporary errors
+* asynchronous payment states may occur
 
-• Kafka or Redpanda where justified
+Each attempt should capture appropriate information such as:
 
-Background Processing:
+* attempt ID
+* payment ID
+* provider
+* provider attempt/reference ID
+* amount
+* currency
+* status
+* failure code
+* failure category
+* provider response metadata safe for storage
+* created timestamp
+* completed timestamp
 
-• BullMQ
+Never overwrite historical attempts to make them appear successful.
 
-Payments:
+---
 
-• Stripe
-• Stripe Connect or approved marketplace-payment architecture
+# 8. Exact Money Handling
 
-Shipping:
+Payment amounts must use exact monetary representation.
 
-• Shipping-provider abstraction
+Never use floating-point arithmetic.
 
-Object Storage:
+The system must validate:
 
-• AWS S3-compatible object storage where documents are required
+* currency
+* minor-unit amount
+* order total
+* payment amount
+* capture amount
+* refund amount
 
-Observability:
+Payment amounts must exactly correspond to authoritative order totals.
 
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
+Never trust a payment amount supplied by the frontend.
 
-Testing:
+---
 
-• Jest
-• Supertest
-• Integration and contract testing tools
+# 9. Stripe Integration
 
-────────────────────────────────────────
+Implement Stripe integration using the official Stripe SDK appropriate for the repository's Node.js/TypeScript environment.
 
-IMPLEMENTATION RULES
+Do not invent Stripe API behavior.
 
-Never generate pseudo-code.
+Use configuration for:
 
-Never generate placeholders.
+* secret key
+* webhook secret
+* API version if explicitly configured
+* environment/mode
+* connection behavior where supported
 
-Never generate TODO comments.
+Secrets must come from secure configuration/environment mechanisms.
 
-Never omit implementations.
+Never commit Stripe credentials.
 
-Never say:
+Never expose the Stripe secret key to:
 
-- "implement similarly"
-- "left as an exercise"
-- "for brevity"
-- "remaining code omitted"
+* browser
+* React
+* React Native
+* logs
+* API responses
+* client configuration
 
-Every generated file must be complete.
+---
 
-Every generated file must compile.
+# 10. Stripe Customer Mapping
 
-Never regenerate unchanged files.
+If the architecture uses Stripe Customer objects, maintain a safe mapping between:
 
-Only modify existing files when required.
+* internal customer
+* Stripe customer
 
-Use strict TypeScript.
+Do not use email as the sole durable identity mapping.
 
-Use dependency injection.
+Use an explicit provider reference.
 
-Keep controllers thin.
+Ensure:
 
-Keep business rules outside controllers.
+* uniqueness
+* correct ownership
+* safe creation
+* retry behavior
+* no duplicate customer creation during concurrent requests
 
-Use repositories for persistence.
+---
 
-Use DTOs for APIs.
+# 11. PaymentIntent Creation
 
-Use centralized validation.
+Implement server-side PaymentIntent creation where required by the checkout/payment flow.
 
-Use centralized error handling.
+The PaymentIntent amount must come from the authoritative order/checkout total.
 
-Use structured logging.
+The server must verify:
 
-Use idempotency for financial operations.
+* order ownership
+* order state
+* payment state
+* currency
+* amount
+* customer
+* idempotency
 
-Never trust payment-provider callbacks without verification.
+Do not allow clients to specify arbitrary payment amounts.
 
-────────────────────────────────────────
+---
 
-DOMAIN OWNERSHIP
+# 12. Stripe Idempotency
 
-Maintain explicit boundaries between:
+Use Stripe idempotency mechanisms where appropriate.
 
-Orders
+Also maintain application-level idempotency.
 
-Seller Orders
+These are separate protections.
 
-Fulfillment
+The application must prevent duplicate internal payments even if:
 
-Shipments
+* client retries
+* API request retries
+* network timeout occurs after provider success
+* server crashes after provider creation
+* webhook arrives before the original API response
 
-Payments
+Do not assume provider idempotency alone solves application-level duplication.
 
-Refunds
+---
 
-Returns
+# 13. Payment Authorization
 
-Exchanges
+Support the appropriate payment authorization lifecycle.
 
-Marketplace Commissions
+The system must distinguish:
 
-Seller Balances
+* payment method accepted
+* payment requires customer action
+* payment authorized
+* payment captured
+* payment failed
 
-Seller Payouts
+Do not mark an order as successfully paid merely because a PaymentIntent was created.
 
-Reconciliation
+---
 
-Audit
+# 14. Payment Confirmation
 
-Do not combine payment state and order state.
+Payment confirmation must be server-authoritative.
 
-Do not combine shipment state and fulfillment state.
+Depending on the selected Stripe integration flow:
 
-Do not combine seller balance and payout state.
+* client may initiate customer authentication
+* server verifies resulting provider state
+* webhook confirms asynchronous state where necessary
 
-Do not infer financial state solely from external provider state.
+Never trust:
 
-────────────────────────────────────────
+* frontend success screens
+* client-provided PaymentIntent status
+* client-provided charge IDs
 
-ORDER DOMAIN
+as authoritative proof of payment.
 
-Implement order creation from validated checkout state.
+---
 
-Support:
+# 15. Order-Payment Consistency
 
-• Order creation
-• Parent order
-• Seller sub-orders
-• Order items
-• Price snapshots
-• Tax snapshots
-• Shipping snapshots
-• Customer address snapshot
-• Billing snapshot where required
-• Order totals
-• Order status
-• Order timeline
+Maintain clear separation between:
 
-The order must be immutable with respect to critical historical commercial data.
+* order status
+* payment status
+* inventory state
 
-Do not recalculate historical order totals from current catalog values.
+For example:
 
-────────────────────────────────────────
+A payment failure must not create a successful order.
 
-ORDER STRUCTURE
+A successful payment must not result in an order with missing order items.
 
-Support:
+A payment retry must not create a second order.
 
-• Parent marketplace order
-• Seller order
-• Fulfillment order
-• Shipment
-• Shipment item
+An order cancellation must not accidentally refund an unrelated payment.
 
-Define relationships among:
+Define these invariants explicitly in the implementation.
 
-Customer
-→ Parent Order
-→ Seller Orders
-→ Fulfillment Orders
-→ Shipments
+---
 
-Support multiple sellers and multiple shipments.
+# 16. Payment Webhooks
 
-────────────────────────────────────────
+Implement a dedicated Stripe webhook endpoint.
 
-ORDER STATE MACHINE
+The webhook endpoint must:
 
-Implement explicit order states.
+1. Receive the raw request body.
+2. Preserve the exact payload needed for signature verification.
+3. Verify the Stripe signature using the configured webhook secret.
+4. Reject invalid signatures.
+5. Identify the provider event.
+6. Persist the webhook event safely.
+7. Handle duplicate events idempotently.
+8. Process supported event types.
+9. Update internal payment state transactionally.
+10. Create internal events/outbox records where appropriate.
+11. Return the appropriate HTTP response.
 
-Support appropriate states such as:
+Do not parse and mutate the request body before signature verification if that would invalidate verification.
 
-• Pending
-• Awaiting Payment
-• Confirmed
-• Processing
-• Partially Fulfilled
-• Fulfilled
-• Partially Shipped
-• Shipped
-• Partially Delivered
-• Delivered
-• Partially Canceled
-• Canceled
-• Return Pending
-• Partially Returned
-• Returned
-• Refunded
-• Closed
+---
 
-Define all allowed transitions.
+# 17. Webhook Event Persistence
 
-Invalid state transitions must be rejected.
+Create or extend a durable payment webhook event model.
 
-State transitions must be idempotent.
+Persist sufficient metadata such as:
 
-────────────────────────────────────────
+* provider
+* provider event ID
+* event type
+* API version where available
+* payload or safe normalized representation
+* received timestamp
+* processing status
+* processed timestamp
+* attempt count
+* last error
+* correlation/reference data
 
-SELLER ORDER
+Provider event IDs must be uniquely protected against duplicate processing.
 
-Implement seller-scoped order representation.
+---
 
-A seller must only access the order items and customer information required for fulfillment.
+# 18. Webhook Idempotency
 
-Support:
+Webhook processing must be idempotent.
 
-• Seller order
-• Seller order status
-• Seller order totals
-• Fulfillment state
-• Seller cancellation
-• Seller return handling
-• Seller financial references
+Stripe may deliver the same event more than once.
 
-Do not expose unrelated sellers' order data.
+A duplicate webhook must not:
 
-────────────────────────────────────────
+* create duplicate payments
+* create duplicate refunds
+* double-count captured amount
+* double-count refunded amount
+* consume inventory twice
+* change an order twice incorrectly
+* duplicate business events
 
-ORDER ITEM SNAPSHOTS
+Use durable database constraints plus transactional processing.
 
-Persist authoritative historical snapshots for:
+---
 
-• Product
-• Variant
-• Seller
-• Seller offer
-• SKU
-• Product title
-• Unit price
-• Discount
-• Tax
-• Shipping allocation
-• Currency
+# 19. Supported Stripe Events
 
-Historical order information must remain stable even when catalog data changes later.
+Implement only event types actually required by the payment architecture.
 
-────────────────────────────────────────
+Potential events include:
 
-ORDER CREATION
+* `payment_intent.created`
+* `payment_intent.processing`
+* `payment_intent.requires_action`
+* `payment_intent.succeeded`
+* `payment_intent.payment_failed`
+* `payment_intent.canceled`
+* `charge.refunded`
+* `charge.refund.updated`
 
-Order creation must be idempotent.
+Add additional events only when they provide meaningful consistency or reconciliation value.
 
-Support:
+Do not build a giant generic event switch without domain ownership.
 
-• Checkout reference
-• Idempotency key
-• Payment reference
-• Inventory reservation references
+---
 
-Prevent:
+# 20. Provider State Reconciliation
 
-• Duplicate orders
-• Duplicate order items
-• Duplicate financial records
+Provider state and internal state can temporarily diverge.
 
-Use transactional boundaries appropriate to the local database.
+Implement a reconciliation mechanism.
 
-Do not attempt distributed transactions across payment providers and inventory systems.
+The system must be able to detect situations such as:
 
-────────────────────────────────────────
+* internal payment says PROCESSING but Stripe says SUCCEEDED
+* internal payment says FAILED but provider later reports success
+* webhook was never received
+* webhook processing failed
+* API request timed out after provider accepted payment
+* refund status differs between systems
 
-ORDER TIMELINE
+The reconciliation process must be safe and idempotent.
 
-Implement an auditable order timeline.
+---
 
-Track events such as:
+# 21. Payment Reconciliation Jobs
 
-• Created
-• Payment Pending
-• Paid
-• Processing
-• Fulfillment Started
-• Shipped
-• Delivered
-• Canceled
-• Return Requested
-• Return Approved
-• Return Received
-• Refund Issued
-• Closed
+Use BullMQ for appropriate reconciliation jobs.
 
-Timeline entries must be immutable.
+Jobs may:
 
-────────────────────────────────────────
+* retry failed webhook processing
+* reconcile pending PaymentIntents
+* reconcile refunds
+* detect stale processing payments
+* repair safe state mismatches
 
-FULFILLMENT DOMAIN
+Every job must define:
 
-Implement:
+* queue
+* payload
+* retry count
+* backoff
+* timeout
+* concurrency
+* idempotency
+* logging
+* metrics
+* failure behavior
 
-• Fulfillment order creation
-• Fulfillment assignment
-• Fulfillment status
-• Seller fulfillment
-• Warehouse fulfillment
-• Partial fulfillment
-• Fulfillment cancellation
-• Fulfillment completion
+Do not build an infinite retry loop.
 
-Support fulfillment states such as:
+---
 
-• Pending
-• Assigned
-• Processing
-• Ready
-• Shipped
-• Completed
-• Canceled
-• Failed
+# 22. Payment Failure Handling
 
-Define ownership of every state transition.
+Classify failures where useful.
 
-────────────────────────────────────────
+Distinguish:
 
-FULFILLMENT ALLOCATION
+* customer-action-required
+* permanent payment failure
+* temporary provider failure
+* network failure
+* internal processing failure
+* fraud/risk rejection
+* configuration failure
 
-Support:
+Do not expose raw Stripe/provider internals unnecessarily to customers.
 
-• Warehouse allocation
-• Seller allocation
-• Multi-warehouse orders
-• Backorders where explicitly supported
-• Partial fulfillment
+Return safe, stable application-level error codes.
 
-Use the inventory allocation architecture established in the previous backend volume.
+---
 
-Do not reserve inventory again during fulfillment if it has already been reserved and committed correctly.
+# 23. Retry Behavior
 
-────────────────────────────────────────
+Retry only operations that are safe to retry.
 
-SHIPMENT DOMAIN
+Do not blindly retry:
 
-Implement:
+* payment creation
+* capture
+* refund
 
-• Shipment creation
-• Shipment items
-• Carrier
-• Service level
-• Tracking number
-• Tracking URL where available
-• Shipment status
-• Shipment events
-• Estimated delivery
-• Actual delivery
-
-Support multiple shipments for a single seller order.
-
-────────────────────────────────────────
-
-SHIPMENT STATE MACHINE
-
-Support:
-
-• Pending
-• Label Created
-• Ready for Pickup
-• In Transit
-• Out for Delivery
-• Delivered
-• Delayed
-• Failed
-• Returned
-• Lost
-• Canceled
-
-Define valid transitions and provider synchronization behavior.
-
-External carriers may report events out of order or more than once.
-
-The integration must be idempotent.
-
-────────────────────────────────────────
-
-SHIPPING PROVIDER ABSTRACTION
-
-Create an abstraction for external shipping providers.
-
-Support operations such as:
-
-• Rate lookup
-• Shipment creation
-• Label generation
-• Tracking
-• Cancellation where supported
-
-Provider-specific response formats must not leak into core order logic.
-
-Handle:
-
-• Timeouts
-• Retries
-• Provider failures
-• Duplicate callbacks
-• Out-of-order tracking events
-
-────────────────────────────────────────
-
-PAYMENT DOMAIN
-
-Implement production Stripe integration.
-
-Support:
-
-• Payment Intent
-• Payment attempt
-• Payment confirmation
-• Payment failure
-• Payment cancellation
-• Payment status
-• Webhook ingestion
-• Webhook verification
-• Payment reconciliation
-
-Use idempotency keys for operations where supported.
-
-────────────────────────────────────────
-
-PAYMENT STATE MACHINE
-
-Separate payment state from order state.
-
-Support states such as:
-
-• Created
-• Requires Action
-• Processing
-• Succeeded
-• Failed
-• Canceled
-• Partially Refunded
-• Refunded
-
-Define valid transitions.
-
-Never move a payment to a successful state solely because a client reports success.
-
-Use verified payment-provider events where appropriate.
-
-────────────────────────────────────────
-
-STRIPE WEBHOOKS
-
-Implement secure webhook processing.
-
-Support:
-
-• Signature verification
-• Event persistence
-• Duplicate detection
-• Idempotent processing
-• Event ordering tolerance
-• Retry
-• Failure recording
-
-Persist webhook event identifiers so the same provider event cannot be processed twice incorrectly.
-
-Never trust an unsigned webhook request.
-
-────────────────────────────────────────
-
-PAYMENT RECONCILIATION
-
-Implement reconciliation processes that compare:
-
-• Internal payment records
-• Stripe payment state
-• Order state
-• Refund state
-• Seller settlement state
-
-Identify:
-
-• Missing payments
-• Unknown payments
-• State mismatches
-• Duplicate events
-• Failed reconciliation
-
-Reconciliation must be auditable.
-
-────────────────────────────────────────
-
-REFUNDS
-
-Implement:
-
-• Full refund
-• Partial refund
-• Refund reason
-• Refund state
-• Refund amount
-• Refund eligibility
-• Refund provider reference
-• Refund timeline
-
-Support refund causes such as:
-
-• Cancellation
-• Return
-• Partial compensation
-• Payment correction
-• Administrative refund
-
-Prevent duplicate refund requests.
-
-────────────────────────────────────────
-
-REFUND STATE MACHINE
-
-Support:
-
-• Requested
-• Pending
-• Processing
-• Succeeded
-• Failed
-• Canceled
-
-Do not mark an external refund as successful without appropriate provider confirmation.
-
-────────────────────────────────────────
-
-PARTIAL REFUNDS
-
-Support refunds at:
-
-• Order level
-• Seller-order level
-• Order-item level
-• Quantity level
-
-Maintain exact financial allocation.
-
-Refund calculations must account for:
-
-• Item price
-• Discounts
-• Taxes
-• Shipping
-• Marketplace commission adjustments where required
-
-Use exact decimal arithmetic.
-
-────────────────────────────────────────
-
-RETURN DOMAIN
-
-Implement:
-
-• Return request
-• Return eligibility
-• Return items
-• Return reason
-• Return status
-• Return shipping
-• Return receipt
-• Inspection
-• Refund eligibility
-• Return rejection
-
-Define return states such as:
-
-• Requested
-• Under Review
-• Approved
-• Rejected
-• In Transit
-• Received
-• Inspected
-• Refund Pending
-• Completed
-• Canceled
-
-────────────────────────────────────────
-
-RETURN ELIGIBILITY
-
-Determine eligibility using:
-
-• Order status
-• Delivery date
-• Return window
-• Product rules
-• Seller policy
-• Marketplace policy
-• Regional requirements
-• Item condition
-
-Eligibility must be evaluated server-side.
-
-────────────────────────────────────────
-
-RETURN PROCESSING
-
-Support:
-
-• Return authorization
-• Return shipping
-• Return tracking
-• Warehouse receipt
-• Inspection
-• Condition result
-• Refund authorization
-• Exchange authorization
-
-Define recovery for:
-
-• Lost return
-• Damaged return
-• Invalid item
-• Missing item
-• Late return
-
-────────────────────────────────────────
-
-EXCHANGES
-
-Implement:
-
-• Exchange request
-• Eligibility
-• Replacement product
-• Replacement inventory
-• Approval
-• Replacement fulfillment
-• Return of original item
-• Financial adjustment
-
-Coordinate with:
-
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Refunds
-
-Avoid duplicate financial operations.
-
-────────────────────────────────────────
-
-MARKETPLACE COMMISSIONS
-
-Implement marketplace commission calculation.
-
-Support:
-
-• Percentage commission
-• Fixed commission
-• Category-specific commission
-• Seller-specific commission
-• Promotional commission rules where appropriate
-
-Commission calculations must be deterministic and auditable.
-
-Persist commission snapshots on financial records.
-
-Do not recalculate historical commission using current rules.
-
-────────────────────────────────────────
-
-SELLER BALANCE
-
-Design seller accounting state.
-
-Support separate amounts for:
-
-• Pending
-• Available
-• Reserved
-• Paid
-• Refunded
-• Adjusted
-
-Seller balances must be derived from immutable financial transactions or a strongly auditable ledger.
-
-Do not simply update one mutable balance field without transactional accounting records.
-
-────────────────────────────────────────
-
-SELLER SETTLEMENT
-
-Implement settlement workflows.
-
-Support:
-
-• Order settlement
-• Commission deduction
-• Refund adjustment
-• Return adjustment
-• Shipping adjustment where applicable
-• Tax-related adjustment where applicable
-
-Define when seller revenue becomes:
-
-• Pending
-• Available
-• Eligible for payout
-
-Use settlement rules that can accommodate configurable hold periods.
-
-────────────────────────────────────────
-
-SELLER PAYOUTS
-
-Implement:
-
-• Payout creation
-• Payout status
-• Payout provider reference
-• Payout completion
-• Payout failure
-• Payout cancellation where supported
-
-Support:
-
-• Stripe Connect or approved marketplace payout integration
-• Idempotency
-• Reconciliation
-• Retry
-• Failure handling
-
-Never pay sellers solely because a client requests a payout.
-
-────────────────────────────────────────
-
-PAYOUT STATE MACHINE
-
-Support:
-
-• Pending
-• Eligible
-• Created
-• Processing
-• Paid
-• Failed
-• Reversed where applicable
-
-Separate payout state from seller balance state.
-
-────────────────────────────────────────
-
-FINANCIAL LEDGER
-
-Implement an auditable internal financial ledger appropriate for marketplace operations.
-
-Track immutable financial transactions for:
-
-• Customer payment
-• Platform commission
-• Seller revenue
-• Refund
-• Return adjustment
-• Payout
-• Chargeback where applicable
-• Manual adjustment
-
-Define:
-
-• Transaction ID
-• Account/reference
-• Amount
-• Currency
-• Direction
-• Type
-• Related order
-• Related seller
-• Related payment
-• Timestamp
-
-Do not allow silent balance changes without ledger entries.
-
-────────────────────────────────────────
-
-MONETARY PRECISION
-
-Use exact decimal types.
-
-Define:
-
-• Currency
-• Minor units or decimal precision
-• Rounding rules
-• Tax rounding
-• Commission rounding
-• Refund rounding
-
-Never use JavaScript floating-point arithmetic as the authoritative financial calculation mechanism.
-
-────────────────────────────────────────
-
-FINANCIAL IDEMPOTENCY
-
-Use idempotency for:
-
-• Order creation
-• Payment creation
-• Payment confirmation
-• Refund creation
-• Payout creation
-• Webhook handling
-• Settlement processing
-
-Retries must never create duplicate monetary effects.
-
-────────────────────────────────────────
-
-ORDER/PAYMENT CONSISTENCY
-
-Define behavior for:
-
-Payment succeeds but order creation fails.
-
-Payment fails but order exists.
-
-Order exists but payment webhook is delayed.
-
-Webhook is delivered multiple times.
-
-Inventory reservation expires during payment.
-
-Payment succeeds after checkout expiration.
-
-Refund provider event arrives before internal refund record is updated.
-
-Resolve these scenarios deterministically.
-
-────────────────────────────────────────
-
-ORDER CANCELLATION
-
-Support:
-
-• Customer cancellation
-• Seller cancellation
-• Administrative cancellation
-• Partial cancellation
-
-Define effects on:
-
-• Inventory
-• Payment
-• Refund
-• Fulfillment
-• Seller settlement
-• Notifications
-
-Cancellation operations must be idempotent.
-
-────────────────────────────────────────
-
-PAYMENT FAILURE RECOVERY
-
-Support:
-
-• Retry payment where appropriate
-• Customer action required
-• Payment expiration
-• Inventory release
-• Checkout expiration
-• Order cancellation
-
-Do not leave inventory permanently reserved after terminal payment failure.
-
-────────────────────────────────────────
-
-DATABASE
-
-Implement Prisma models and migrations for:
-
-• Order
-• OrderItem
-• SellerOrder
-• FulfillmentOrder
-• FulfillmentItem
-• Shipment
-• ShipmentItem
-• ShipmentEvent
-• Payment
-• PaymentAttempt
-• PaymentWebhookEvent
-• Refund
-• Return
-• ReturnItem
-• Exchange
-• Commission
-• SellerBalance
-• SellerBalanceEntry
-• Settlement
-• SellerPayout
-• FinancialTransaction
-• OrderTimelineEntry
+without appropriate idempotency.
 
 Use:
 
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Composite indexes
-• Check constraints
-• Status constraints
-• Monetary decimal types
-• Immutable financial records where appropriate
-• Timestamps
+* provider idempotency keys
+* application idempotency
+* durable operation records
+* exponential backoff
 
-Identify partitioning candidates such as:
+where appropriate.
 
-• Orders
-• Order events
-• Payment webhook records
-• Financial transactions
-• Audit/settlement records
+---
 
-────────────────────────────────────────
+# 24. Refund Domain
 
-DATABASE TRANSACTIONS
+Implement a Refund model.
 
-Use local database transactions for operations requiring strong consistency.
+A refund should track:
 
-Examples:
+* refund ID
+* payment ID
+* order ID
+* amount
+* currency
+* status
+* provider refund ID
+* reason
+* requested by
+* created timestamp
+* completed timestamp
+* failure information where appropriate
 
-• Order creation from validated checkout
-• Order item creation
-• Seller-order creation
-• Financial ledger writes
-• Commission creation
-• Refund record creation
-• Balance ledger entry
+Possible states:
 
-Do not use distributed database transactions across external providers.
+* PENDING
+* PROCESSING
+* SUCCEEDED
+* FAILED
+* CANCELLED
+
+Use the repository's naming conventions if equivalent states exist.
+
+---
+
+# 25. Refund Rules
+
+Enforce:
+
+`total refunded amount <= total captured amount`
+
+Never allow:
+
+* negative refund
+* refund above captured amount
+* refund in a different currency
+* duplicate refund operation
+* unauthorized refund
+
+Use transactional locking or equivalent concurrency controls when multiple refund requests can occur simultaneously.
+
+---
+
+# 26. Partial Refunds
+
+Support partial refunds where the marketplace architecture requires them.
+
+A partial refund must preserve:
+
+* original payment amount
+* previously refunded amount
+* current refund amount
+* remaining refundable amount
+
+The system must remain correct under concurrent refund attempts.
+
+---
+
+# 27. Refund Authorization
+
+Define explicit refund permissions.
+
+Potential actors:
+
+* customer
+* seller
+* platform administrator
+* internal order/payment service
+
+Do not allow customers or sellers to arbitrarily refund money merely by knowing an order ID.
+
+Authorization must consider:
+
+* order ownership
+* seller ownership
+* refund reason
+* order/payment state
+* maximum refundable amount
+
+---
+
+# 28. Stripe Refund Integration
+
+Implement server-side Stripe refund creation.
+
+Before requesting a refund:
+
+1. Authenticate actor.
+2. Authorize refund.
+3. Load authoritative payment.
+4. Verify refundable amount.
+5. Apply idempotency.
+6. Persist refund intent safely.
+7. Call Stripe outside the database transaction where appropriate.
+8. Reconcile provider result.
+9. Update internal state.
+10. Emit events.
+
+Do not hold a long database transaction open during a network call.
+
+---
+
+# 29. Refund Idempotency
+
+Refund creation must be idempotent.
+
+A retry must not create multiple Stripe refunds for the same logical refund operation.
 
 Use:
 
-• Idempotency
-• Outbox events
-• Reconciliation
-• Compensating workflows
+* application idempotency
+* Stripe idempotency
+* durable refund records
+* unique provider references
 
-────────────────────────────────────────
+A reused idempotency key with conflicting refund parameters must be rejected.
 
-EVENTS
+---
 
-Publish appropriate events.
-
-ORDERS
+# 30. Refund Reconciliation
 
-• OrderCreated
-• OrderConfirmed
-• OrderCanceled
-• OrderPartiallyCanceled
-• SellerOrderCreated
-• OrderCompleted
+Refunds may be asynchronous.
 
-FULFILLMENT
+Support reconciliation for:
 
-• FulfillmentCreated
-• FulfillmentAssigned
-• FulfillmentStarted
-• FulfillmentCompleted
-• FulfillmentFailed
+* pending refunds
+* provider timeout
+* missing webhook
+* duplicate webhook
+* provider state mismatch
+* failed refund
 
-SHIPMENTS
+Do not mark a refund successful solely because a request to Stripe returned without error if the provider state requires later confirmation.
 
-• ShipmentCreated
-• ShipmentLabelCreated
-• ShipmentShipped
-• ShipmentInTransit
-• ShipmentOutForDelivery
-• ShipmentDelivered
-• ShipmentDelayed
-• ShipmentFailed
-• ShipmentReturned
+---
 
-PAYMENTS
+# 31. Payment Events
 
-• PaymentCreated
-• PaymentRequiresAction
-• PaymentProcessing
-• PaymentSucceeded
-• PaymentFailed
-• PaymentCanceled
+Integrate with the existing event architecture.
 
-REFUNDS
+Potential events:
 
-• RefundRequested
-• RefundProcessing
-• RefundSucceeded
-• RefundFailed
+* payment.created
+* payment.requires_action
+* payment.processing
+* payment.authorized
+* payment.captured
+* payment.failed
+* payment.cancelled
+* refund.created
+* refund.processing
+* refund.succeeded
+* refund.failed
 
-RETURNS
+Use existing event conventions if already present.
 
-• ReturnRequested
-• ReturnApproved
-• ReturnRejected
-• ReturnReceived
-• ReturnInspected
-• ReturnCompleted
+Events must be emitted only after authoritative state changes are committed.
 
-EXCHANGES
+Use the transactional outbox pattern.
 
-• ExchangeRequested
-• ExchangeApproved
-• ExchangeCompleted
+---
 
-SELLER FINANCE
+# 32. Event Envelope
 
-• CommissionCalculated
-• SettlementCreated
-• SellerBalanceUpdated
-• SellerPayoutCreated
-• SellerPayoutSucceeded
-• SellerPayoutFailed
+Payment events must use the project's standard event envelope containing appropriate:
 
-Events must contain only the information required by consumers.
+* event ID
+* event type
+* event version
+* aggregate ID
+* aggregate type
+* producer
+* occurred timestamp
+* correlation ID
+* causation ID
+* trace context
+* payload
 
-Use transactional outbox where appropriate.
+Never publish raw Stripe payloads as internal domain events.
 
-────────────────────────────────────────
+Normalize provider data into domain-level contracts.
 
-BACKGROUND JOBS
+---
 
-Implement BullMQ jobs for:
+# 33. Stripe Payload Storage
 
-• Payment reconciliation
-• Webhook retry
-• Shipment synchronization
-• Tracking synchronization
-• Return expiration
-• Settlement processing
-• Seller payout processing
-• Financial reconciliation
-• Failed-payout retry
-• Stale-order detection
-• Order cleanup where appropriate
+If raw provider payloads must be stored for reconciliation/audit:
 
-Every job must support:
+* protect sensitive data
+* minimize retained information
+* apply retention rules
+* prevent accidental logging
+* restrict access
 
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter behavior
-• Metrics
-• Structured logs
+Do not store unnecessary payment credentials.
 
-────────────────────────────────────────
+Never store full card numbers or CVV.
 
-API
+Follow Stripe's recommended architecture for sensitive payment data.
 
-Implement production-ready REST APIs.
+---
 
-ORDERS
+# 34. Webhook Security
 
-• Create/order confirmation where required
-• Get order
-• List orders
-• Get order timeline
-• Cancel order
-• Seller order access
+Protect the webhook endpoint against:
 
-FULFILLMENT
+* invalid signatures
+* replay
+* oversized payloads
+* malformed events
+* duplicate events
+* unauthorized access
+* denial-of-service abuse
 
-• Get fulfillment
-• Update fulfillment state
-• Assign fulfillment
-• Complete fulfillment
+Use:
 
-SHIPMENTS
+* signature verification
+* body-size limits
+* provider event ID uniqueness
+* safe parsing
+* structured processing
+* rate/abuse controls appropriate to the provider endpoint
 
-• Create shipment
-• Get shipment
-• Tracking
-• Update shipment status
-• Carrier webhook
+Do not disable signature verification for development in production configurations.
 
-PAYMENTS
+---
 
-• Create payment intent
-• Get payment
-• Confirm payment status
-• Payment history
-• Webhook endpoint
+# 35. Customer Payment APIs
 
-REFUNDS
+Implement appropriate APIs for:
 
-• Create refund
-• Get refund
-• Refund history
+* initiating payment
+* retrieving payment status
+* confirming supported payment state
+* retrying failed payment where appropriate
+* listing payment information appropriate to the customer
+* requesting refunds where the business rules permit
 
-RETURNS
+Never return:
 
-• Check eligibility
-• Create return
-• Get return
-• Approve
-• Reject
-• Record receipt
-• Complete return
+* Stripe secret keys
+* full payment credentials
+* sensitive provider data
+* internal security metadata
 
-EXCHANGES
+---
 
-• Create exchange
-• Get exchange
-• Approve
-• Complete
+# 36. Administrative Payment APIs
 
-SELLER FINANCE
+Provide appropriately protected administrative endpoints for:
 
-• Get balance
-• Get settlements
-• Get payouts
-• Create payout request where applicable
-• Get payout status
+* payment inspection
+* webhook inspection
+* reconciliation
+* refund management
+* payment retry/recovery where appropriate
 
-ADMINISTRATION
+Require explicit permissions.
 
-• Investigate orders
-• Investigate payments
-• Investigate refunds
-• Investigate payouts
-• Manual adjustments with elevated permissions
+Audit administrative actions.
 
-Every endpoint must include:
+Do not expose unrestricted provider operations.
 
-• Authentication
-• Authorization
-• Validation
-• Seller isolation
-• Idempotency where appropriate
-• Rate limiting
-• OpenAPI documentation
-• Consistent errors
+---
 
-────────────────────────────────────────
+# 37. Seller Payment Boundaries
 
-WEBHOOK SECURITY
+For marketplace sellers, seller-facing payment information must be restricted.
 
-All external webhooks must:
+Do not expose:
 
-• Verify signatures
-• Persist event IDs
-• Reject duplicate effects
-• Handle retries
-• Handle unknown event types safely
-• Record failures
-• Support reconciliation
+* other seller payment data
+* customer payment credentials
+* platform secrets
+* internal reconciliation details
 
-Never trust webhook payloads before verification.
+If seller settlement/payout functionality is not yet implemented, do not invent it here.
 
-────────────────────────────────────────
+Create only the boundaries necessary for future marketplace settlement.
 
-SELLER ISOLATION
+---
 
-Seller financial and order data must be isolated.
+# 38. Payment API Errors
 
-A seller may only access:
+Use stable domain error codes.
 
-• Its seller orders
-• Its fulfillment
-• Its shipments
-• Its commissions
-• Its balances
-• Its payouts
-• Its allowed customer information
+Potential codes:
 
-A seller must never access another seller's financial information.
+* PAYMENT_NOT_FOUND
+* PAYMENT_NOT_PAYABLE
+* PAYMENT_AMOUNT_MISMATCH
+* PAYMENT_CURRENCY_MISMATCH
+* PAYMENT_REQUIRES_ACTION
+* PAYMENT_PROCESSING
+* PAYMENT_FAILED
+* PAYMENT_ALREADY_CAPTURED
+* PAYMENT_ALREADY_CANCELLED
+* REFUND_NOT_FOUND
+* REFUND_AMOUNT_INVALID
+* REFUND_AMOUNT_EXCEEDED
+* REFUND_NOT_ALLOWED
+* REFUND_ALREADY_PROCESSED
+* WEBHOOK_SIGNATURE_INVALID
+* WEBHOOK_ALREADY_PROCESSED
 
-Platform administrators require explicit permissions.
+Reuse existing project error codes when available.
 
-────────────────────────────────────────
+Do not expose raw Stripe errors directly.
 
-SECURITY
+---
 
-Protect against:
+# 39. Database Design
 
-• Payment tampering
-• Refund abuse
-• Payout abuse
-• Order IDOR
-• Seller data leakage
-• Webhook spoofing
-• Duplicate webhook attacks
-• Replay attacks
-• Privilege escalation
-• Manual-adjustment abuse
+Extend Prisma safely.
 
-Sensitive administrative financial actions must be audited.
+Create or update appropriate models for:
 
-────────────────────────────────────────
+* Payment
+* PaymentAttempt
+* Refund
+* PaymentWebhookEvent
+* provider/customer mapping where needed
+* reconciliation records where justified
 
-OBSERVABILITY
+Use:
 
-Instrument:
+* foreign keys
+* unique constraints
+* composite indexes
+* status indexes
+* provider reference uniqueness
+* timestamps
+* audit relationships
 
-• Order creation
-• Order transitions
-• Payment operations
-• Webhook processing
-• Refunds
-• Returns
-• Fulfillment
-• Shipment updates
-• Seller settlement
-• Payouts
-• Reconciliation
+Important uniqueness requirements include:
 
-Measure:
+* provider event ID
+* provider payment ID
+* provider refund ID
+* internal payment/order relationship where applicable
+* idempotency operation keys
 
-• Order creation latency
-• Payment success rate
-• Payment failure rate
-• Webhook processing latency
-• Refund latency
-• Payout latency
-• Shipment synchronization latency
-• Reconciliation mismatches
+---
+
+# 40. Payment Transactions
+
+Use database transactions for:
+
+* payment state transitions
+* webhook event processing
+* refund state transitions
+* idempotency records
+* payment/order consistency
+* outbox insertion
+
+Do not make Stripe network requests while holding long-running database locks.
+
+Use short transactions before and after external provider operations.
+
+---
+
+# 41. Provider Call Pattern
+
+For operations requiring Stripe:
+
+1. Validate request.
+2. Load authoritative state.
+3. Validate authorization.
+4. Establish idempotency.
+5. Create/update internal operation record.
+6. Commit necessary state.
+7. Call Stripe.
+8. Persist provider result.
+9. Reconcile asynchronously when necessary.
+10. Emit domain events after authoritative state is updated.
+
+The exact implementation must prevent crashes between steps from producing duplicate operations or inconsistent state.
+
+---
+
+# 42. Crash Recovery
+
+Explicitly handle:
+
+### Crash before Stripe call
+
+The operation must remain retryable.
+
+### Crash after Stripe accepts request but before response persistence
+
+The system must reconcile provider state instead of blindly creating another operation.
+
+### Crash after provider success but before event publication
+
+The durable internal state/outbox must allow eventual event publication.
+
+### Duplicate webhook
+
+Process safely without duplicating effects.
+
+### Provider unavailable
+
+Fail safely and leave the payment in a recoverable state.
+
+---
+
+# 43. Redis
+
+Redis may be used for:
+
+* rate limiting
+* short-lived reconciliation locks
+* cached provider metadata
+* ephemeral coordination
+
+Do not use Redis as the authoritative payment state.
+
+Do not use Redis-only locks as the sole protection against duplicate financial operations.
+
+Database constraints and provider idempotency remain essential.
+
+---
+
+# 44. Observability
+
+Instrument payment operations.
+
+Metrics should include:
+
+* payment attempts
+* payment success rate
+* payment failure rate
+* requires-action rate
+* PaymentIntent processing duration
+* webhook latency
+* webhook failures
+* duplicate webhook count
+* reconciliation count
+* refund success rate
+* refund failure rate
+* provider latency
+* provider errors
+* idempotency conflicts
+
+Trace:
+
+* HTTP
+* PostgreSQL
+* Stripe calls
+* Redis
+* BullMQ
+* event publication
 
 Never log:
 
-• Card numbers
-• Payment secrets
-• Authentication secrets
-• Sensitive financial credentials
+* Stripe secret keys
+* card numbers
+* CVV
+* authentication secrets
+* access tokens
+* unnecessary payment/customer information
 
-────────────────────────────────────────
+---
 
-TESTING
+# 45. Audit Logging
 
-UNIT TESTS
+Audit:
+
+* administrative refunds
+* payment state overrides if any are permitted
+* manual reconciliation
+* administrative payment inspection
+* cancellation/refund actions
+* sensitive configuration changes
+
+Audit records must be immutable.
+
+---
+
+# 46. Security Threat Model
+
+Explicitly test for:
+
+* payment amount manipulation
+* currency manipulation
+* order IDOR
+* refund IDOR
+* seller refund abuse
+* customer refund abuse
+* webhook forgery
+* webhook replay
+* duplicate payment
+* duplicate refund
+* provider reference spoofing
+* privilege escalation
+* secret leakage
+* sensitive payment-data exposure
+* rate-limit bypass
+
+Never trust provider IDs submitted by clients without server-side validation.
+
+---
+
+# 47. Testing
+
+Implement comprehensive tests.
+
+## Unit Tests
+
+Cover:
+
+* payment state machine
+* refund state machine
+* refundable amount calculation
+* payment amount validation
+* currency validation
+* failure classification
+* authorization rules
+* webhook event mapping
+
+## Integration Tests
+
+Cover:
+
+* payment persistence
+* payment attempts
+* webhook persistence
+* webhook idempotency
+* refund persistence
+* transactional state changes
+* outbox creation
+* reconciliation jobs
+
+## API Tests
+
+Cover:
+
+* payment creation
+* payment retrieval
+* refund authorization
+* refund creation
+* customer isolation
+* seller isolation
+* administrative permissions
+* validation errors
+* idempotency
+
+## Webhook Tests
 
 Test:
 
-• Order state machine
-• Seller-order state
-• Fulfillment state
-• Shipment state
-• Payment state
-• Refund state
-• Return eligibility
-• Exchange rules
-• Commission calculation
-• Seller balance calculations
-• Settlement rules
-• Payout state machine
-• Monetary rounding
+* valid signature
+* invalid signature
+* malformed payload
+* duplicate event
+* unknown event
+* supported event
+* provider state transition
+* processing failure
+* retry behavior
 
-INTEGRATION TESTS
+## Security Tests
 
-Test:
+Explicitly test:
 
-• PostgreSQL
-• Prisma
-• Kafka
-• BullMQ
-• Stripe
-• Shipping providers
+* forged payment amount
+* forged currency
+* forged provider ID
+* unauthorized refund
+* cross-customer payment access
+* cross-seller payment access
+* webhook signature bypass
+* replayed webhook
+* duplicate refund
+* duplicate payment
 
-WEBHOOK TESTS
-
-Test:
-
-• Signature validation
-• Duplicate event
-• Retry
-• Out-of-order events
-• Unknown events
-• Provider failures
-
-FINANCIAL TESTS
+## Concurrency Tests
 
 Test:
 
-• Payment success
-• Payment failure
-• Partial refund
-• Full refund
-• Multiple refunds
-• Seller commission
-• Payout
-• Payout failure
-• Reconciliation
+* simultaneous payment creation attempts
+* simultaneous refund attempts
+* repeated webhook delivery
+* reconciliation racing with webhook processing
 
-CONCURRENCY TESTS
+Verify no duplicate financial operation is produced.
 
-Test:
+---
 
-• Duplicate order request
-• Duplicate payment request
-• Duplicate refund request
-• Concurrent cancellation
-• Concurrent return
-• Multiple webhook deliveries
+# 48. Stripe Test Environment
 
-SECURITY TESTS
+Use Stripe's supported test environment/test credentials for automated integration tests where configured.
 
-Test:
+Never place real production credentials in:
 
-• Seller isolation
-• Financial IDOR
-• Payout authorization
-• Refund authorization
-• Webhook spoofing
-• Privilege escalation
+* repository
+* tests
+* fixtures
+* source code
+* documentation
+* logs
 
-PERFORMANCE TESTS
+If integration tests cannot run because credentials are absent, report that fact accurately rather than claiming provider integration tests passed.
 
-Test:
+---
 
-• Order creation
-• Payment processing
-• Webhook throughput
-• Reconciliation
-• Shipment synchronization
-• Payout processing
+# 49. API Documentation
 
-────────────────────────────────────────
+Update OpenAPI/Swagger for:
 
-DOCUMENTATION
+* payment endpoints
+* refund endpoints
+* payment statuses
+* refund statuses
+* idempotency requirements
+* authorization
+* error codes
 
-Generate:
+Do not expose webhook secrets or sensitive provider configuration.
 
-• Order architecture
-• Order state machine
-• Seller-order architecture
-• Fulfillment architecture
-• Shipment architecture
-• Payment architecture
-• Refund architecture
-• Returns architecture
-• Exchanges
-• Marketplace commission model
-• Seller balance model
-• Settlement model
-• Payout model
-• Financial ledger
-• Reconciliation
-• Webhook handling
-• API contracts
-• Event contracts
-• Database schema
-• Failure handling
-• Testing strategy
+---
 
-────────────────────────────────────────
+# 50. Migration Safety
 
-PROJECT INDEX
+Create safe Prisma migrations.
 
-Update the backend Project Index with:
+Verify:
 
-• Order modules
-• Seller-order modules
-• Fulfillment modules
-• Shipment modules
-• Payment modules
-• Refund modules
-• Return modules
-• Exchange modules
-• Commission modules
-• Seller balance modules
-• Settlement modules
-• Payout modules
-• Financial ledger
-• Reconciliation
-• Database objects
-• Migrations
-• APIs
-• Webhooks
-• Events
-• Queues
-• Workers
-• Tests
-• Generated files
-• Remaining work
-• Current milestone
-• Dependencies
+* foreign keys
+* unique constraints
+* provider indexes
+* order/payment relationships
+* refund/payment relationships
+* webhook uniqueness
+* migration compatibility with existing data
 
-────────────────────────────────────────
+Do not reset existing databases.
 
-IMPLEMENTATION MILESTONES
+Do not delete existing payment/order information merely to simplify schema changes.
 
-BACKEND MILESTONE 1
+---
 
-Order models, order state machine, order snapshots, seller-order structure, and order APIs.
+# 51. Backward Compatibility
 
-BACKEND MILESTONE 2
+Preserve existing:
 
-Fulfillment orders, fulfillment state, allocation integration, and seller fulfillment.
+* checkout contracts
+* order contracts
+* inventory contracts
+* cart contracts
+* authentication
+* authorization
 
-BACKEND MILESTONE 3
+If payment integration changes existing behavior:
 
-Shipments, shipment tracking, carrier abstraction, and tracking events.
+1. inspect consumers
+2. preserve compatibility where possible
+3. update affected modules
+4. add regression tests
+5. document actual changes
 
-BACKEND MILESTONE 4
+Do not silently break checkout/order functionality.
 
-Stripe payment intents, payment persistence, payment state machine, and secure webhook processing.
+---
 
-BACKEND MILESTONE 5
+# 52. Documentation
 
-Refunds, partial refunds, cancellation flows, and payment recovery.
+Update documentation for:
 
-BACKEND MILESTONE 6
+* payment lifecycle
+* Stripe integration
+* webhook verification
+* idempotency
+* payment reconciliation
+* refund lifecycle
+* failure recovery
+* operational troubleshooting
+* required environment variables
+* local/test setup
+* security boundaries
 
-Returns, return eligibility, return processing, and exchanges.
+Never document fake Stripe behavior.
 
-BACKEND MILESTONE 7
+---
 
-Marketplace commissions, seller balances, settlement, and financial ledger.
-
-BACKEND MILESTONE 8
-
-Seller payouts, payout state, provider integration, and reconciliation.
-
-BACKEND MILESTONE 9
-
-Cross-domain events, background jobs, notifications integration, observability, and audit.
-
-BACKEND MILESTONE 10
-
-Financial concurrency tests, integration testing, performance testing, security hardening, reconciliation testing, and production readiness.
-
-Each milestone should contain approximately 20–40 files where practical.
-
-Every milestone must compile before proceeding.
-
-────────────────────────────────────────
-
-OUTPUT FORMAT
-
-For every generated file provide:
-
-1. Exact file path
-2. Complete file contents
-
-Never truncate code.
-
-Never summarize source code instead of generating it.
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO implementations.
-
-When modifying an existing file:
-
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
-
-Never regenerate unchanged files.
-
-────────────────────────────────────────
-
-SCOPE RESTRICTION
-
-This volume covers:
-
-• Orders
-• Seller orders
-• Fulfillment
-• Shipments
-• Tracking
-• Payments
-• Stripe webhooks
-• Refunds
-• Returns
-• Exchanges
-• Marketplace commissions
-• Seller balances
-• Settlements
-• Seller payouts
-• Financial ledger
-• Reconciliation
+# 53. Explicitly Defer
 
 Do not implement complete:
 
-• Reviews
-• Recommendations
-• Search
-• Notifications
-• Customer/seller messaging
-• Analytics
-• CMS
-• Administration UI
-• Infrastructure
-• Frontend
-• Mobile
+* seller payouts
+* marketplace settlement
+* seller balance accounting
+* tax remittance
+* shipping
+* fulfillment
+* returns
+* reviews
+* notifications
+* analytics
 
-Those belong to later implementation volumes.
+unless a minimal compatibility change is required.
 
-────────────────────────────────────────
+Do not invent Stripe Connect behavior or seller payout functionality unless explicitly required by the repository's actual scope.
 
-QUALITY BAR
+---
 
-Treat orders and financial systems as mission-critical production infrastructure.
+# 54. Implementation Requirements
 
-Assume:
+You must:
 
-• Millions of orders
-• High concurrent checkout traffic
-• Multiple sellers per order
-• Multiple shipments
-• Payment-provider retries
-• Duplicate webhooks
-• Partial refunds
-• High seller payout volume
-• Financial audits
-• Regional operations
+1. Inspect the repository first.
+2. Reuse compatible payment infrastructure.
+3. Implement the complete payment scope.
+4. Create/update Prisma migrations.
+5. Implement Stripe integration.
+6. Implement PaymentIntent lifecycle.
+7. Implement webhook verification.
+8. Implement webhook idempotency.
+9. Implement refunds.
+10. Implement refund idempotency.
+11. Implement reconciliation.
+12. Implement BullMQ jobs.
+13. Implement payment events.
+14. Implement authorization.
+15. Implement audit logging.
+16. Implement observability.
+17. Implement tests.
+18. Update API documentation.
+19. Update operational documentation.
+20. Run formatting.
+21. Run lint.
+22. Run type checking.
+23. Run tests.
+24. Run build validation.
+25. Validate migrations.
+26. Verify no secrets were introduced.
+27. Verify no placeholders remain.
 
-Prioritize:
+Do not merely describe what should be implemented.
 
-• Financial correctness
-• Idempotency
-• Auditability
-• Exact monetary calculations
-• Strong authorization
-• Seller isolation
-• Transactional integrity
-• Reconciliation
-• Fault tolerance
-• Observability
-• Security
-• Production readiness
+Actually implement it.
+
+---
+
+# 55. Final Validation
+
+Verify:
+
+### Payments
+
+* exact amount handling
+* exact currency handling
+* correct payment lifecycle
+* payment attempts preserved
+* duplicate operations prevented
+
+### Stripe
+
+* secure configuration
+* PaymentIntent integration
+* server-side verification
+* provider idempotency
+* webhook signature verification
+* webhook deduplication
+
+### Refunds
+
+* authorization
+* partial refunds
+* total refund limits
+* provider integration
+* refund idempotency
+* reconciliation
+
+### Reliability
+
+* crash recovery
+* retry safety
+* webhook replay safety
+* provider outage handling
+* outbox reliability
+* reconciliation
+
+### Security
+
+* no payment manipulation
+* no refund abuse
+* no webhook forgery
+* no secret leakage
+* no customer/seller data isolation bypass
+
+### Testing
+
+* unit tests pass
+* integration tests pass
+* API tests pass
+* webhook tests pass
+* security tests pass
+* concurrency tests pass
+
+### Code Quality
+
+* lint passes
+* typecheck passes
+* build passes
+* migrations are valid
+* no duplicate implementations exist
+
+---
+
+# 56. Final Report
+
+At completion, report only facts about the actual repository.
+
+Include:
+
+1. Payment functionality implemented.
+2. Stripe integration implemented.
+3. PaymentIntent behavior.
+4. Webhook handling.
+5. Refund functionality.
+6. Reconciliation.
+7. Database migrations/models.
+8. APIs.
+9. Events.
+10. BullMQ jobs.
+11. Security controls.
+12. Tests.
+13. Validation commands and actual results.
+14. Any genuine remaining limitations or blockers.
+
+Do not claim that real Stripe operations were tested unless they actually were.
+
+Do not claim provider verification succeeded if credentials/environment prevented it.
+
+The repository is the final source of truth.
+
+---
+
+# 57. Non-Negotiable Rules
+
+* No pseudo-code.
+* No TODOs.
+* No FIXME markers.
+* No placeholder implementations.
+* No fake Stripe APIs.
+* No invented provider behavior.
+* No hardcoded secrets.
+* No client-trusted payment amounts.
+* No client-trusted payment status.
+* No client-trusted refund amounts.
+* No duplicate financial operations.
+* No webhook signature bypass.
+* No webhook replay vulnerability.
+* No unauthorized refunds.
+* No cross-customer payment access.
+* No cross-seller payment access.
+* No storing card numbers or CVV.
+* No Redis-only financial locking.
+* No unnecessary regeneration of unchanged files.
+* No competing implementations.
+* No false completion claims.
+
+Most importantly:
+
+**Inspect the actual repository first, then implement the complete Payments + Stripe + Webhooks + Refunds + Reconciliation backend implementation unit as a production-grade extension of the existing ecommerce marketplace.**

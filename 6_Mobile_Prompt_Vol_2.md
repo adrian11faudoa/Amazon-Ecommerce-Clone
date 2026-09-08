@@ -1,3 +1,1381 @@
+# Amazon Ecommerce Marketplace — Mobile Prompt — Volume 2
+
+## Checkout, Payments, Orders, Fulfillment, Returns, Reviews, Notifications, Account Features, and Production Hardening
+
+You are implementing the second major production-grade mobile customer application implementation unit for an original Amazon-style ecommerce marketplace.
+
+This prompt is fully standalone. It must be executable without requiring another prompt, architecture document, previous conversation, or previously generated document to be present.
+
+The actual repository is the source of truth for existing implementation, contracts, schemas, APIs, navigation, authentication, design system, and infrastructure integrations.
+
+This implementation must extend the existing mobile application into one coherent production-grade customer experience. Do not create a separate application, duplicate architecture, competing API contracts, or parallel business logic.
+
+---
+
+# 1. Mission
+
+Implement the remaining major customer-facing mobile functionality using:
+
+* React Native
+* Expo
+* TypeScript
+* React Navigation
+* TanStack Query
+* Zustand
+
+The implementation must cover:
+
+* Customer account completion
+* Address management
+* Checkout
+* Checkout validation
+* Shipping selection
+* Tax presentation
+* Promotions/coupons
+* Payment UI
+* Stripe integration where actually configured
+* Payment state handling
+* Order creation
+* Order confirmation
+* Order history
+* Order details
+* Multi-seller orders
+* Multi-shipment orders
+* Shipment tracking
+* Returns
+* Refund status
+* Reviews
+* Review media
+* Notifications
+* Notification preferences
+* Session/security management
+* Deep-link completion
+* Accessibility hardening
+* Performance hardening
+* Security hardening
+* Analytics integration
+* Production-grade error recovery
+* End-to-end customer-flow testing
+
+The mobile application must consume the actual backend contracts.
+
+Never invent backend behavior to make the mobile application appear complete.
+
+---
+
+# 2. Repository-First Implementation
+
+Before changing anything:
+
+1. Inspect the entire repository relevant to the mobile application.
+2. Inspect the existing backend contracts.
+3. Inspect existing web implementation where useful for understanding API behavior.
+4. Inspect existing mobile implementation.
+5. Identify:
+
+   * API clients
+   * authentication/session handling
+   * navigation
+   * query configuration
+   * Zustand stores
+   * design system
+   * checkout contracts
+   * payment contracts
+   * order APIs
+   * fulfillment APIs
+   * return APIs
+   * review APIs
+   * notification APIs
+   * SSE infrastructure
+   * media handling
+   * deep-link configuration
+   * analytics
+   * tests
+6. Reuse compatible code and abstractions.
+7. Do not duplicate existing systems.
+8. Preserve backward compatibility.
+9. Make the smallest safe architectural changes required.
+
+If the actual repository differs from the requirements, adapt to the actual implementation while preserving the intended production behavior.
+
+---
+
+# 3. Customer Account
+
+Complete the customer account experience.
+
+Support actual backend capabilities for:
+
+* Customer profile
+* Profile editing
+* Addresses
+* Default address
+* Address creation
+* Address editing
+* Address deletion
+* Address selection
+* Customer preferences
+* Session/security management
+* Logout
+* Account navigation
+
+All account mutations must use server-side authorization.
+
+Never trust a customer ID supplied by the client to determine ownership.
+
+Handle:
+
+* validation errors
+* conflicts
+* expired sessions
+* deleted addresses
+* unavailable addresses
+* network failures
+
+---
+
+# 4. Address Management
+
+Implement production-grade mobile address management.
+
+Support:
+
+* Address list
+* Add address
+* Edit address
+* Delete address
+* Default address
+* Checkout address selection
+
+Use the actual backend address schema.
+
+Do not invent unsupported address fields.
+
+Validate user input client-side for UX, but always rely on backend validation for authority.
+
+Prevent:
+
+* unauthorized address access
+* duplicate submissions
+* stale updates
+* deleting an address currently required by an active operation without appropriate backend handling
+
+Never expose another customer's addresses.
+
+---
+
+# 5. Checkout
+
+Implement the mobile checkout flow using the actual checkout API.
+
+The flow should support the backend's authoritative state machine and may include:
+
+1. Cart
+2. Customer information
+3. Shipping address
+4. Shipping method
+5. Promotion/coupon
+6. Order review
+7. Payment
+8. Confirmation
+
+Do not assume the backend uses these exact stages if its actual contract differs.
+
+The backend checkout state is authoritative.
+
+---
+
+# 6. Checkout Validation
+
+Before allowing a customer to proceed, display server-provided validation failures clearly.
+
+Handle:
+
+* Product unavailable
+* Quantity unavailable
+* Price changed
+* Seller offer changed
+* Cart changed
+* Coupon invalid
+* Coupon expired
+* Coupon no longer applicable
+* Address invalid
+* Shipping unavailable
+* Tax calculation failure
+* Checkout session expired
+* Authentication expiration
+* Server error
+
+Never silently overwrite the customer's cart or checkout selections.
+
+Provide recovery actions such as:
+
+* Refresh cart
+* Update quantity
+* Remove unavailable item
+* Re-select address
+* Re-select shipping
+* Remove invalid promotion
+* Restart expired checkout
+
+---
+
+# 7. Authoritative Pricing
+
+The mobile client must never calculate authoritative checkout totals.
+
+Display backend-provided:
+
+* Subtotal
+* Discounts
+* Promotions
+* Shipping
+* Taxes
+* Final total
+* Currency
+
+Client-side calculations may be used only for presentation and must never be submitted as authoritative totals.
+
+Use exact currency formatting.
+
+Never use floating-point arithmetic as the source of truth for money.
+
+---
+
+# 8. Promotions and Coupons
+
+Integrate with actual promotion/coupon APIs.
+
+Support where available:
+
+* Coupon entry
+* Coupon application
+* Coupon removal
+* Promotion display
+* Discount display
+* Validation errors
+
+Handle:
+
+* expired coupon
+* invalid coupon
+* minimum order failure
+* seller restriction
+* product restriction
+* usage limit
+* customer eligibility failure
+* checkout expiration
+
+Never claim a coupon is valid based solely on client-side logic.
+
+---
+
+# 9. Shipping Selection
+
+Display available shipping methods from the backend.
+
+Support:
+
+* Shipping method list
+* Estimated delivery information where provided
+* Shipping price
+* Seller-specific or fulfillment-specific methods where supported
+* Selection
+* Re-selection after cart/address changes
+
+Do not invent delivery estimates.
+
+Do not fabricate carrier names or tracking information.
+
+---
+
+# 10. Tax Presentation
+
+Display tax information returned by the backend.
+
+The mobile client must not become the tax authority.
+
+Do not implement tax calculation rules in the mobile application.
+
+Handle tax calculation failures explicitly.
+
+If tax data is unavailable, display an appropriate state rather than guessing.
+
+---
+
+# 11. Payment UI
+
+Integrate payment functionality according to the actual backend payment contract.
+
+If Stripe is configured and the repository contains the required client-safe integration:
+
+* use the appropriate Stripe mobile SDK
+* use client-safe publishable configuration only
+* obtain payment information from the backend
+* respect backend-created payment state
+* handle required customer actions
+* handle payment processing
+* handle success
+* handle failure
+
+Never embed:
+
+* Stripe secret keys
+* backend secrets
+* webhook secrets
+* provider credentials
+
+Never create a second payment architecture.
+
+---
+
+# 12. Payment State Handling
+
+Correctly handle backend payment states such as:
+
+* requires payment
+* requires action
+* processing
+* authorized
+* captured
+* failed
+* cancelled
+
+Do not assume that returning from a payment UI means payment succeeded.
+
+After payment interaction:
+
+1. Query the backend.
+2. Reconcile payment/order state.
+3. Display the authoritative result.
+
+If the network fails after payment interaction, do not blindly submit another payment.
+
+Avoid duplicate charges.
+
+---
+
+# 13. Ambiguous Payment Failures
+
+Treat ambiguous payment states as a first-class failure mode.
+
+Examples:
+
+* Payment UI completed but response was lost.
+* Network disconnected after confirmation.
+* App was backgrounded during payment.
+* App was killed.
+* Payment provider returned an uncertain result.
+* Backend request timed out.
+
+The application must recover by querying the authoritative backend state.
+
+Do not create duplicate PaymentIntent operations merely because the client lost a response.
+
+---
+
+# 14. Order Creation
+
+Integrate with the actual checkout/order APIs.
+
+Prevent duplicate order creation.
+
+Use backend idempotency mechanisms where supported.
+
+Never create a second order simply because the customer:
+
+* double taps
+* retries after timeout
+* returns to the screen
+* relaunches the app
+* loses network connectivity
+
+After order submission, reconcile against backend state.
+
+---
+
+# 15. Order Confirmation
+
+Implement a production-grade confirmation experience.
+
+Display actual backend data such as:
+
+* Order number
+* Order date
+* Items
+* Sellers
+* Total
+* Payment status
+* Shipping information
+* Expected delivery information where available
+
+Provide navigation to order details.
+
+Do not fabricate confirmation details.
+
+---
+
+# 16. Order History
+
+Implement customer order history.
+
+Support:
+
+* Pagination/infinite scrolling
+* Order status
+* Order number
+* Date
+* Total
+* Item preview
+* Seller information where appropriate
+* Shipment summary where available
+
+Handle:
+
+* no orders
+* loading
+* network failure
+* authentication expiration
+* pagination errors
+
+Only return the authenticated customer's orders.
+
+---
+
+# 17. Order Details
+
+Implement complete customer order details using actual backend APIs.
+
+Support where available:
+
+* Order summary
+* Items
+* Product information
+* Seller information
+* Pricing snapshot
+* Payment status
+* Fulfillment status
+* Shipments
+* Tracking
+* Return eligibility
+* Refund status
+* Relevant actions
+
+Do not attempt to reconstruct immutable order information from the current product catalog.
+
+Use the backend order snapshot.
+
+---
+
+# 18. Multi-Seller Orders
+
+The marketplace can contain multiple sellers in one customer order.
+
+The UI must correctly represent:
+
+* seller grouping
+* seller-specific fulfillment
+* seller-specific shipments
+* seller-specific status
+* seller-specific return eligibility where applicable
+
+Do not assume one order equals one seller.
+
+Do not expose seller-internal information.
+
+---
+
+# 19. Shipment Tracking
+
+Implement shipment tracking using actual fulfillment/tracking APIs.
+
+Support:
+
+* Shipment list
+* Shipment detail
+* Tracking number where authorized
+* Tracking status
+* Tracking timeline
+* Estimated delivery where actually provided
+* Seller/fulfillment grouping
+
+Possible states may include:
+
+* Created
+* Label pending
+* Label created
+* Ready to ship
+* Shipped
+* In transit
+* Out for delivery
+* Delivered
+* Delivery failed
+* Returned
+* Cancelled
+
+Use the actual backend states rather than assuming these exact values.
+
+Never generate fake tracking events.
+
+---
+
+# 20. Tracking Refresh
+
+Support appropriate tracking refresh behavior.
+
+Use:
+
+* TanStack Query
+* polling only where justified
+* SSE where an actual backend contract exists
+* manual refresh
+
+Avoid aggressive polling that wastes battery and network resources.
+
+If live updates are unavailable, REST polling/manual refresh remains acceptable.
+
+---
+
+# 21. Returns
+
+Implement customer return functionality using the actual return API.
+
+Support where backend functionality exists:
+
+* Return eligibility
+* Return request creation
+* Return item selection
+* Return quantities
+* Return reason
+* Return submission
+* Return status
+* Return details
+* Return tracking
+* Return cancellation where supported
+
+Do not allow customers to return:
+
+* unauthorized items
+* quantities exceeding purchased quantities
+* items already returned beyond allowable quantity
+* items outside backend eligibility rules
+
+The backend remains authoritative.
+
+---
+
+# 22. Return State
+
+Display the backend's return lifecycle.
+
+Possible states include:
+
+* Requested
+* Approved
+* Rejected
+* Label pending
+* In transit
+* Received
+* Inspecting
+* Approved for refund
+* Refunded
+* Cancelled
+* Closed
+
+Do not hardcode unsupported states.
+
+Handle state transitions gracefully.
+
+---
+
+# 23. Refund Status
+
+Display actual refund information.
+
+Support:
+
+* Refund amount
+* Refund status
+* Refund date where available
+* Associated order
+* Associated return
+* Payment method information where safely exposed
+
+Do not display sensitive payment information.
+
+Never assume a return automatically means a refund has completed.
+
+Use backend refund state.
+
+---
+
+# 24. Reviews
+
+Implement customer review functionality using actual review APIs.
+
+Support:
+
+* Review eligibility
+* Verified purchase indication
+* Rating
+* Review text
+* Review media
+* Create review
+* Edit review
+* Remove review where supported
+* Review submission errors
+* Review list
+* Rating summary
+
+The backend determines:
+
+* eligibility
+* verified purchase
+* ownership
+* moderation status
+
+Do not trust the client to mark a review as verified.
+
+---
+
+# 25. Review UX
+
+Implement a polished review composer.
+
+Support:
+
+* Rating selection
+* Text input
+* Media attachment where supported
+* Upload progress
+* Validation
+* Submission state
+* Duplicate submission prevention
+* Success
+* Failure/retry
+
+Validate text length and media constraints before upload where possible.
+
+The backend remains authoritative for final validation.
+
+---
+
+# 26. Review Media
+
+Use the existing media architecture.
+
+Do not create a second upload system.
+
+Respect:
+
+* secure upload flow
+* media ownership
+* file validation
+* size limits
+* MIME validation
+* processing states
+* thumbnails/optimized variants
+* upload failures
+
+Never expose private storage credentials.
+
+Do not upload arbitrary content directly to infrastructure without the repository's intended authorization flow.
+
+---
+
+# 27. Notifications
+
+Implement the customer notification center using actual backend contracts.
+
+Support:
+
+* Notification list
+* Pagination
+* Unread state
+* Read state
+* Mark read
+* Mark all read
+* Unread count
+* Notification detail/action
+* Safe navigation to related resources
+
+Support notification categories where provided.
+
+Do not invent notifications that the backend never produces.
+
+---
+
+# 28. Real-Time Notifications
+
+If the backend provides SSE or another supported real-time notification channel:
+
+* connect securely
+* authenticate appropriately
+* handle reconnect
+* avoid duplicate events
+* update TanStack Query state
+* recover through REST after disconnect
+* avoid battery/network abuse
+
+Real-time delivery is supplemental.
+
+The REST API remains the recovery path and authoritative notification state.
+
+---
+
+# 29. Notification Preferences
+
+Implement notification preferences where the backend supports them.
+
+Allow customers to control appropriate:
+
+* categories
+* channels
+* marketing preferences
+
+Do not allow customers to disable mandatory security or transactional notifications if the backend marks them mandatory.
+
+Always respect server-side preference rules.
+
+---
+
+# 30. Push Notification Foundation
+
+If push infrastructure is already configured:
+
+* register device tokens securely
+* associate tokens with the authenticated account through backend APIs
+* handle token rotation
+* handle logout/device removal
+* process notification taps
+* validate deep-link destinations
+
+Do not implement fake FCM/APNS delivery.
+
+Do not expose device tokens unnecessarily.
+
+If provider configuration does not exist, implement only the client architecture necessary to integrate with the actual repository without pretending delivery is operational.
+
+---
+
+# 31. Deep Links and Notification Actions
+
+Support secure navigation from:
+
+* product links
+* category links
+* search links
+* order links
+* shipment links
+* return links
+* notification actions
+
+Validate all route parameters.
+
+Do not trust a notification or deep link as proof of authorization.
+
+After navigation, fetch the resource through the authenticated backend.
+
+Prevent open redirects.
+
+---
+
+# 32. Account Security
+
+Complete mobile account security UX supported by the backend.
+
+Support where available:
+
+* Password change
+* Session management
+* Device/session visibility
+* Logout
+* Logout other sessions
+* Re-authentication for sensitive actions
+
+Do not expose:
+
+* session tokens
+* refresh tokens
+* internal authentication metadata
+
+Sensitive operations should require appropriate backend authorization.
+
+---
+
+# 33. TanStack Query Consistency
+
+Ensure correct cache behavior across the entire customer journey.
+
+Important invalidation/update boundaries include:
+
+### Authentication
+
+On logout:
+
+* clear customer queries
+* clear private order queries
+* clear private notification queries
+* clear private cart state
+* clear sensitive cached data
+
+### Cart
+
+After cart mutation:
+
+* update/invalidate cart
+* update cart count
+* invalidate dependent checkout data
+
+### Checkout
+
+After checkout changes:
+
+* invalidate relevant checkout state
+* refresh authoritative totals
+
+### Order
+
+After successful order creation:
+
+* invalidate cart
+* invalidate customer orders
+* fetch authoritative order
+* invalidate relevant payment state
+
+### Returns
+
+After return creation:
+
+* invalidate order detail
+* invalidate return list
+* refresh eligibility/status
+
+### Reviews
+
+After review creation/edit/removal:
+
+* invalidate product reviews
+* invalidate rating summaries
+* update the customer's review state
+
+### Notifications
+
+After marking read:
+
+* update notification list
+* update unread count
+
+Do not blindly invalidate the entire query cache after every mutation.
+
+---
+
+# 34. Offline and Recovery Behavior
+
+Mobile users may lose connectivity at any point.
+
+Handle:
+
+* checkout network loss
+* payment network loss
+* order submission timeout
+* order detail offline viewing where cached safely
+* notification synchronization
+* tracking refresh failure
+* return submission failure
+* review submission failure
+
+Do not claim success until backend confirmation exists.
+
+For mutations with uncertain results:
+
+1. Stop duplicate submission.
+2. Reconnect.
+3. Query authoritative state.
+4. Reconcile.
+5. Resume only when safe.
+
+---
+
+# 35. Accessibility Hardening
+
+Review all implemented screens for:
+
+* screen-reader labels
+* roles
+* hints
+* focus order
+* dynamic text
+* touch targets
+* accessible dialogs
+* accessible forms
+* error announcements
+* loading announcements
+* meaningful status messages
+
+Checkout, payment, return, and review flows must be usable with accessibility technologies.
+
+---
+
+# 36. Performance Hardening
+
+Optimize the completed mobile application.
+
+Review:
+
+* startup time
+* navigation transitions
+* list rendering
+* image loading
+* product galleries
+* order history
+* notifications
+* query caching
+* unnecessary rerenders
+* memory usage
+* large datasets
+* pagination
+* background behavior
+
+Avoid:
+
+* rendering huge lists without virtualization
+* unnecessary polling
+* duplicated API requests
+* storing large server datasets in Zustand
+* unnecessary global state
+
+---
+
+# 37. Security Hardening
+
+Perform a complete mobile security review.
+
+Check for:
+
+* insecure storage
+* sensitive logs
+* token exposure
+* open redirects
+* malicious deep links
+* unauthorized account data
+* IDOR assumptions
+* unsafe media handling
+* unsafe external URLs
+* WebView vulnerabilities if WebView exists
+* insecure debugging configuration
+* production logging
+* leaked environment secrets
+
+The application must assume the client can be manipulated.
+
+All authorization must remain server-side.
+
+---
+
+# 38. Analytics
+
+Integrate with the existing analytics architecture.
+
+Track appropriate customer events such as:
+
+* checkout started
+* shipping selected
+* coupon applied
+* payment interaction
+* order created
+* order viewed
+* shipment viewed
+* return started
+* return submitted
+* review started
+* review submitted
+* notification opened
+
+Do not send:
+
+* passwords
+* payment credentials
+* tokens
+* private addresses
+* unnecessary personal information
+* sensitive payment data
+
+Analytics must never control commerce behavior.
+
+---
+
+# 39. Error UX
+
+Every major customer operation must distinguish:
+
+* validation errors
+* authorization errors
+* authentication errors
+* network errors
+* timeout
+* conflict
+* rate limiting
+* server errors
+* provider failures
+* ambiguous state
+
+Provide actionable recovery.
+
+Examples:
+
+* Retry
+* Refresh
+* Return to cart
+* Re-select address
+* Re-select shipping
+* View order
+* Check payment status
+* Contact support where the actual product supports it
+
+Never display raw backend exceptions.
+
+---
+
+# 40. End-to-End Customer Journey
+
+Create or extend mobile E2E coverage for the complete customer lifecycle where the environment supports it:
+
+1. Launch application.
+2. Authenticate.
+3. Browse catalog.
+4. Search.
+5. Open product.
+6. Select variant/offer.
+7. Add to cart.
+8. Open cart.
+9. Start checkout.
+10. Select address.
+11. Select shipping.
+12. Apply promotion if available.
+13. Review authoritative totals.
+14. Complete payment using test configuration where available.
+15. Reconcile payment/order state.
+16. View order confirmation.
+17. Open order history.
+18. Open order details.
+19. View shipment.
+20. View tracking.
+21. Request return where eligible.
+22. Check return/refund state.
+23. Submit eligible review.
+24. Open notifications.
+25. Mark notification read.
+
+Tests must use actual backend behavior or properly isolated test infrastructure.
+
+Never create fake production APIs merely to satisfy tests.
+
+---
+
+# 41. Production Build
+
+Validate the mobile application using the repository's actual build system.
+
+Where configured, validate:
+
+* development build
+* staging build
+* production build
+* Expo configuration
+* native configuration
+* environment configuration
+* deep links
+* assets
+* app identifiers
+* permissions
+
+Do not claim a production build works if it was not actually built.
+
+---
+
+# 42. Testing
+
+Implement or extend tests covering:
+
+### Checkout
+
+* session creation
+* cart validation
+* address selection
+* shipping selection
+* promotion
+* total refresh
+* expiration
+* validation failures
+
+### Payments
+
+* successful payment
+* required action
+* processing
+* failure
+* ambiguous network result
+* duplicate submission prevention
+
+### Orders
+
+* order creation
+* confirmation
+* history
+* details
+* multi-seller order
+* multi-shipment order
+
+### Fulfillment
+
+* shipment display
+* tracking
+* tracking refresh
+* delivery states
+
+### Returns
+
+* eligibility
+* item selection
+* quantity validation
+* submission
+* status
+* refund state
+
+### Reviews
+
+* eligibility
+* rating
+* review creation
+* media
+* edit/remove
+* duplicate prevention
+
+### Notifications
+
+* list
+* unread count
+* read
+* read all
+* real-time update
+* reconnect
+* deep-link action
+
+### Account
+
+* profile
+* addresses
+* default address
+* logout
+* session security
+
+### Security
+
+* protected routes
+* unauthorized access
+* deep-link manipulation
+* sensitive-data exposure
+* token handling
+
+### Accessibility
+
+Test critical accessibility behavior throughout checkout and account flows.
+
+---
+
+# 43. Documentation
+
+Update relevant mobile documentation.
+
+Document:
+
+* customer flows
+* authentication
+* secure storage
+* checkout
+* payment configuration
+* deep links
+* push notifications
+* environment variables
+* builds
+* testing
+* troubleshooting
+
+Documentation must describe only actual repository capabilities.
+
+---
+
+# 44. Final Integration Review
+
+After implementation, inspect the entire mobile application as one system.
+
+Verify consistency across:
+
+* authentication
+* customer
+* addresses
+* catalog
+* search
+* cart
+* checkout
+* payment
+* orders
+* fulfillment
+* returns
+* reviews
+* notifications
+* navigation
+* deep links
+* query cache
+* Zustand
+* API client
+* secure storage
+* analytics
+* observability
+
+Check for:
+
+* duplicate abstractions
+* inconsistent API models
+* stale query data
+* navigation loops
+* authentication leaks
+* duplicated payment submissions
+* duplicated order submissions
+* unauthorized customer data
+* inconsistent money formatting
+* unsafe deep links
+* fake provider behavior
+* broken offline recovery
+
+Fix issues found.
+
+---
+
+# 45. Validation
+
+Run the appropriate repository commands for:
+
+* TypeScript
+* lint
+* formatting
+* unit tests
+* integration tests
+* mobile tests
+* E2E tests
+* Expo validation
+* native builds
+* production builds where configured
+
+Do not suppress errors merely to achieve a passing result.
+
+Do not skip failing tests without understanding and documenting the reason.
+
+---
+
+# 46. Scope Boundaries
+
+Do not create unrelated systems.
+
+Unless the repository already requires them, do not implement:
+
+* Seller portal
+* Seller payout UI
+* Settlement dashboards
+* Administration portal
+* Advanced WMS
+* Advertising platform
+* Recommendation engine
+* Advanced marketing automation
+* Tax-remittance platform
+* Carrier-specific systems without actual providers
+* Analytics data warehouse/dashboard platform
+
+The mobile application should remain focused on the customer experience.
+
+---
+
+# 47. Non-Negotiable Rules
+
+You must:
+
+* Inspect the repository first.
+* Integrate with actual existing code.
+* Preserve compatible architecture.
+* Use actual backend contracts.
+* Keep all business authority server-side.
+* Protect authentication and customer data.
+* Prevent duplicate payments.
+* Prevent duplicate orders.
+* Handle ambiguous payment states safely.
+* Handle network failures.
+* Use authoritative backend totals.
+* Respect inventory and seller boundaries.
+* Use secure media handling.
+* Use existing notification architecture.
+* Use existing fulfillment/tracking architecture.
+* Add meaningful tests.
+* Validate actual builds and tests.
+* Document actual behavior.
+* Report only verified repository state.
+
+You must NOT:
+
+* Invent endpoints.
+* Invent payment provider behavior.
+* Invent shipment tracking.
+* Invent order status.
+* Invent return eligibility.
+* Invent review verification.
+* Fabricate notification events.
+* Store secrets in the application.
+* Store passwords insecurely.
+* Trust client-side authorization.
+* Use floating-point money as an authority.
+* Duplicate backend business rules unnecessarily.
+* Create competing API clients.
+* Create competing state-management systems.
+* Leave TODO/FIXME placeholders.
+* Hide TypeScript/lint/test failures.
+* Claim completion without implementation.
+* Claim tests passed without running them.
+* Claim builds succeeded without validating them.
+
+---
+
+# 48. Final Implementation Report
+
+After implementation, provide a factual report containing:
+
+1. Files/modules created.
+2. Files/modules modified.
+3. Account functionality implemented.
+4. Address functionality implemented.
+5. Checkout functionality implemented.
+6. Promotion/coupon functionality implemented.
+7. Shipping functionality implemented.
+8. Payment functionality implemented.
+9. Order functionality implemented.
+10. Fulfillment/tracking functionality implemented.
+11. Return/refund functionality implemented.
+12. Review functionality implemented.
+13. Notification functionality implemented.
+14. Deep-link functionality implemented.
+15. Security hardening performed.
+16. Accessibility work performed.
+17. Performance work performed.
+18. Analytics/observability integration.
+19. Tests added or modified.
+20. Validation commands executed and actual results.
+21. Build validation results.
+22. Documentation updated.
+23. Genuine limitations or environment-dependent functionality that could not be validated.
+
+Do not claim anything that was not actually implemented and verified.
+
+The final result must be one coherent production-grade mobile ecommerce application integrated with the existing marketplace repositor
+
 You are operating in Senior Engineering Team Mode.
 
 Complete the remaining production-ready mobile application for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.

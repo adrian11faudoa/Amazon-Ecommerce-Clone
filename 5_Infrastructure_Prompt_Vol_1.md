@@ -1,1208 +1,1221 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Infrastructure Prompt — Volume 1
+
+## Production AWS Foundation, Networking, Data Services, Storage, Messaging, Containers, Secrets, and Deployment
+
+You are implementing the production infrastructure foundation for an original, production-grade Amazon-style ecommerce marketplace.
+
+This prompt is fully standalone. It must be executable without requiring any other prompt, architecture document, previous conversation, or previously generated document to be present.
+
+The actual repository is the source of truth for the existing application, infrastructure, contracts, configuration, deployment structure, and implementation state.
+
+Your responsibility is to build the infrastructure required to run the marketplace reliably in development, staging, and production environments.
+
+Do not create a separate platform or competing infrastructure architecture.
+
+---
+
+# 1. Mission
+
+Implement the production cloud foundation using AWS and infrastructure-as-code.
+
+The infrastructure must support:
+
+* Next.js web application
+* React Native/Expo mobile application
+* NestJS backend
+* PostgreSQL
+* Prisma
+* Redis
+* Elasticsearch/OpenSearch
+* S3
+* CloudFront
+* BullMQ
+* Kafka/Redpanda where actually required
+* REST APIs
+* Webhooks
+* SSE
+* background workers
+* scheduled jobs
+* Stripe integration
+* notifications
+* search indexing
+* media processing
+* CI/CD
+* secrets management
+* secure networking
+* production deployments
+
+Preferred infrastructure technologies:
+
+* AWS
+* Terraform or OpenTofu
+* Docker
+* Kubernetes/EKS where justified by the repository's architecture and operational requirements
+* GitHub Actions or the repository's existing CI/CD system
+
+Do not introduce Kubernetes merely for complexity. If the existing architecture can be deployed more safely with managed AWS services, evaluate that approach and use the most appropriate production architecture.
+
+---
+
+# 2. Repository-First Audit
+
+Before creating or modifying infrastructure:
+
+1. Inspect the entire repository.
+2. Identify existing:
+
+   * Dockerfiles
+   * Docker Compose files
+   * Terraform/OpenTofu
+   * Kubernetes manifests
+   * Helm charts
+   * CI/CD workflows
+   * environment files
+   * deployment scripts
+   * package scripts
+   * database migration scripts
+   * backend configuration
+   * frontend configuration
+   * worker configuration
+   * search configuration
+   * Redis configuration
+   * storage configuration
+   * observability configuration
+3. Determine what infrastructure already exists.
+4. Determine which components are already deployable.
+5. Reuse compatible infrastructure.
+6. Do not create duplicate resources or competing deployment mechanisms.
+7. Preserve backward compatibility.
+8. Make the smallest safe infrastructure changes necessary.
+
+The repository is the source of truth for current infrastructure state.
+
+---
+
+# 3. Infrastructure Principles
+
+Implement infrastructure according to these principles:
+
+* Infrastructure as code.
+* Immutable and reproducible deployments.
+* Environment isolation.
+* Least privilege.
+* Secure defaults.
+* Private networking for internal services.
+* Managed AWS services where operationally appropriate.
+* Encryption at rest and in transit.
+* Secrets never committed to source control.
+* No hardcoded production credentials.
+* Explicit dependencies.
+* Safe migrations.
+* Repeatable deployments.
+* Controlled blast radius.
+* Horizontal scalability.
+* Health-based deployment.
+* Graceful shutdown.
+* Observability-ready infrastructure.
+* Disaster recovery readiness.
 
-Build the production-ready infrastructure foundation for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+---
 
-The platform is an original implementation.
+# 4. Environment Strategy
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+Support clear environment separation.
 
-This prompt is completely independent and may be executed in a separate conversation.
+At minimum establish a strategy for:
 
-The infrastructure must support the established backend, web frontend, mobile applications, search, payments, inventory, fulfillment, notifications, analytics, and administrative systems.
+* development
+* staging
+* production
 
-Do not redesign the application architecture.
+Each environment must have isolated:
 
-Do not implement backend business logic.
+* databases
+* Redis
+* search indexes/clusters where appropriate
+* storage paths/buckets
+* secrets
+* queues
+* event infrastructure
+* application configuration
 
-Do not implement frontend code.
+Do not accidentally allow staging applications to access production data.
 
-Do not implement mobile code.
+Do not reuse production credentials in development.
 
-Do not generate application business logic.
+---
 
-This volume establishes the foundational cloud, networking, container, Kubernetes, Terraform, storage, database, cache, event-streaming, and deployment infrastructure.
+# 5. AWS Account and Region Strategy
 
-────────────────────────────────────────
+Define infrastructure assumptions for:
 
-MISSION
+* AWS account boundaries
+* region
+* availability zones
+* environment separation
+* resource naming
+* tagging
+* ownership
+* cost allocation
 
-Build production-grade cloud infrastructure supporting:
+Use variables rather than hardcoding environment-specific values.
 
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High checkout traffic
-• High search traffic
-• High inventory throughput
-• Large media traffic
-• Large analytics workloads
-• Marketplace payments
-• Seller payouts
-• Multi-region deployment
-• High availability
-• Horizontal scaling
-• Zero-downtime deployments
-• Disaster recovery
-• Secure operations
+Resources should have consistent tags such as:
 
-Support environments for:
+* project
+* environment
+* service
+* owner
+* managed-by
+* cost-center where applicable
 
-• Local Development
-• Development
-• Testing
-• Staging
-• Production
-• Disaster Recovery
+Do not hardcode assumptions that prevent future multi-region expansion.
 
-────────────────────────────────────────
+---
 
-PRIMARY TECHNOLOGY STACK
+# 6. Terraform/OpenTofu Structure
 
-Cloud:
+Implement a maintainable infrastructure-as-code structure.
 
-• AWS
+Separate reusable components/modules for appropriate resources such as:
 
-Containers:
+* networking
+* IAM
+* compute
+* database
+* Redis
+* search
+* S3
+* CloudFront
+* queues
+* event infrastructure
+* secrets
+* monitoring foundations
+* DNS
+* certificates
 
-• Docker
+Separate environment configuration from reusable modules.
 
-Orchestration:
+Avoid enormous monolithic infrastructure files.
 
-• Kubernetes
-• Amazon EKS
+Avoid copy-pasting entire environments.
 
-Package Management:
+Use variables, locals, modules, outputs, and dependency relationships appropriately.
 
-• Helm
+---
 
-Infrastructure as Code:
+# 7. State Management
 
-• Terraform
+Configure secure infrastructure state management.
 
-CI/CD:
+Where applicable use:
 
-• GitHub Actions
+* encrypted remote state
+* state locking
+* restricted access
+* versioning
+* backups/recovery
 
-Container Registry:
+Do not store infrastructure state in an unsafe shared local file for production.
 
-• Amazon ECR
+Do not expose secrets through state unnecessarily.
 
-Database:
+Review Terraform/OpenTofu resource attributes that could place sensitive values into state.
 
-• PostgreSQL
-• Amazon RDS or Aurora PostgreSQL where justified
+---
 
-Cache:
+# 8. VPC Architecture
 
-• Redis
-• Amazon ElastiCache where appropriate
-
-Event Streaming:
-
-• Kafka or Redpanda
-• Managed AWS alternative where justified
-
-Search:
-
-• Elasticsearch/OpenSearch
-
-Object Storage:
-
-• Amazon S3
-
-CDN:
-
-• Amazon CloudFront
-
-DNS:
-
-• Amazon Route 53
-
-TLS:
-
-• AWS Certificate Manager
-
-Secrets:
-
-• AWS Secrets Manager
-• Kubernetes secret integration
-• Approved cloud-native secret management
-
-Observability:
-
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
-
-Security:
-
-• IAM
-• KMS
-• WAF
-• NetworkPolicies
-• Pod Security controls
-
-────────────────────────────────────────
-
-INFRASTRUCTURE ARCHITECTURE
-
-Design infrastructure across multiple Availability Zones.
-
-Support:
-
-• Public edge
-• Private application workloads
-• Private data workloads
-• Internal service communication
-• Management access
-• Observability infrastructure
-
-Do not expose:
-
-• PostgreSQL
-• Redis
-• Kafka
-• Search clusters
-• Kubernetes control-plane infrastructure
-
-directly to the public internet.
-
-────────────────────────────────────────
-
-AWS ACCOUNT STRATEGY
-
-Define an AWS account strategy suitable for enterprise operations.
-
-Consider separation for:
-
-• Security
-• Shared services
-• Development
-• Staging
-• Production
-• Disaster recovery
-
-Define:
-
-• Account boundaries
-• IAM boundaries
-• Network boundaries
-• Billing boundaries
-• Logging boundaries
-
-Do not reuse production credentials in lower environments.
-
-────────────────────────────────────────
-
-ENVIRONMENT STRATEGY
-
-Design separate infrastructure configurations for:
-
-LOCAL
-
-• Docker Compose
-• Local PostgreSQL
-• Local Redis
-• Local Kafka/Redpanda
-• Local search
-
-DEVELOPMENT
-
-• Shared development AWS environment
-
-TESTING
-
-• Isolated automated-test infrastructure where appropriate
-
-STAGING
-
-• Production-like architecture
-
-PRODUCTION
-
-• High availability
-• Multi-AZ
-• Multi-region readiness
-
-DISASTER RECOVERY
-
-• Recovery infrastructure
-• Backup storage
-• Recovery validation
-
-────────────────────────────────────────
-
-TERRAFORM ARCHITECTURE
-
-Create a scalable Terraform organization.
-
-Use reusable modules for:
-
-• Networking
-• VPC
-• Subnets
-• Routing
-• Security groups
-• IAM
-• EKS
-• Node groups
-• PostgreSQL
-• Redis
-• Kafka
-• OpenSearch
-• S3
-• CloudFront
-• Route 53
-• ACM
-• ECR
-• KMS
-• Secrets
-• WAF
-• Monitoring
-• Logging
-• Backups
-
-Define environment layers separately from reusable modules.
-
-Support:
-
-• Remote state
-• State locking
-• Provider configuration
-• Variable validation
-• Outputs
-• Tags
-• Naming conventions
-• Region configuration
-
-Never place secrets in Terraform code or state intentionally.
-
-────────────────────────────────────────
-
-TERRAFORM STATE
-
-Implement secure remote state.
-
-Support:
-
-• Encrypted state storage
-• State locking
-• Restricted access
-• Versioning
-• Recovery
-
-Separate state appropriately for:
-
-• Shared infrastructure
-• Development
-• Staging
-• Production
-• Disaster recovery
-
-────────────────────────────────────────
-
-NETWORKING
-
-Design AWS networking.
-
-Include:
-
-• VPC
-• Public subnets
-• Private application subnets
-• Private data subnets
-• Internet Gateway
-• NAT Gateways
-• Route tables
-• Security groups
-• Network ACLs
-• VPC endpoints
+Implement a production VPC.
 
 Use multiple Availability Zones.
 
-Define network flows between:
+Define appropriate:
 
-• Internet
-• CloudFront
-• WAF
-• Load balancers
-• EKS
-• PostgreSQL
-• Redis
-• Kafka
-• Search
-• S3
+* VPC CIDR
+* public subnets
+* private application subnets
+* private data subnets
+* route tables
+* internet gateway
+* NAT strategy
+* security groups
+* network ACL strategy where justified
 
-Apply least-privilege networking.
+Internal application and data services should not be publicly exposed unnecessarily.
 
-────────────────────────────────────────
+Prefer private connectivity for:
 
-NETWORK SEGMENTATION
+* PostgreSQL
+* Redis
+* OpenSearch
+* Kafka/Redpanda
+* internal workers
 
-Separate:
+---
 
-• Edge traffic
-• Application traffic
-• Worker traffic
-• Database traffic
-• Management traffic
-• Observability traffic
+# 9. Network Security
 
-Do not allow unrestricted east-west traffic inside the environment.
+Implement least-privilege network access.
 
-────────────────────────────────────────
+Security groups must permit only required communication.
 
-IAM
+Examples:
 
-Implement least-privilege IAM architecture.
+* Load balancer → backend
+* Backend → PostgreSQL
+* Backend → Redis
+* Backend → OpenSearch
+* Workers → required data services
+* Backend/workers → S3
+* Backend → external providers through controlled egress
 
-Create roles for:
+Do not use broad:
 
-• Terraform
-• EKS
-• Application workloads
-• Worker workloads
-• Media processing
-• Search workers
-• CI/CD
-• Monitoring
-• Backup systems
-• Disaster recovery
+* `0.0.0.0/0`
+* all ports
+* unrestricted internal access
 
-Prefer short-lived credentials and workload identity.
+unless genuinely required and explicitly justified.
 
-Use:
+---
 
-• OIDC federation
-• IAM Roles for Service Accounts
-• GitHub Actions OIDC
+# 10. DNS and TLS
 
-Avoid long-lived access keys.
+Where the repository uses a production domain:
 
-────────────────────────────────────────
+Implement infrastructure for:
 
-KMS
+* Route 53
+* DNS records
+* ACM certificates
+* HTTPS
+* certificate validation
+* domain routing
 
-Define KMS architecture for:
+All production customer-facing traffic must use TLS.
 
-• S3
-• PostgreSQL
-• Redis
-• EBS
-• Secrets
-• Logs
-• Backups
+Redirect insecure HTTP where appropriate.
 
-Define:
+Do not disable certificate validation.
 
-• Key ownership
-• Rotation
-• Access policies
-• Environment separation
+---
 
-────────────────────────────────────────
+# 11. Edge and Load Balancing
 
-EKS FOUNDATION
+Implement appropriate AWS edge/load-balancing architecture.
 
-Create the production Kubernetes foundation.
+For backend APIs, use an appropriate managed load balancer/API gateway strategy.
 
 Support:
 
-• Amazon EKS
-• Multi-AZ node groups
-• Cluster autoscaling
-• IAM integration
-• Kubernetes RBAC
-• NetworkPolicies
-• Pod security
+* TLS termination
+* health checks
+* connection management
+* routing
+* request limits where appropriate
+* multiple backend instances
+* graceful deployment behavior
 
-Separate workload categories:
+For web applications, use the deployment model compatible with the actual Next.js application.
 
-• API services
-• Web workloads
-• Background workers
-• Media workers
-• Search workers
-• Notification workers
-• Analytics workers
-• Administration
+Do not force static hosting if the application requires server-side rendering.
 
-────────────────────────────────────────
+---
 
-KUBERNETES NAMESPACES
+# 12. Backend Containerization
 
-Define namespaces appropriate for the platform.
+Create or improve production-grade Docker configuration for the NestJS backend.
 
-Examples may include:
+Requirements:
 
-• ingress
-• applications
-• workers
-• search
-• observability
-• security
+* multi-stage builds
+* minimal runtime image
+* non-root execution where compatible
+* deterministic dependency installation
+* production-only dependencies where appropriate
+* health check strategy
+* graceful shutdown
+* environment-based configuration
+* no secrets in image layers
 
-Do not create unnecessary namespaces.
+Do not copy:
 
-Define ownership and isolation clearly.
+* `.env` secrets
+* credentials
+* local development artifacts
+* unnecessary source files
 
-────────────────────────────────────────
+into production images.
 
-NODE GROUPS
+---
 
-Design workload-specific node groups.
+# 13. Worker Containerization
 
-Support:
+Support separate worker deployment for workloads such as:
 
-• General application workloads
-• Memory-intensive workloads
-• CPU-intensive workloads
-• Media-processing workloads
-• Analytics workloads
-• Observability workloads
+* BullMQ
+* media processing
+* search indexing
+* notifications
+* reconciliation
+* scheduled jobs
 
-Define:
+Workers must be independently scalable where justified.
 
-• Node labels
-• Taints
-• Tolerations
-• Affinity
-• Anti-affinity
-• Availability zones
-• Autoscaling policies
+Do not run heavy background workloads inside the API process if the repository architecture separates workers.
 
-────────────────────────────────────────
+Workers must support:
 
-KUBERNETES RESOURCE GOVERNANCE
+* graceful shutdown
+* concurrency configuration
+* health checks
+* retry behavior
+* structured logging
+* resource limits
 
-Define foundations for:
+---
 
-• Resource requests
-• Resource limits
-• ResourceQuota
-• LimitRange
-• PodDisruptionBudget
-• NetworkPolicy
-• ServiceAccount
-• RBAC
+# 14. Compute Platform
 
-Prevent noisy-neighbor issues.
+Evaluate the repository's actual requirements and deploy backend/worker workloads using the most appropriate AWS compute architecture.
 
-────────────────────────────────────────
+Potential options include:
 
-CONTAINERIZATION
+* ECS/Fargate
+* EKS
+* EC2
+* Lambda for narrowly suitable workloads
 
-Create production Docker strategy.
+If Kubernetes/EKS is used:
 
-Support:
+Implement production-grade:
 
-• Multi-stage builds
-• Minimal runtime images
-• Non-root execution
-• Dependency caching
-• Immutable versions
-• Health checks
-• Graceful shutdown
-• Security scanning compatibility
+* namespaces
+* deployments
+* services
+* ingress/load balancing
+* resource requests/limits
+* readiness probes
+* liveness probes
+* pod disruption strategy
+* autoscaling foundations
+* secrets integration
+* rolling deployments
+* graceful termination
 
-Create patterns for:
+Do not introduce Kubernetes complexity without operational justification.
 
-• Backend services
-• Workers
-• Web application
-• Mobile build tooling where necessary
+---
 
-Do not include secrets inside images.
+# 15. PostgreSQL
 
-────────────────────────────────────────
+Implement production PostgreSQL infrastructure.
 
-DOCKER COMPOSE
+Preferred AWS service:
 
-Create local infrastructure with Docker Compose.
+* Amazon RDS PostgreSQL or Aurora PostgreSQL when justified.
 
 Support:
 
-• PostgreSQL
-• Redis
-• Kafka/Redpanda
-• Elasticsearch/OpenSearch where appropriate
-• Supporting services
-
-The local environment must support backend development and integration testing without requiring AWS.
-
-────────────────────────────────────────
-
-ECR
-
-Configure Amazon ECR.
-
-Support:
-
-• Repository management
-• Image lifecycle policies
-• Image scanning
-• Immutable tags where appropriate
-• Access control
-• Retention
-
-Define tagging using:
-
-• Git SHA
-• Semantic version
-• Release tag
-• Environment
-
-────────────────────────────────────────
-
-LOAD BALANCING
-
-Design load balancing for:
-
-• Web application
-• Public APIs
-• Seller APIs
-• Admin APIs
-• Webhook endpoints
-
-Support:
-
-• TLS
-• Health checks
-• Connection timeouts
-• Load balancing across AZs
-• Horizontal scaling
-
-Do not route large media downloads through application services when CloudFront/S3 can deliver them directly.
-
-────────────────────────────────────────
-
-INGRESS
-
-Design Kubernetes ingress.
-
-Support:
-
-• TLS
-• Routing
-• API routing
-• Web routing
-• Webhook routing
-• Health checks
-• Security integration
-• Rate limiting where appropriate
-
-Keep internal services private.
-
-────────────────────────────────────────
-
-POSTGRESQL INFRASTRUCTURE
-
-Configure production PostgreSQL.
-
-Support:
-
-• Multi-AZ
-• Automated backups
-• Point-in-time recovery
-• Read replicas
-• Encryption
-• Monitoring
-• Failover
-• Maintenance
-• Connection pooling
-• Parameter configuration
-
-Define:
-
-• Storage scaling
-• Connection limits
-• Backup retention
-• Replica strategy
-• Monitoring thresholds
+* Multi-AZ where appropriate
+* encryption at rest
+* encryption in transit
+* backups
+* automated backup retention
+* maintenance windows
+* parameter configuration
+* monitoring
+* private networking
+* security groups
+* deletion protection for production
 
 Do not expose PostgreSQL publicly.
 
-────────────────────────────────────────
+---
 
-REDIS INFRASTRUCTURE
+# 16. Database Connectivity
 
-Configure production Redis.
-
-Support:
-
-• Multi-AZ
-• Replication
-• Automatic failover
-• Encryption at rest
-• Encryption in transit
-• Authentication
-• Monitoring
-• Persistence where appropriate
-
-Support platform use cases:
-
-• Cache
-• Rate limiting
-• Idempotency
-• Distributed locks
-• Cart acceleration
-• Queue infrastructure
-
-Redis must never be the authoritative store for:
-
-• Orders
-• Payments
-• Inventory
-• Seller balances
-• Refunds
-
-────────────────────────────────────────
-
-KAFKA / REDPANDA INFRASTRUCTURE
-
-Define event-streaming infrastructure.
+Configure the backend for reliable PostgreSQL connectivity.
 
 Support:
 
-• Multi-broker cluster
-• Multi-AZ distribution
-• Persistent storage
-• Replication
-• Authentication
-• TLS
-• Monitoring
-• Topic management
-• Retention
+* connection pooling
+* connection limits
+* timeouts
+* retry strategy where appropriate
+* graceful shutdown
+* migration execution strategy
 
-Design for:
+Do not run destructive database migrations automatically as an unsafe side effect of every application startup.
 
-• Product events
-• Inventory events
-• Order events
-• Payment events
-• Notification events
-• Analytics events
-• Seller events
+Production migrations must have controlled deployment behavior.
 
-────────────────────────────────────────
+---
 
-OPENSEARCH / ELASTICSEARCH
+# 17. Prisma Migrations
 
-Configure production search infrastructure.
+Infrastructure must support safe Prisma migration deployment.
 
-Support:
+Ensure:
 
-• Multi-node
-• Multi-AZ
-• Replicas
-• Shards
-• Snapshots
-• Encryption
-• Access control
-• Monitoring
-• Scaling
+* migration files are version-controlled
+* migration execution is deterministic
+* production migration runs exactly once
+* migrations happen before application versions requiring them
+* failed migrations stop unsafe deployment progression
+* backward-compatible migration patterns are possible
 
-Search remains a derived system.
+Do not use `prisma db push` as the production schema-management strategy.
 
-Provide recovery from search loss through reindexing from authoritative data.
+---
 
-────────────────────────────────────────
+# 18. Redis
 
-S3
+Implement managed Redis using an appropriate AWS service such as ElastiCache/Valkey where compatible with the repository.
 
-Configure storage architecture for:
+Redis must support the application's actual uses:
 
-• Product media
-• Seller media
-• Store assets
-• Review media
-• Documents
-• Reports
-• Backups
-• Temporary uploads
+* caching
+* rate limiting
+* ephemeral state
+* counters
+* coordination
+* presence
+* BullMQ
 
 Support:
 
-• Versioning
-• Encryption
-• Lifecycle rules
-• Private access
-• IAM policies
-• Replication
-• Cleanup
+* private networking
+* encryption
+* authentication
+* backups where appropriate
+* monitoring
+* failover/high availability where required
 
-Keep private objects private.
+Redis must not become the authoritative source for durable commerce data.
 
-────────────────────────────────────────
+---
 
-CLOUDFRONT
+# 19. Redis Reliability
 
-Configure CDN architecture.
+Infrastructure must account for Redis failure.
+
+The application must be able to distinguish:
+
+* critical database failure
+* cache failure
+* queue failure
+* temporary Redis unavailability
+
+Do not make nonessential caching failures take down core commerce functionality unless the specific operation genuinely depends on Redis.
+
+BullMQ workloads must have appropriate recovery behavior.
+
+---
+
+# 20. Search Infrastructure
+
+Implement Elasticsearch/OpenSearch infrastructure according to the actual repository implementation.
 
 Support:
 
-• S3 origins
-• Static assets
-• Product media
-• Review media
-• Protected content
-• TLS
-• Cache policies
-• Signed URLs where required
-• Origin protection
+* private networking
+* encryption at rest
+* encryption in transit
+* access control
+* appropriate node sizing
+* monitoring
+* index lifecycle strategy
+* backup strategy where appropriate
 
-Optimize cache behavior for:
+Search remains a projection.
 
-• Immutable media
-• Public assets
-• Short-lived content
+PostgreSQL remains authoritative.
 
-────────────────────────────────────────
+Do not make checkout or order creation depend on search availability.
 
-ROUTE 53
+---
+
+# 21. Search Index Deployment
+
+Infrastructure must support:
+
+* versioned indexes
+* aliases
+* zero-downtime index migration
+* reindex jobs
+* worker access
+* administrative reindex operations
+
+Do not destroy the active search index simply because a new deployment is being applied.
+
+---
+
+# 22. Object Storage
+
+Implement secure S3 infrastructure for:
+
+* product media
+* review media
+* processed media
+* thumbnails
+* exports where actually required
+* operational artifacts where justified
+
+Use:
+
+* encryption
+* private buckets
+* versioning where appropriate
+* lifecycle policies
+* access logging where justified
+* least-privilege IAM
+
+Do not make product/media buckets publicly writable.
+
+---
+
+# 23. S3 Security
+
+Applications should access S3 through:
+
+* IAM roles
+* controlled presigned URLs
+* appropriate CloudFront mechanisms
+
+Never embed AWS access keys in:
+
+* mobile application
+* web application
+* Docker images
+* Git repository
+
+Uploaded content must be treated as untrusted.
+
+---
+
+# 24. CloudFront
+
+Configure CloudFront where appropriate for:
+
+* product media
+* processed media
+* public web assets
+* static content
+
+Support:
+
+* HTTPS
+* caching
+* cache invalidation strategy
+* origin protection
+* secure headers where appropriate
+* controlled access to private content
+
+Do not expose private S3 objects directly if CloudFront is intended to be the controlled distribution layer.
+
+---
+
+# 25. Media Processing
+
+Infrastructure must support background media processing where the application requires it.
+
+Potential workloads include:
+
+* image resizing
+* thumbnail generation
+* format conversion
+* validation
+* metadata extraction
+
+If FFmpeg or other processing tools exist in the repository, provide appropriate worker/container infrastructure.
+
+Do not process arbitrary uploaded media inside the API request path when asynchronous processing is more appropriate.
+
+---
+
+# 26. BullMQ
+
+Provide production infrastructure for BullMQ.
+
+Support queues required by the actual repository, potentially including:
+
+* media processing
+* search indexing
+* notifications
+* payment reconciliation
+* inventory expiration
+* checkout expiration
+* fulfillment
+* returns
+
+Each queue must have:
+
+* controlled concurrency
+* retry configuration
+* backoff
+* timeout
+* dead-letter strategy where implemented
+* monitoring
+* idempotency
+
+Do not create queues for functionality that does not exist.
+
+---
+
+# 27. Kafka/Redpanda
+
+If the actual repository uses Kafka/Redpanda for domain events, provide production infrastructure for it.
+
+Use a managed AWS-compatible option where appropriate, or deploy the existing technology using a justified architecture.
+
+Support:
+
+* authentication
+* encryption
+* topic provisioning
+* partitions
+* replication
+* retention
+* consumer access
+* monitoring
+
+Do not create Kafka merely because it is listed as a possible technology if the current implementation does not require it.
+
+---
+
+# 28. Event Infrastructure
+
+Infrastructure must support the application's event architecture.
+
+Ensure:
+
+* durable event delivery
+* at-least-once semantics
+* consumer retry
+* dead-letter/recovery behavior
+* replay where supported
+* monitoring
+* controlled access
+
+Transactional outbox events must not be lost because application deployment occurs.
+
+---
+
+# 29. Secrets Management
+
+Use AWS Secrets Manager and/or AWS Systems Manager Parameter Store as appropriate.
+
+Store sensitive values such as:
+
+* database credentials
+* Redis credentials
+* JWT signing secrets
+* Stripe secret keys
+* webhook secrets
+* email provider credentials
+* push provider credentials
+* search credentials
+
+Never store secrets in:
+
+* Git
+* Dockerfiles
+* Terraform source
+* frontend bundles
+* mobile builds
+* Kubernetes manifests committed with plaintext secrets
+
+Infrastructure code should reference secret locations rather than embed values.
+
+---
+
+# 30. IAM
+
+Implement least-privilege IAM.
+
+Separate roles for:
+
+* backend
+* workers
+* CI/CD
+* media processing
+* search workers
+* notification workers
+* infrastructure deployment
+
+Examples:
+
+Backend should not automatically have unrestricted:
+
+* S3 access
+* Secrets Manager access
+* database administration
+* infrastructure modification
+
+Grant only required permissions.
+
+---
+
+# 31. CI/CD Foundation
+
+Implement or improve CI/CD.
+
+Pipeline stages should include appropriate:
+
+1. Dependency installation.
+2. Lint.
+3. Type checking.
+4. Unit tests.
+5. Integration tests where practical.
+6. Build.
+7. Container image creation.
+8. Image vulnerability/security scanning where configured.
+9. Infrastructure validation.
+10. Deployment.
+11. Health validation.
+12. Rollback strategy.
+
+Do not deploy if required quality gates fail.
+
+---
+
+# 32. Container Registry
+
+Use Amazon ECR or the repository's existing registry.
+
+Support:
+
+* immutable or controlled image tags
+* vulnerability scanning where available
+* lifecycle policies
+* least-privilege access
+* retention strategy
+
+Avoid using `latest` as the only production deployment identifier.
+
+Prefer immutable commit/version identifiers.
+
+---
+
+# 33. Deployment Strategy
+
+Implement safe deployment behavior.
+
+Depending on the compute platform, support:
+
+* rolling deployments
+* blue/green deployments
+* canary where justified
+
+Deployments must verify:
+
+* health
+* readiness
+* application startup
+* database compatibility
+* critical dependencies
+
+Do not immediately terminate the previous version before the new version is healthy.
+
+---
+
+# 34. Environment Configuration
+
+Separate:
+
+* build-time configuration
+* runtime configuration
+* public client configuration
+* private server configuration
+
+Web/mobile public configuration must never contain secrets.
+
+Backend/worker secrets must be injected at runtime.
+
+Do not commit production `.env` files.
+
+---
+
+# 35. Health Checks
+
+Implement infrastructure health checks for:
+
+* API
+* workers where appropriate
+* database connectivity
+* Redis connectivity
+* search connectivity
+* queue dependencies
+
+Distinguish:
+
+* liveness
+* readiness
+
+A service should not receive traffic if it cannot safely process requests.
+
+Avoid health checks that perform expensive operations.
+
+---
+
+# 36. Graceful Shutdown
+
+Infrastructure must support graceful application shutdown.
+
+Backend:
+
+* stop accepting new requests
+* finish safe in-flight work
+* close connections
+* close Redis
+* close queue consumers
+* close database
+* terminate cleanly
+
+Workers:
+
+* stop accepting new jobs
+* finish or safely release current jobs
+* close queue connections
+* terminate cleanly
+
+Configure appropriate termination grace periods.
+
+---
+
+# 37. Autoscaling Foundation
+
+Prepare the platform for horizontal scaling.
+
+Scale based on appropriate signals such as:
+
+* CPU
+* memory
+* request count
+* queue depth
+* latency
+* worker concurrency
+
+Do not scale solely on CPU when queue depth is the actual bottleneck.
+
+Ensure application instances remain stateless where appropriate.
+
+---
+
+# 38. Background Worker Scaling
+
+Workers should scale independently from API servers where workloads require it.
+
+Examples:
+
+* Search indexing spikes → scale search workers.
+* Media uploads spike → scale media workers.
+* Notification spikes → scale notification workers.
+* Checkout expiration jobs spike → scale appropriate workers.
+
+Avoid running all workloads through a single worker deployment.
+
+---
+
+# 39. Database Backup Foundation
 
 Configure:
 
-• Public DNS
-• Private DNS where appropriate
-• Health checks
-• Failover routing
-• Latency-based routing
-• Weighted routing where appropriate
+* automated backups
+* retention
+* point-in-time recovery where supported
+* snapshot strategy
+* deletion protection
 
-Prepare for multi-region application routing.
+Production database recovery must be tested later as part of disaster recovery work.
 
-────────────────────────────────────────
+Do not assume backups are valid merely because AWS reports them as enabled.
 
-ACM
+---
 
-Configure certificate management.
+# 40. Infrastructure Security
 
-Support:
+Perform a security review of infrastructure.
 
-• Public certificates
-• CloudFront
-• Load balancers
-• Automatic renewal
-• Region-specific certificates where required
+Check for:
 
-Avoid manual certificate management.
+* public databases
+* public Redis
+* unrestricted security groups
+* exposed secrets
+* overly broad IAM
+* public S3 write permissions
+* missing encryption
+* missing TLS
+* weak CI/CD permissions
+* production/staging cross-access
+* insecure container execution
+* privileged containers
+* unnecessary public endpoints
 
-────────────────────────────────────────
+Fix discovered issues.
 
-SECRETS
+---
 
-Implement secret-management infrastructure.
+# 41. Cost Awareness
 
-Manage:
+Infrastructure must be production-capable without blindly provisioning excessive resources.
 
-• Database credentials
-• Redis credentials
-• Kafka credentials
-• Stripe secrets
-• Stripe webhook secrets
-• OAuth secrets
-• S3-related credentials where required
-• Email provider credentials
-• Push-provider credentials
+Use:
 
-Support:
+* environment-specific sizing
+* autoscaling
+* lifecycle policies
+* log retention
+* storage lifecycle
+* appropriate managed-service tiers
 
-• Environment separation
-• Rotation
-• IAM access control
-• Audit
+Do not compromise critical reliability merely to reduce cost.
 
-Never commit secrets.
+Document major cost drivers.
 
-────────────────────────────────────────
+---
 
-BACKUPS
+# 42. Infrastructure Documentation
 
-Design backup infrastructure for:
+Create/update infrastructure documentation covering:
 
-• PostgreSQL
-• S3
-• Redis where supported
-• Kafka configuration
-• Search snapshots
-• Terraform state
-• Critical configuration
+* AWS architecture
+* environment structure
+* network topology
+* data services
+* storage
+* compute
+* queues/events
+* secrets
+* CI/CD
+* deployment process
+* rollback
+* database migrations
+* local development
+* staging
+* production
+* required AWS permissions
+* disaster-recovery prerequisites
 
-Define:
+Documentation must reflect actual infrastructure.
 
-• Retention
-• Encryption
-• Cross-region replication
-• Restore verification
+---
 
-────────────────────────────────────────
+# 43. Validation
 
-OBSERVABILITY FOUNDATION
+Before considering this infrastructure unit complete, validate:
 
-Deploy infrastructure for:
+### Infrastructure
 
-• Prometheus
-• Grafana
-• Loki
-• Tempo
-• OpenTelemetry
+* Terraform/OpenTofu formatting
+* validation
+* module consistency
+* dependency graph
+* plan where credentials/environment permit
 
-Monitor:
+### Containers
 
-• EKS
-• Nodes
-• Pods
-• API services
-• Workers
-• PostgreSQL
-• Redis
-• Kafka
-• OpenSearch
-• S3
-• CloudFront
-• Load balancers
+* Docker build
+* runtime startup
+* health checks
 
-────────────────────────────────────────
+### Backend
 
-LOGGING FOUNDATION
+* production build
+* migration compatibility
+* environment validation
 
-Implement centralized logging.
+### CI/CD
 
-Support:
+* workflow syntax
+* build steps
+* deployment configuration
 
-• Structured JSON
-• Loki
-• Trace IDs
-• Correlation IDs
-• Request IDs
-• Retention
-• Sensitive-data filtering
+### Security
 
-Never store:
+* IAM review
+* network exposure review
+* secret review
+* container review
 
-• Passwords
-• API keys
-• Payment credentials
-• Private keys
-• Tokens
-• Secrets
+Do not claim successful cloud deployment unless it was actually performed.
 
-────────────────────────────────────────
+---
 
-ALERTING FOUNDATION
+# 44. Local Development
 
-Create alerts for:
+Maintain a practical local-development environment.
 
-• CPU
-• Memory
-• Disk
-• Node failure
-• Pod failure
-• API latency
-• API error rates
-• Database health
-• Redis health
-• Kafka health
-• Search health
-• Queue backlog
-• Backup failures
-• Certificate expiration
-• Storage failures
+Where appropriate support:
 
-Define:
+* PostgreSQL
+* Redis
+* OpenSearch/Elasticsearch
+* Kafka/Redpanda
+* application backend
+* workers
 
-• Warning
-• Critical
-• Emergency
-
-────────────────────────────────────────
-
-WAF
-
-Create WAF-ready architecture.
-
-Support:
+Use Docker Compose or the repository's existing local infrastructure.
 
-• Rate limiting
-• IP filtering
-• Bot protection
-• OWASP protections
-• Request-size restrictions
-• DDoS integration
+Do not require developers to provision production AWS infrastructure merely to run basic development.
 
-Application-level authentication and authorization remain mandatory.
-
-────────────────────────────────────────
-
-DISASTER RECOVERY FOUNDATION
-
-Prepare infrastructure for:
-
-• Availability-zone failure
-• Database failure
-• Redis failure
-• Kafka failure
-• Search failure
-• Kubernetes failure
-• Region failure
-• S3 failure
-
-Define:
-
-• Recovery process
-• Backup dependency
-• Infrastructure reconstruction
-• Regional recovery
-
-────────────────────────────────────────
-
-COST OPTIMIZATION FOUNDATION
-
-Design:
-
-• Autoscaling
-• Right-sizing
-• Reserved capacity strategy
-• Savings Plans
-• Spot strategy for safe batch workloads
-• S3 lifecycle
-• CDN caching
-• Log retention
-• Search sizing
-• Database sizing
-
-Do not sacrifice critical reliability for cost savings.
-
-────────────────────────────────────────
-
-INFRASTRUCTURE TESTING
-
-Define and implement infrastructure tests for:
+---
 
-• Terraform formatting
-• Terraform validation
-• Terraform plan
-• Module tests where appropriate
-• Helm validation
-• Kubernetes validation
-• Docker image scanning
-• IAM validation
-• Network validation
-• Backup validation
-• Smoke tests
+# 45. Production vs Local Infrastructure
 
-────────────────────────────────────────
+Clearly distinguish:
 
-DOCUMENTATION
+### Local
 
-Generate:
+* disposable services
+* development credentials
+* local containers
+* debug tooling
 
-• AWS infrastructure architecture
-• Account strategy
-• Environment strategy
-• Network architecture
-• Terraform organization
-• Kubernetes foundation
-• Docker development guide
-• ECR guide
-• PostgreSQL infrastructure guide
-• Redis guide
-• Kafka guide
-• Search infrastructure guide
-• S3 guide
-• CloudFront guide
-• DNS guide
-• Secrets guide
-• Backup guide
-• Monitoring guide
-• Disaster recovery foundation
+### Staging
 
-────────────────────────────────────────
+* production-like configuration
+* isolated data
+* controlled secrets
+* realistic deployment
 
-PROJECT INDEX
+### Production
 
-Maintain the infrastructure Project Index.
+* secure networking
+* managed services
+* backups
+* encryption
+* high availability
+* least privilege
+* monitoring
+* controlled deployments
 
-Track:
+Never allow local development configuration to silently target production.
 
-• AWS accounts
-• Regions
-• VPCs
-• Subnets
-• Security groups
-• IAM roles
-• KMS keys
-• EKS clusters
-• Node groups
-• Namespaces
-• Terraform modules
-• Docker images
-• ECR repositories
-• PostgreSQL
-• Redis
-• Kafka/Redpanda
-• OpenSearch
-• S3
-• CloudFront
-• Route 53
-• ACM
-• WAF
-• Secrets
-• Monitoring
-• Logging
-• Backups
-• Generated files
-• Remaining work
-• Current milestone
+---
 
-────────────────────────────────────────
+# 46. Non-Functional Requirements
 
-IMPLEMENTATION MILESTONES
-
-INFRASTRUCTURE MILESTONE 1
-
-Terraform foundation, providers, remote state, environments, naming, tagging, and shared modules.
-
-INFRASTRUCTURE MILESTONE 2
-
-AWS networking, VPC, subnets, routing, NAT, security groups, NACLs, and VPC endpoints.
-
-INFRASTRUCTURE MILESTONE 3
-
-IAM, OIDC, workload identity, KMS, ECR, and secrets foundations.
-
-INFRASTRUCTURE MILESTONE 4
-
-EKS cluster, node groups, namespaces, RBAC, autoscaling, resource governance, and NetworkPolicies.
-
-INFRASTRUCTURE MILESTONE 5
-
-PostgreSQL production infrastructure and connection/backup architecture.
-
-INFRASTRUCTURE MILESTONE 6
-
-Redis, Kafka/Redpanda, and OpenSearch infrastructure.
-
-INFRASTRUCTURE MILESTONE 7
-
-S3, CloudFront, Route 53, ACM, WAF, and media/static-delivery infrastructure.
-
-INFRASTRUCTURE MILESTONE 8
-
-Dockerfiles, Docker Compose, local development infrastructure, and container-security foundation.
-
-INFRASTRUCTURE MILESTONE 9
-
-Prometheus, Grafana, Loki, Tempo, OpenTelemetry, logging, and alerting foundation.
-
-INFRASTRUCTURE MILESTONE 10
-
-Backup, disaster-recovery foundation, infrastructure testing, documentation, and production-readiness foundation.
-
-Each milestone should contain approximately 20–40 files where practical.
-
-Every milestone must be validated before proceeding.
-
-────────────────────────────────────────
-
-OUTPUT FORMAT
-
-For every generated file provide:
-
-1. Exact file path
-2. Complete file contents
-
-Never truncate files.
-
-Never summarize files instead of generating them.
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO implementations.
-
-When modifying an existing file:
-
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
-
-Never regenerate unchanged files.
-
-────────────────────────────────────────
-
-SCOPE RESTRICTION
-
-This volume covers infrastructure foundations:
-
-• AWS
-• Terraform
-• Networking
-• IAM
-• KMS
-• EKS
-• Kubernetes foundations
-• Docker
-• ECR
-• PostgreSQL infrastructure
-• Redis infrastructure
-• Kafka/Redpanda infrastructure
-• OpenSearch infrastructure
-• S3
-• CloudFront
-• Route 53
-• ACM
-• WAF foundations
-• Secrets management
-• Monitoring foundation
-• Logging foundation
-• Backups
-• Disaster-recovery foundation
-• Local development infrastructure
-
-Do not implement:
-
-• Backend business logic
-• Frontend code
-• Mobile code
-• Application-level APIs
-• Application-level domain logic
-
-────────────────────────────────────────
-
-QUALITY BAR
-
-Treat the infrastructure as the foundation for a globally distributed enterprise ecommerce marketplace.
-
-Assume:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• High checkout traffic
-• High inventory throughput
-• Large search workloads
-• Large media traffic
-• Large analytics workloads
-• Multi-region deployment
-• High availability
-• Zero-downtime operations
-• Strict security requirements
-
-Prioritize:
-
-• Security
-• Availability
-• Scalability
-• Reliability
-• Observability
-• Recoverability
-• Cost efficiency
-• Operational simplicity
-• Production readiness
+Infrastructure must support:
+
+* horizontal scaling
+* fault isolation
+* secure networking
+* high availability where justified
+* deployment without unnecessary downtime
+* observability integration
+* controlled failure
+* recoverability
+* safe migrations
+* secret rotation
+* operational maintenance
+
+---
+
+# 47. Explicit Scope Boundaries
+
+This infrastructure unit establishes the foundation.
+
+Do not pretend to complete advanced operational infrastructure that belongs in the next infrastructure unit, including:
+
+* complete observability platform
+* comprehensive Prometheus/Grafana/Loki/Tempo deployment
+* advanced alerting
+* full disaster recovery exercises
+* multi-region active-active deployment
+* advanced WAF rules
+* complete incident-response automation
+* sophisticated autoscaling policies
+* advanced cost optimization
+* chaos engineering
+* complete production runbooks
+* final security/compliance hardening
+
+Implement the foundation necessary for those capabilities without falsely claiming they are complete.
+
+---
+
+# 48. Non-Negotiable Rules
+
+You must:
+
+* Inspect the repository first.
+* Reuse existing infrastructure.
+* Use infrastructure as code.
+* Protect production resources.
+* Separate environments.
+* Use least-privilege IAM.
+* Keep databases private.
+* Encrypt sensitive data.
+* Use TLS.
+* Keep secrets outside source control.
+* Build reproducible containers.
+* Support safe deployments.
+* Support graceful shutdown.
+* Support database migrations safely.
+* Provide backups.
+* Validate infrastructure configuration.
+* Document actual infrastructure.
+* Report only verified implementation state.
+
+You must NOT:
+
+* Hardcode production credentials.
+* Commit secrets.
+* Create public databases.
+* Create unrestricted security groups.
+* Give applications administrator permissions unnecessarily.
+* Expose private S3 buckets.
+* Put AWS credentials in mobile/web applications.
+* Use `prisma db push` for production migrations.
+* Deploy unversioned production images as the only strategy.
+* Destroy active production resources during normal deployment.
+* Create duplicate infrastructure architectures.
+* Invent AWS capabilities.
+* Claim a deployment succeeded without actually deploying.
+* Claim infrastructure is highly available without configuring the required resources.
+* Leave TODO/FIXME infrastructure placeholders.
+* Suppress infrastructure validation failures.
+
+---
+
+# 49. Final Infrastructure Report
+
+After implementation, provide a factual report based only on actual repository state.
+
+Include:
+
+1. Infrastructure files created.
+2. Infrastructure files modified.
+3. AWS architecture implemented.
+4. Environment strategy.
+5. VPC/networking.
+6. DNS/TLS.
+7. Compute platform.
+8. Backend deployment.
+9. Worker deployment.
+10. PostgreSQL infrastructure.
+11. Redis infrastructure.
+12. Search infrastructure.
+13. S3/CloudFront.
+14. BullMQ infrastructure.
+15. Kafka/Redpanda infrastructure if actually used.
+16. IAM roles and permissions.
+17. Secrets management.
+18. Container registry.
+19. CI/CD.
+20. Database migration strategy.
+21. Backup configuration.
+22. Local-development infrastructure.
+23. Security controls implemented.
+24. Validation commands executed and actual results.
+25. Cloud resources actually provisioned, if deployment was performed.
+26. Infrastructure that remains intentionally incomplete for the next operational-hardening phase.
+27. Any environment-dependent limitations.
+
+Do not claim cloud resources were created unless they were actually provisioned.
+
+The final repository must contain a coherent, reproducible, secure production infrastructure foundation for the ecommerce marketplace.

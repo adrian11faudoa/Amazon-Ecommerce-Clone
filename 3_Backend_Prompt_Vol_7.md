@@ -1,1356 +1,1810 @@
-You are operating in Senior Engineering Team Mode.
+# Amazon Ecommerce Marketplace — Backend Prompt — Volume 7
 
-Build the production-ready backend for administration, CMS, moderation, fraud prevention, feature flags, system configuration, audit, compliance, and platform operations for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
+## Reviews, Ratings, Review Media, Verification, Moderation, and Trust
 
-The platform is an original implementation.
+You are implementing **Backend Volume 7** of a production-grade, original Amazon-style ecommerce marketplace.
 
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
+This prompt is fully standalone. Do not assume that another prompt, architecture document, previous conversation, previously generated code, or previously approved specification is available. The **actual repository is the only source of truth for the current implementation state**. Inspect the repository before making changes and integrate this work into whatever is actually present.
 
-This prompt is completely independent and may be executed in a separate conversation.
+This is one implementation unit of a single coherent ecommerce marketplace system. Do not create a separate project or competing architecture.
 
-The backend must follow the established ecommerce architecture, database ownership model, seller-isolation rules, catalog architecture, inventory architecture, checkout architecture, order architecture, payment architecture, search architecture, recommendation architecture, notification architecture, API conventions, event architecture, queue architecture, and security model.
+---
 
-Do not redesign the architecture.
+# 1. ROLE
 
-Do not generate frontend code.
+Act as a senior production engineering team consisting of:
 
-Do not generate mobile code.
+* Principal Software Architect
+* Staff Backend Engineer
+* Database Architect
+* Security Engineer
+* API Architect
+* Distributed Systems Engineer
+* QA Engineer
+* DevOps Engineer
+* Technical Writer
 
-Do not generate Kubernetes manifests.
+Your objective is to implement the complete backend functionality described in this prompt as production-ready software.
 
-Do not generate Terraform.
+Do not behave as a tutor.
 
-Do not generate infrastructure implementation code.
+Do not provide pseudo-code instead of implementation.
 
-Do not generate CI/CD workflows.
+Do not create placeholders.
 
-────────────────────────────────────────
+Do not create TODO/FIXME implementations.
 
-MISSION
+Do not invent provider capabilities.
 
-Implement the production-ready backend required for:
+Do not claim functionality is complete unless it actually exists in the repository and has been validated.
 
-• Customer administration
-• Seller administration
-• Product administration
-• Category administration
-• Brand administration
-• Order investigation
-• Payment investigation
-• Refund investigation
-• Return investigation
-• Seller verification administration
-• Moderation
-• Product moderation
-• Review moderation
-• Report management
-• Fraud prevention
-• Risk evaluation
-• CMS
-• Feature flags
-• System configuration
-• Audit logs
-• Administrative workflows
-• Compliance support
-• Operational reporting
-
-The implementation must support:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Millions of products
-• Millions of orders
-• Large administrative workloads
-• Multiple administrator roles
-• Strict privilege separation
-• Complete auditability
-• High availability
-• Horizontal scaling
-• Multi-region deployment
-
-────────────────────────────────────────
-
-TECHNOLOGY STACK
-
-Backend:
-
-• Node.js
-• NestJS
-• TypeScript
-
-Database:
-
-• PostgreSQL
-• Prisma ORM
-
-Cache:
-
-• Redis
-
-Event Streaming:
-
-• Kafka or Redpanda where justified
-
-Background Processing:
-
-• BullMQ
-
-Object Storage:
-
-• AWS S3-compatible object storage where administrative documents require it
-
-Search:
-
-• Elasticsearch/OpenSearch where administrative search requires it
-
-Observability:
-
-• OpenTelemetry
-• Prometheus
-• Grafana
-• Loki
-• Tempo
-
-Testing:
-
-• Jest
-• Supertest
-• Integration and contract testing tools
-
-────────────────────────────────────────
-
-IMPLEMENTATION RULES
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO comments.
-
-Never omit implementations.
-
-Never say:
-
-- "implement similarly"
-- "left as an exercise"
-- "for brevity"
-- "remaining code omitted"
-
-Every generated file must be complete.
-
-Every generated file must compile.
-
-Never regenerate unchanged files.
-
-Only modify existing files when required.
-
-Use strict TypeScript.
-
-Use dependency injection.
-
-Keep controllers thin.
-
-Keep business rules outside controllers.
-
-Use repositories for persistence.
-
-Use DTOs for external contracts.
-
-Use centralized validation.
-
-Use centralized error handling.
-
-Use structured logging.
-
-Use explicit authorization for every administrative operation.
-
-────────────────────────────────────────
-
-ADMINISTRATION ARCHITECTURE
-
-Define and implement administrative modules for:
-
-• Customers
-• Sellers
-• Seller staff
-• Stores
-• Products
-• Categories
-• Brands
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reviews
-• Reports
-• Promotions
-• Coupons
-• CMS
-• Feature flags
-• System configuration
-• Audit logs
-
-Administrative operations must never bypass the normal domain boundaries silently.
-
-Administrative services should invoke controlled domain application services or explicit administrative workflows.
-
-────────────────────────────────────────
-
-ADMINISTRATIVE ROLES
-
-Support a granular role model including:
-
-• Support Agent
-• Customer Operations
-• Seller Operations
-• Catalog Moderator
-• Content Moderator
-• Fraud Analyst
-• Finance Operator
-• Fulfillment Operator
-• Marketing Operator
-• Analyst
-• Administrator
-• Super Administrator
-• System Service
-
-Define permissions separately from roles.
-
-Avoid one unrestricted administrator role for ordinary operations.
-
-────────────────────────────────────────
-
-ADMINISTRATIVE PERMISSIONS
-
-Define permissions for:
-
-• View customer
-• Modify customer status
-• Reset account access
-• View seller
-• Approve seller
-• Suspend seller
-• View product
-• Moderate product
-• Suspend product
-• Manage category
-• Manage brand
-• View order
-• Investigate payment
-• Issue refund
-• Approve return
-• Investigate seller payout
-• Moderate review
-• Manage reports
-• Manage CMS
-• Manage feature flags
-• Modify system configuration
-• Access audit logs
-• Perform financial adjustments
-
-High-risk permissions must be explicitly separated.
-
-────────────────────────────────────────
-
-SENSITIVE ADMINISTRATIVE ACTIONS
-
-Require stronger controls for:
-
-• Full customer account suspension
-• Seller suspension
-• Seller termination
-• Large refunds
-• Financial adjustments
-• Seller payout changes
-• Feature-flag kill switches
-• Security configuration changes
-• Permission changes
-• System configuration changes
-
-Where appropriate support:
-
-• Re-authentication
-• Confirmation
-• Reason capture
-• Approval workflow
-• Dual authorization
-• Audit trail
-
-────────────────────────────────────────
-
-ADMINISTRATIVE SEARCH
-
-Implement secure administrative search for:
-
-• Customers
-• Sellers
-• Stores
-• Products
-• Orders
-• Payments
-• Refunds
-• Returns
-• Reports
-• Audit records
-
-Search must enforce administrator permissions.
-
-Do not expose data fields that a given administrator role is not authorized to view.
-
-────────────────────────────────────────
-
-CUSTOMER ADMINISTRATION
+---
+
+# 2. PROJECT
+
+Build an original, production-grade ecommerce marketplace inspired by the capabilities of large-scale marketplaces.
+
+The platform supports:
+
+* Customers
+* Sellers
+* Products
+* Product variants
+* SKUs
+* Seller offers
+* Pricing
+* Inventory
+* Cart
+* Checkout
+* Orders
+* Payments
+* Fulfillment
+* Shipments
+* Tracking
+* Returns
+* Reviews
+* Search
+* Notifications
+* Administration
+* Analytics
+
+This volume focuses specifically on the **Reviews and Ratings domain**, including moderation and trust controls.
+
+The implementation must integrate with the existing marketplace backend rather than creating duplicate product, seller, order, customer, or media systems.
+
+---
+
+# 3. TECHNOLOGY BASELINE
+
+Use the technology actually established by the repository when compatible.
+
+Expected backend stack:
+
+* Node.js
+* NestJS
+* TypeScript
+* PostgreSQL
+* Prisma ORM
+* Redis
+* REST APIs
+* OpenAPI / Swagger
+* BullMQ
+* AWS S3 for object storage where applicable
+* CloudFront where applicable
+* Elasticsearch/OpenSearch where already established
+* Docker
+* OpenTelemetry-compatible observability
+
+Architectural principles:
+
+* Clean Architecture
+* Domain-Driven Design
+* SOLID
+* Repository Pattern
+* Service Layer
+* Explicit domain boundaries
+* Strong typing
+* Transactional consistency
+* Secure server-side authorization
+
+Do not replace an existing compatible implementation simply because you prefer another framework or pattern.
+
+---
+
+# 4. FIRST ACTION — INSPECT THE REPOSITORY
+
+Before writing code:
+
+1. Inspect the complete repository structure.
+2. Identify the existing NestJS application structure.
+3. Inspect existing Prisma schema and migrations.
+4. Inspect:
+
+   * Customer domain
+   * Identity/authentication
+   * Authorization
+   * Product/catalog domain
+   * Product variants
+   * SKU domain
+   * Seller domain
+   * Seller offers
+   * Orders
+   * Order items
+   * Payments
+   * Fulfillment
+   * Shipments
+   * Returns
+   * Media infrastructure
+   * Event/outbox infrastructure
+   * BullMQ infrastructure
+   * Redis infrastructure
+   * API conventions
+   * Error handling
+   * Validation
+   * Logging
+   * Audit infrastructure
+   * Testing conventions
+5. Identify existing domain models that should be reused.
+6. Identify existing product/order/customer/media identifiers.
+7. Identify existing authorization guards and permission systems.
+8. Identify existing pagination and response conventions.
+9. Identify existing event conventions.
+10. Identify existing API versioning conventions.
+
+Do not create duplicate entities if equivalent entities already exist.
+
+If the repository differs from the assumptions in this prompt, adapt the implementation to the repository while preserving the intended business behavior.
+
+---
+
+# 5. PRIMARY OBJECTIVE
+
+Implement a complete production-grade **Reviews and Ratings subsystem**.
+
+The subsystem must support:
+
+* Product reviews
+* Product ratings
+* Review titles
+* Review bodies
+* Review media
+* Review ownership
+* Verified-purchase indicators
+* Review eligibility
+* One or more reviews according to clearly defined business rules
+* Review editing rules
+* Review deletion/removal rules
+* Review visibility
+* Review moderation
+* Review reporting
+* Abuse prevention
+* Seller/product/customer authorization
+* Rating aggregation
+* Rating distribution
+* Review sorting
+* Review pagination
+* Review media integration
+* Review events
+* Auditability
+* Administrative moderation
+* Secure handling of user-generated content
+
+The implementation must integrate with existing:
+
+* Customer
+* Product
+* SKU/variant
+* Seller offer
+* Order
+* Order item
+* Fulfillment
+* Return
+* Media
+* Authentication
+* Authorization
+* Audit
+* Event
+* Queue
+
+domains.
+
+---
+
+# 6. REVIEW DOMAIN BOUNDARY
+
+Create an explicit Reviews bounded context/module.
+
+The Reviews domain owns:
+
+* Review lifecycle
+* Review content
+* Review rating
+* Review authorship
+* Review verification state
+* Review visibility
+* Review moderation
+* Review reports
+* Rating aggregation
+* Review-specific policies
+
+The Reviews domain must not become the owner of:
+
+* Products
+* Orders
+* Customers
+* Payments
+* Inventory
+* Fulfillment
+* Returns
+
+Those domains remain authoritative for their respective data.
+
+Use references to existing domain entities.
+
+Do not duplicate customer, product, order, or seller records inside the Reviews domain unless a denormalized snapshot is explicitly justified.
+
+---
+
+# 7. CORE REVIEW MODEL
+
+Design and implement the necessary Prisma models.
+
+At minimum evaluate the need for:
+
+## Review
+
+Potential fields include:
+
+* id
+* customerId
+* productId
+* variantId where appropriate
+* sellerOfferId where appropriate
+* orderId where appropriate
+* orderItemId where appropriate
+* rating
+* title
+* body
+* verificationStatus
+* moderationStatus
+* visibilityStatus
+* createdAt
+* updatedAt
+* publishedAt
+* editedAt
+* removedAt
+* removalReason
+* version where useful
+
+Use the actual repository naming conventions.
+
+Do not blindly create every field above if the existing architecture provides a better representation.
+
+---
+
+# 8. REVIEW IDENTITY
+
+Each review must have a stable internal identifier.
+
+Do not expose sequential database identifiers if the existing security architecture uses opaque/public identifiers.
+
+Review ownership must be unambiguous.
+
+The system must be able to determine:
+
+* who created the review
+* what product was reviewed
+* which order/order item qualifies the review
+* whether the purchase can be verified
+* whether the review is currently visible
+* whether it has been moderated
+* whether it has been removed
+
+---
+
+# 9. RATING MODEL
+
+Ratings must use an explicit validated representation.
+
+For example:
+
+* 1
+* 2
+* 3
+* 4
+* 5
+
+Do not accept arbitrary numeric values.
+
+Validate ratings on the server.
+
+Do not trust frontend validation.
+
+The database must also enforce valid rating ranges where practical.
+
+Define the behavior for:
+
+* invalid rating
+* decimal rating
+* null rating
+* negative rating
+* out-of-range rating
+
+---
+
+# 10. REVIEW CONTENT
+
+Review title and body are user-generated content and therefore untrusted.
 
 Implement:
 
-• Customer lookup
-• Account state
-• Account suspension
-• Account reactivation
-• Session investigation
-• Device investigation
-• Security events
-• Order overview
-• Report history
-• Support notes where appropriate
+* length validation
+* Unicode-safe handling
+* normalization where appropriate
+* malicious markup handling
+* HTML/script prevention
+* injection protection
+* safe serialization
+* output encoding where required
+* abuse controls
 
-Do not allow administrators to modify customer financial or security state without the required permission.
+Do not allow arbitrary executable HTML.
 
-────────────────────────────────────────
+Do not introduce a rich-text system unless the repository already requires one.
 
-SELLER ADMINISTRATION
+If plain text is used, enforce plain-text semantics.
 
-Implement:
+---
 
-• Seller lookup
-• Seller verification review
-• Seller approval
-• Seller rejection
-• Seller suspension
-• Seller reactivation
-• Seller termination
-• Store investigation
-• Seller staff investigation
-• Seller performance overview
-• Seller risk status
+# 11. REVIEW ELIGIBILITY
 
-Seller administrative actions must be audited.
+Implement server-side review eligibility.
 
-────────────────────────────────────────
+A customer must not be able to create a review merely by knowing:
 
-CATALOG ADMINISTRATION
+* product ID
+* seller offer ID
+* order ID
+* order item ID
 
-Implement administrative operations for:
+The backend must verify eligibility using authoritative order data.
 
-• Categories
-• Brands
-• Products
-• Product variants
-• Seller offers
-• Product media
+Define and implement rules for:
 
-Support:
+* completed/delivered purchases
+* cancelled orders
+* unpaid orders
+* failed payments
+* returned items
+* refunded items
+* partially fulfilled orders
+* partially returned quantities
+* duplicate review attempts
+* invalid order-item/product relationships
 
-• Approval
-• Rejection
-• Suspension
-• Unpublishing
-• Archival
-• Moderation notes
-• Policy references
+Do not trust customer-supplied relationships.
 
-Do not allow an administrator to bypass catalog lifecycle rules without an explicit override operation.
+The backend must verify that the order item actually belongs to:
 
-────────────────────────────────────────
+* the authenticated customer
+* the requested product
+* the relevant seller offer/variant where applicable.
 
-ORDER ADMINISTRATION
+---
 
-Implement controlled order investigation.
+# 12. VERIFIED PURCHASE
 
-Support:
+Implement a clear verification mechanism.
 
-• Order lookup
-• Seller-order lookup
-• Fulfillment lookup
-• Shipment lookup
-• Order timeline
-• Payment status
-• Refund status
-• Return status
-• Cancellation investigation
+A review may receive a verified-purchase status only when the platform can prove the required purchase relationship from authoritative data.
 
-Administrative order actions must use explicit workflows.
+Do not allow clients to submit:
 
-Do not allow silent direct database modifications.
+```text
+verifiedPurchase: true
+```
 
-────────────────────────────────────────
+and have the server trust it.
 
-FINANCIAL ADMINISTRATION
+The verification status must be derived server-side.
 
-Implement controlled access to:
+Define behavior for:
 
-• Payments
-• Refunds
-• Seller balances
-• Settlements
-• Payouts
-• Commissions
-• Financial transactions
+* delivered order
+* cancelled order
+* refunded order
+* returned order
+* partially returned quantity
+* multiple purchases
+* multiple reviews if supported
 
-Support:
+Use explicit business rules.
 
-• Investigation
-• Reconciliation
-• Manual adjustment where explicitly authorized
-• Adjustment reasons
-• Approval workflows
-• Audit
+---
 
-Every financial adjustment must create an immutable financial record.
+# 13. REVIEW UNIQUENESS
 
-────────────────────────────────────────
+Prevent duplicate reviews according to the actual marketplace policy.
 
-MODERATION DOMAIN
+At minimum consider:
 
-Implement moderation workflows for:
+* one review per customer/product
+* one review per customer/order item
+* repeated purchases
+* multiple variants
+* multiple seller offers
+* edited reviews
 
-• Products
-• Product media
-• Brands
-• Reviews
-• Stores
-• Seller profiles
-• Customer reports
-• Marketplace content
+Choose and implement a coherent policy.
 
-Support:
+Do not rely exclusively on application-level checks.
 
-• Report creation
-• Case creation
-• Assignment
-• Investigation
-• Action
-• Appeal
-• Resolution
-• Reopening
+Where possible, enforce uniqueness with database constraints.
 
-────────────────────────────────────────
+Where uniqueness depends on conditional business state, use transactional enforcement.
 
-MODERATION CASE
+Prevent race conditions where two simultaneous requests create duplicate reviews.
 
-Implement moderation case state.
+---
 
-Support:
+# 14. REVIEW LIFECYCLE
 
-• Open
-• Assigned
-• Investigating
-• Action Required
-• Action Taken
-• Appealed
-• Resolved
-• Reopened
-• Closed
+Define explicit states.
 
-Store:
+The exact enum names may adapt to the existing repository.
 
-• Case type
-• Subject
-• Priority
-• Policy
-• Evidence references
-• Assigned reviewer
-• Actions
-• Timestamps
+A possible lifecycle is:
 
-────────────────────────────────────────
+```text
+PENDING_MODERATION
+PUBLISHED
+HIDDEN
+REJECTED
+REMOVED
+```
 
-MODERATION EVIDENCE
+Do not create arbitrary states.
 
-Implement secure evidence references.
+Define valid transitions.
 
-Support evidence such as:
+For every transition specify:
 
-• Product metadata
-• Review metadata
-• Media references
-• User reports
-• Administrative history
-• Event references
+* who may trigger it
+* authorization requirement
+* database mutation
+* audit requirement
+* event emission
+* effect on rating aggregation
+* effect on search/read APIs
 
-Do not expose internal evidence to unauthorized administrators.
+Prevent invalid state transitions.
 
-Do not store unnecessary copies of sensitive data.
+---
 
-────────────────────────────────────────
+# 15. REVIEW EDITING
 
-APPEALS
-
-Support:
-
-• Appeal creation
-• Appeal eligibility
-• Appeal review
-• Appeal decision
-• Final resolution
-
-Appeal decisions must be auditable.
-
-────────────────────────────────────────
-
-FRAUD PREVENTION
-
-Implement a marketplace risk and fraud-prevention foundation.
-
-Evaluate:
-
-• Account risk
-• Seller risk
-• Payment risk
-• Order risk
-• Coupon risk
-• Promotion risk
-• Return risk
-• Review risk
-• Refund risk
-
-Use signals such as:
-
-• Account age
-• Transaction history
-• Device signals
-• IP/network signals where appropriate
-• Order patterns
-• Payment outcomes
-• Coupon usage
-• Return patterns
-• Seller performance
-• Behavioral anomalies
-
-Do not implement invasive collection beyond legitimate platform requirements.
-
-────────────────────────────────────────
-
-RISK ENGINE
-
-Implement a configurable risk-evaluation architecture.
-
-Support:
-
-• Rules
-• Risk scores
-• Risk levels
-• Signals
-• Thresholds
-• Actions
-
-Possible outcomes:
-
-• Allow
-• Review
-• Step-up verification
-• Hold
-• Reject
-• Suspend
-
-Risk rules must be versioned and auditable.
-
-────────────────────────────────────────
-
-FRAUD ACTIONS
-
-Support:
-
-• Transaction hold
-• Account review
-• Seller review
-• Coupon restriction
-• Promotion restriction
-• Order review
-• Refund review
-• Return review
-• Temporary suspension
-
-High-impact automated actions should be configurable and auditable.
-
-────────────────────────────────────────
-
-CMS
-
-Implement a production CMS foundation.
-
-Support:
-
-• Pages
-• Sections
-• Banners
-• Campaign content
-• Promotional content
-• Navigation content
-• Category editorial content
-• SEO metadata
-• Homepage configuration
-
-Content lifecycle:
-
-• Draft
-• Review
-• Approved
-• Scheduled
-• Published
-• Unpublished
-• Archived
-
-────────────────────────────────────────
-
-CMS VERSIONING
-
-Support content versioning.
-
-Track:
-
-• Version
-• Author
-• Editor
-• Created time
-• Updated time
-• Publication time
-• Change summary
-
-Published content must be immutable for historical reference.
-
-────────────────────────────────────────
-
-CMS SCHEDULING
-
-Support:
-
-• Scheduled publication
-• Scheduled unpublication
-• Start/end time
-• Time-zone handling
-• Failure handling
-
-Use BullMQ or scheduled processing.
-
-────────────────────────────────────────
-
-FEATURE FLAGS
-
-Implement feature flags.
-
-Support:
-
-• Global flags
-• Environment flags
-• Percentage rollout
-• Customer targeting
-• Seller targeting
-• Region targeting
-• Device targeting
-• Application version targeting
-• Kill switches
-• Experiment assignment
+Implement safe review editing.
 
 Define:
 
-• Flag owner
-• Evaluation rules
-• Cache
-• Propagation
-• Audit
-• Expiration
-• Cleanup
+* whether customers may edit reviews
+* which fields may be edited
+* whether rating can change
+* whether media can change
+* whether edited reviews require moderation again
+* whether verification remains valid after editing
+* edit timestamps
+* audit requirements
 
-────────────────────────────────────────
+Prevent unauthorized users from modifying another customer's review.
 
-FEATURE FLAG SAFETY
+If editing changes rating or visibility, ensure rating aggregates remain correct.
+
+Use transactions where multiple records must remain consistent.
+
+---
+
+# 16. REVIEW REMOVAL
+
+Implement controlled removal.
+
+A customer may have a self-service delete/removal capability if appropriate.
+
+Administrators/moderators must be able to remove reviews according to permissions.
+
+Do not physically destroy audit-critical information merely because a review becomes invisible.
+
+Define:
+
+* visibility behavior
+* removal reason
+* audit record
+* aggregate recalculation
+* event emission
+* retention behavior
+
+Respect privacy and applicable data deletion requirements while maintaining necessary audit integrity.
+
+---
+
+# 17. REVIEW MEDIA
+
+Integrate reviews with the existing media system.
+
+Do not create a second independent media-storage implementation.
+
+Review media may include:
+
+* images
+* supported video where already supported by the platform
+
+All uploads are untrusted.
+
+Implement or integrate:
+
+* file type validation
+* file size validation
+* content-type validation
+* safe object keys
+* ownership validation
+* upload authorization
+* processing state
+* moderation state where applicable
+* malware/security scanning boundary if supported
+* thumbnail/variant processing where applicable
+* cleanup of abandoned uploads
+* CloudFront delivery where appropriate
+
+Never trust:
+
+* filename
+* extension
+* MIME type supplied only by the client
+* object path supplied by the client
+
+Review media must not expose private customer data through predictable storage paths.
+
+---
+
+# 18. REVIEW MEDIA OWNERSHIP
+
+Ensure a user cannot attach another user's media asset to a review.
+
+Validate server-side:
+
+```text
+media belongs to authenticated user
+media is eligible for review attachment
+media is not already improperly associated
+media state allows publication
+```
+
+Prevent:
+
+* IDOR
+* arbitrary S3 object attachment
+* cross-user media reuse
+* unauthorized deletion
+* orphaned media
+
+Use existing media ownership infrastructure whenever possible.
+
+---
+
+# 19. RATING AGGREGATION
+
+Implement product-level rating aggregation.
+
+At minimum support:
+
+* total review count
+* average rating
+* count of 1-star reviews
+* count of 2-star reviews
+* count of 3-star reviews
+* count of 4-star reviews
+* count of 5-star reviews
+
+Do not calculate averages using floating-point money-like assumptions.
+
+Define deterministic rounding/display behavior.
+
+Consider whether aggregates should be:
+
+* calculated dynamically
+* stored transactionally
+* maintained asynchronously
+* materialized
+
+Choose based on repository architecture and scale requirements.
+
+The authoritative review records remain the source of truth.
+
+If aggregate projections are introduced, document them as projections rather than independent truth.
+
+---
+
+# 20. AGGREGATION CONSISTENCY
+
+Rating aggregates must correctly respond to:
+
+* review creation
+* review publication
+* review rejection
+* review hiding
+* review removal
+* review editing
+* rating changes
+* moderation changes
+
+Do not count hidden/rejected/removed reviews unless the business rule explicitly requires it.
+
+Prevent:
+
+* double counting
+* missed decrement
+* negative counters
+* stale aggregate corruption
+* race-condition updates
+
+If asynchronous aggregation is used:
+
+* make consumers idempotent
+* support retries
+* support reconciliation
+* define eventual-consistency behavior
+
+---
+
+# 21. REVIEW QUERIES
+
+Implement customer-facing review retrieval.
 
 Support:
 
-• Default-safe values
-• Emergency kill switches
-• Versioning
-• Rollback
-• Evaluation logging where appropriate
+* product reviews
+* rating summary
+* verified-purchase filtering
+* rating filtering
+* sorting
+* pagination
 
-Feature flags must not be the only authorization mechanism.
+Potential sort options:
 
-Security-sensitive permissions must remain server-side.
+* newest
+* oldest
+* highest rating
+* lowest rating
+* most helpful if a helpfulness system exists
 
-────────────────────────────────────────
+Do not expose unsupported sort options.
 
-SYSTEM CONFIGURATION
+Use stable pagination.
 
-Implement a controlled configuration system for dynamic business settings.
+Prefer cursor pagination for high-volume review feeds where appropriate.
+
+Avoid offset-based pagination for extremely large datasets when it creates unacceptable performance characteristics.
+
+---
+
+# 22. REVIEW FILTERING
+
+Support safe filters such as:
+
+* rating
+* verified purchase
+* publication state where authorized
+
+Do not allow customers to query moderation-only data.
+
+Customer-facing APIs must return only reviews they are authorized to see.
+
+Administrative APIs may expose moderation state.
+
+Seller APIs must expose only reviews related to products/offers they are authorized to manage.
+
+---
+
+# 23. SELLER REVIEW ACCESS
+
+Implement seller access boundaries.
+
+A seller must not be able to:
+
+* read unrelated seller review moderation information
+* modify customer reviews
+* remove reviews merely because they are negative
+* access private customer information unnecessarily
+* access reviews belonging to another seller
+
+Define exactly what seller users can access.
+
+Seller roles must respect the existing authorization model.
+
+If reviews are product-level rather than offer-level, carefully determine what seller information is exposed.
+
+Do not create ambiguous ownership rules.
+
+---
+
+# 24. CUSTOMER REVIEW ACCESS
+
+Authenticated customers may:
+
+* create eligible reviews
+* read published reviews
+* read their own review state where appropriate
+* edit their own review according to policy
+* remove their own review where supported
+* report inappropriate reviews
+
+Customers must never be able to:
+
+* modify another user's review
+* manipulate verification state
+* bypass moderation
+* modify aggregate values
+* alter review ownership
+
+---
+
+# 25. REVIEW REPORTING
+
+Implement a review-reporting mechanism.
+
+Customers should be able to report potentially abusive or inappropriate reviews.
+
+Create a suitable model such as:
+
+## ReviewReport
+
+Potential fields:
+
+* id
+* reviewId
+* reporterCustomerId
+* reason
+* description
+* status
+* createdAt
+* resolvedAt
+* resolvedBy
+* resolutionReason
+
+Adapt to repository conventions.
+
+Prevent report abuse.
+
+Consider whether the same customer may report the same review multiple times.
+
+Prevent duplicate report spam.
+
+---
+
+# 26. REPORT REASONS
+
+Use controlled server-side values.
 
 Examples:
 
-• Order limits
-• Coupon limits
-• Return-window configuration
-• Seller thresholds
-• Review policy settings
-• Notification limits
-• Fraud thresholds
-• Inventory thresholds
-• Feature defaults
+* SPAM
+* OFFENSIVE_CONTENT
+* HARASSMENT
+* FRAUD
+* PERSONAL_INFORMATION
+* IRRELEVANT
+* OTHER
 
-Configuration must be:
+Do not accept arbitrary moderation states from clients.
 
-• Typed
-• Validated
-• Versioned
-• Audited
-• Environment-aware where appropriate
-• Cached safely
+Allow an optional explanation where appropriate.
 
-Never allow arbitrary code execution through configuration.
+Validate its length and content.
 
-────────────────────────────────────────
+---
 
-CONFIGURATION CHANGE WORKFLOW
+# 27. MODERATION SYSTEM
 
-High-risk configuration changes should support:
+Implement moderation workflows.
 
-• Draft
-• Review
-• Approval
-• Activation
-• Rollback
+Moderators/administrators should be able to:
 
-Track:
+* view reported reviews
+* inspect review state
+* inspect report reasons
+* hide reviews
+* reject reviews
+* restore eligible reviews
+* remove reviews
+* record moderation reasons
 
-• Actor
-• Previous value
-• New value
-• Reason
-• Timestamp
-• Approval
-• Rollback
+Use existing administrative authorization infrastructure.
 
-────────────────────────────────────────
+Do not expose administrative moderation endpoints to normal customers.
 
-AUDIT DOMAIN
+---
 
-Implement a comprehensive immutable audit system.
+# 28. MODERATION AUDIT
 
-Audit:
+Every moderation action must be auditable.
 
-• Administrative actions
-• Security actions
-• Seller actions
-• Financial actions
-• Moderation actions
-• CMS changes
-• Feature-flag changes
-• System-configuration changes
-• Permission changes
+Record:
 
-Audit records must contain:
+* actor
+* action
+* review
+* previous state
+* new state
+* reason
+* timestamp
+* request/correlation ID where available
 
-• Audit ID
-• Actor
-• Actor role
-• Action
-• Resource type
-• Resource ID
-• Before state reference where appropriate
-• After state reference where appropriate
-• Reason
-• Request ID
-• Correlation ID
-• Timestamp
-• Source
-• Result
+Use the existing audit system rather than creating an unrelated audit implementation.
 
-Do not store secrets or unnecessary sensitive information.
+Never log unnecessary private content.
 
-────────────────────────────────────────
+---
 
-AUDIT IMMUTABILITY
+# 29. REVIEW ABUSE PREVENTION
 
-Audit logs must not be updated or deleted through ordinary application workflows.
+Implement appropriate controls against:
 
-Define retention and archival policies.
+* review spam
+* automated review creation
+* repeated submissions
+* report spam
+* account abuse
+* brute-force review manipulation
+* rating manipulation
+* malicious media uploads
 
-Administrative users must not be able to silently erase their own audit history.
+Use existing:
 
-────────────────────────────────────────
+* authentication
+* rate limiting
+* Redis
+* request context
+* audit infrastructure
 
-COMPLIANCE SUPPORT
+Do not make Redis the authoritative review store.
 
-Prepare the backend architecture for:
+Define appropriate rate-limit keys and behavior.
 
-• SOC 2
-• ISO 27001
-• PCI DSS boundaries through payment-provider architecture
-• GDPR
-• Data retention policies
-• Data deletion workflows
-• Access logging
-• Least privilege
+---
 
-Do not claim certification merely because controls exist.
+# 30. REVIEW FRAUD SIGNALS
 
-────────────────────────────────────────
+Where practical, create a foundation for detecting suspicious behavior.
 
-DATA RETENTION
+Potential signals:
 
-Define configurable retention for:
+* unusually high review frequency
+* repeated reviews from related accounts
+* rapid review creation
+* repeated identical content
+* repeated media
+* suspicious purchase/review patterns
 
-• Audit logs
-• Reports
-• Moderation cases
-• Security events
-• Notifications
-• Marketplace messages
-• Analytics
-• Administrative records
-
-Do not automatically delete data required for legal or financial obligations.
-
-Support legal/administrative retention holds where required.
-
-────────────────────────────────────────
-
-PRIVACY REQUESTS
-
-Implement backend foundations for:
-
-• Account data export
-• Data access request
-• Deletion request
-• Data retention policy enforcement
-
-Separate:
-
-• Customer-owned data
-• Operational data
-• Financial records
-• Audit records
-• Legal-retention data
-
-Do not delete mandatory financial records merely because an account deletion request is received.
-
-────────────────────────────────────────
-
-ADMIN EVENTS
-
-Publish appropriate events:
-
-• AdministrativeActionTaken
-• SellerApproved
-• SellerSuspended
-• SellerRejected
-• ProductModerated
-• ReviewModerated
-• ReportCreated
-• ModerationCaseOpened
-• ModerationActionTaken
-• AppealSubmitted
-• AppealResolved
-• CMSContentPublished
-• CMSContentUnpublished
-• FeatureFlagCreated
-• FeatureFlagChanged
-• FeatureFlagDeleted
-• SystemConfigurationChanged
-• PermissionChanged
-• AuditLogCreated
-• RiskEvaluationCompleted
-• FraudActionTaken
-
-Use the established event envelope.
-
-────────────────────────────────────────
-
-BACKGROUND JOBS
-
-Implement jobs for:
-
-• Scheduled CMS publication
-• Scheduled CMS unpublication
-• Feature-flag cleanup
-• Configuration propagation
-• Audit archival
-• Report cleanup
-• Moderation reminders
-• Risk recalculation
-• Data-retention processing
-• Data-export generation
-• Data-deletion workflows
-
-Every job must support:
-
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter handling
-• Metrics
-
-────────────────────────────────────────
-
-DATABASE
-
-Implement Prisma models and migrations for this volume.
-
-Include appropriate entities such as:
-
-• ModerationCase
-• ModerationAction
-• ModerationAssignment
-• ModerationAppeal
-• Report
-• RiskRule
-• RiskEvaluation
-• FraudAction
-• CMSPage
-• CMSPageVersion
-• CMSSection
-• CMSPublication
-• FeatureFlag
-• FeatureFlagRule
-• FeatureFlagTarget
-• SystemConfiguration
-• SystemConfigurationVersion
-• AdministrativeAction
-• AuditLog
-• PrivacyRequest
-• DataExportJob
-• DataDeletionJob
-• LegalHold where applicable
-
-Use:
-
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Composite indexes
-• Status constraints
-• Version fields
-• Timestamps
-
-Audit and financial records must be immutable at the application level.
-
-────────────────────────────────────────
-
-API
-
-Implement production-ready administrative APIs.
-
-ADMIN USERS
-
-• Search users
-• Get account
-• Suspend
-• Reactivate
-• Security investigation
-
-SELLERS
-
-• Search sellers
-• Get seller
-• Review verification
-• Approve
-• Reject
-• Suspend
-• Reactivate
-
-CATALOG
-
-• Review products
-• Approve
-• Reject
-• Suspend
-• Archive
-• Manage categories
-• Manage brands
-
-ORDERS/FINANCE
-
-• Investigate orders
-• Investigate payments
-• Investigate refunds
-• Investigate returns
-• Investigate payouts
-• Create authorized financial adjustment
-
-MODERATION
-
-• Create report
-• Get cases
-• Assign case
-• Take action
-• Appeal
-• Resolve
-
-CMS
-
-• Create content
-• Update content
-• Version content
-• Schedule
-• Publish
-• Unpublish
-
-FEATURE FLAGS
-
-• Create
-• Update
-• Evaluate
-• Roll out
-• Roll back
-• Disable
-
-SYSTEM CONFIGURATION
-
-• Create configuration
-• Update
-• Review
-• Approve
-• Activate
-• Roll back
+Do not invent an AI fraud detection provider.
 
-AUDIT
+If advanced fraud detection is not implemented, create deterministic rule-based foundations and explicit extension points without fake functionality.
 
-• Search audit records
-• Get audit details
-• Export audit data where authorized
-
-PRIVACY
-
-• Create data export
-• Get export status
-• Create deletion request
-• Get deletion status
-
-Every endpoint must include:
-
-• Authentication
-• Authorization
-• Permission checks
-• Validation
-• Rate limiting
-• OpenAPI documentation
-• Consistent errors
-• Audit logging where appropriate
-
-────────────────────────────────────────
+---
 
-ADMINISTRATIVE SEARCH
-
-Search must be permission-aware.
-
-Do not return sensitive fields such as:
-
-• Password hashes
-• Authentication secrets
-• Payment credentials
-• Internal security secrets
-
-Redact or exclude restricted fields based on administrator role.
-
-────────────────────────────────────────
-
-SECURITY
-
-Protect administrative APIs against:
-
-• Privilege escalation
-• IDOR
-• Permission bypass
-• Session hijacking
-• CSRF where applicable
-• Brute-force
-• Malicious configuration
-• Audit manipulation
-• Financial abuse
-
-Implement:
-
-• Strong authentication
-• Fine-grained authorization
-• Rate limiting
-• Re-authentication for sensitive actions
-• Audit logging
-• Secure session management
+# 31. REVIEW API
 
-────────────────────────────────────────
+Implement REST APIs consistent with the repository.
 
-OBSERVABILITY
-
-Instrument:
-
-• Administrative access
-• Permission denials
-• Moderation
-• Fraud decisions
-• CMS publishing
-• Feature-flag changes
-• System configuration
-• Privacy workflows
-• Report generation
-
-Measure:
-
-• Administrative API latency
-• Authorization failures
-• Moderation backlog
-• Fraud-review backlog
-• CMS publishing failures
-• Configuration propagation failures
-
-Never log secrets.
-
-────────────────────────────────────────
-
-TESTING
-
-UNIT TESTS
-
-Test:
-
-• Permission policies
-• Administrative policies
-• Moderation workflows
-• Fraud rules
-• CMS state machine
-• Feature flag evaluation
-• Configuration validation
-• Audit record creation
-• Privacy workflows
-
-INTEGRATION TESTS
-
-Test:
-
-• PostgreSQL
-• Redis
-• Kafka
-• BullMQ
-• S3
-• Search where used
-
-SECURITY TESTS
-
-Test:
-
-• Horizontal privilege escalation
-• Vertical privilege escalation
-• IDOR
-• Admin session abuse
-• Financial permission bypass
-• Feature-flag bypass
-• Configuration bypass
-• Audit manipulation
+At minimum evaluate endpoints for:
 
-ADMIN WORKFLOW TESTS
+### Customer
 
-Test:
+```text
+POST   /api/v1/products/:productId/reviews
+GET    /api/v1/products/:productId/reviews
+GET    /api/v1/products/:productId/reviews/summary
+GET    /api/v1/reviews/:reviewId
+PATCH  /api/v1/reviews/:reviewId
+DELETE /api/v1/reviews/:reviewId
+POST   /api/v1/reviews/:reviewId/reports
+```
 
-• Seller approval
-• Seller suspension
-• Product moderation
-• Refund approval
-• Report handling
-• CMS publication
-• Feature-flag rollout
-• Configuration activation
+Do not blindly use these exact paths if the repository already has established API conventions.
 
-PRIVACY TESTS
+The APIs must have:
 
-Test:
+* DTOs
+* validation
+* authentication
+* authorization
+* status codes
+* error contracts
+* pagination
+* filtering
+* sorting
+* OpenAPI documentation
 
-• Data export
-• Data deletion
-• Retention
-• Legal holds
+---
 
-────────────────────────────────────────
+# 32. REVIEW CREATION CONTRACT
 
-DOCUMENTATION
+Review creation must validate:
 
-Generate:
+* authenticated customer
+* product existence
+* order-item eligibility
+* purchase relationship
+* fulfillment state
+* duplicate-review rules
+* rating
+* title
+* body
+* media ownership
+* media state
+* seller/offer relationship where applicable
 
-• Administration architecture
-• Permission model
-• Moderation model
-• Fraud architecture
-• Risk engine
-• CMS architecture
-• Feature-flag architecture
-• System configuration
-• Audit architecture
-• Privacy workflows
-• Compliance controls
-• Administrative API documentation
-• Event documentation
-• Queue documentation
-• Testing strategy
+The server must derive:
 
-────────────────────────────────────────
+* customer identity
+* verification status
+* eligible order relationship
+* timestamps
+* initial moderation state
 
-PROJECT INDEX
+Do not trust these from the client.
 
-Update the backend Project Index with:
+---
 
-• Administration modules
-• Moderation modules
-• Fraud modules
-• CMS modules
-• Feature-flag modules
-• System-configuration modules
-• Audit modules
-• Privacy modules
-• Database objects
-• Migrations
-• APIs
-• Events
-• Queues
-• Workers
-• Tests
-• Security controls
-• Compliance controls
-• Generated files
-• Remaining work
-• Current milestone
-• Dependencies
+# 33. REVIEW UPDATE CONTRACT
 
-────────────────────────────────────────
+Review updates must:
 
-IMPLEMENTATION MILESTONES
+1. Authenticate the user.
+2. Load the review.
+3. Verify ownership.
+4. Verify editable state.
+5. Validate changes.
+6. Re-run relevant moderation/eligibility rules.
+7. Update rating aggregates if necessary.
+8. Emit appropriate events.
+9. Write audit information.
+10. Return the canonical updated representation.
 
-BACKEND MILESTONE 1
+Prevent race conditions on concurrent edits.
 
-Administrative roles, permissions, policies, and administrative API foundation.
+---
 
-BACKEND MILESTONE 2
+# 34. REVIEW DELETION CONTRACT
 
-Customer and seller administration.
+Deletion/removal must:
 
-BACKEND MILESTONE 3
+* authenticate
+* authorize
+* validate current state
+* preserve required audit information
+* update visibility
+* update aggregates
+* remove/invalidate associated media as appropriate
+* emit an event
+* remain idempotent where practical
 
-Catalog moderation, review moderation, reports, and moderation cases.
+Do not allow deletion to corrupt rating aggregates.
 
-BACKEND MILESTONE 4
+---
 
-Fraud/risk rules, evaluations, and enforcement workflows.
+# 35. ERROR HANDLING
 
-BACKEND MILESTONE 5
+Use the existing standardized error architecture.
 
-CMS pages, content versions, scheduling, publication, and rollback.
+Create explicit domain errors where needed, such as:
 
-BACKEND MILESTONE 6
+* REVIEW_NOT_FOUND
+* REVIEW_NOT_ELIGIBLE
+* REVIEW_ALREADY_EXISTS
+* REVIEW_NOT_EDITABLE
+* REVIEW_NOT_OWNED
+* INVALID_REVIEW_RATING
+* INVALID_REVIEW_STATE
+* REVIEW_MEDIA_NOT_OWNED
+* REVIEW_MEDIA_NOT_READY
+* REVIEW_REPORT_ALREADY_EXISTS
+* REVIEW_REPORT_NOT_ALLOWED
+* REVIEW_MODERATION_FORBIDDEN
 
-Feature flags, targeting, rollout, caching, and audit history.
+Do not expose sensitive internal information.
 
-BACKEND MILESTONE 7
+Use consistent HTTP status mapping.
 
-Dynamic system configuration, versioning, approval, activation, and rollback.
+---
 
-BACKEND MILESTONE 8
+# 36. EVENTS
 
-Audit infrastructure, retention, archival, privacy requests, and data-export workflows.
+Integrate reviews with the existing event/outbox architecture.
 
-BACKEND MILESTONE 9
+Define versioned domain events as appropriate.
 
-Cross-domain events, queues, observability, security hardening, and compliance preparation.
+Potential events:
 
-BACKEND MILESTONE 10
+```text
+ReviewCreated
+ReviewPublished
+ReviewUpdated
+ReviewHidden
+ReviewRejected
+ReviewRemoved
+ReviewReported
+ReviewModerated
+ReviewRestored
+RatingAggregateChanged
+```
 
-Integration testing, authorization testing, security testing, performance testing, and production-readiness review.
+Use the existing event envelope.
 
-Each milestone should contain approximately 20–40 files where practical.
+Events should contain:
 
-Every milestone must compile before proceeding.
+* event ID
+* event type
+* version
+* aggregate ID
+* occurred-at timestamp
+* producer
+* correlation ID
+* causation ID where supported
+* trace context where supported
+* safe payload
 
-────────────────────────────────────────
+Do not put unnecessary private review content into events.
 
-OUTPUT FORMAT
+---
 
-For every generated file provide:
+# 37. TRANSACTIONAL OUTBOX
 
-1. Exact file path
-2. Complete file contents
+If the repository already uses an outbox:
 
-Never truncate code.
+* reuse it.
 
-Never summarize source code instead of generating it.
+Review state changes and corresponding outbox records must be written atomically when required.
 
-Never generate pseudo-code.
+Do not publish a critical review event before its database transaction commits.
 
-Never generate placeholders.
+Consumers must be idempotent.
 
-Never generate TODO implementations.
+---
 
-When modifying an existing file:
+# 38. SEARCH INTEGRATION BOUNDARY
 
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
+If the repository already contains a search subsystem, expose the review information required for search/index projections without making Reviews depend synchronously on search availability.
 
-Never regenerate unchanged files.
+For example:
 
-────────────────────────────────────────
+* rating summary
+* review count
+* verified review count
 
-SCOPE RESTRICTION
+Do not make product review creation fail merely because Elasticsearch/OpenSearch is temporarily unavailable.
 
-This volume covers:
+Use events/projections where appropriate.
 
-• Administration
-• Administrative authorization
-• Moderation
-• Reporting
-• Fraud prevention
-• Risk evaluation
-• CMS
-• Feature flags
-• System configuration
-• Audit
-• Privacy requests
-• Compliance foundations
+Do not implement the complete search engine in this volume.
 
-Do not implement:
+---
 
-• Frontend
-• Mobile
-• Infrastructure
-• Kubernetes
-• Terraform
-• CI/CD
+# 39. NOTIFICATION INTEGRATION BOUNDARY
 
-Do not redesign established catalog, inventory, checkout, order, payment, seller, search, notification, messaging, or analytics architectures.
+If notifications already exist, reviews may produce events for future notifications such as:
 
-────────────────────────────────────────
+* review published
+* review reported
+* moderation result
 
-QUALITY BAR
+Do not implement a second notification system.
 
-Treat administration, financial controls, moderation, and security operations as high-risk enterprise systems.
+Do not synchronously depend on email/push infrastructure for core review persistence.
 
-Assume:
+---
 
-• Large administrator populations
-• Multiple privilege levels
-• Fraud attacks
-• Seller abuse
-• Financial abuse
-• Regulatory requirements
-• Audit requirements
-• Sensitive customer information
-• Sensitive seller information
+# 40. REDIS
 
-Prioritize:
+Redis may be used for:
 
-• Least privilege
-• Strong authorization
-• Auditability
-• Security
-• Data privacy
-• Immutable financial records
-• Safe configuration
-• Controlled administrative actions
-• Observability
-• Reliability
-• Production readiness
+* rate limiting
+* temporary anti-abuse counters
+* short-lived moderation coordination
+* cache where appropriate
+
+Redis must not be the authoritative source for:
+
+* review records
+* rating totals
+* review ownership
+* moderation state
+
+Every Redis key must have:
+
+* clear purpose
+* namespace
+* TTL when appropriate
+* invalidation behavior
+* failure behavior
+
+---
+
+# 41. DATABASE CONSTRAINTS
+
+Use PostgreSQL constraints and indexes appropriately.
+
+Consider indexes for:
+
+* productId
+* customerId
+* orderId
+* orderItemId
+* sellerOfferId
+* moderationStatus
+* visibilityStatus
+* verificationStatus
+* createdAt
+* rating
+* report status
+
+Add compound indexes based on actual query patterns.
+
+Avoid indiscriminate indexing.
+
+Document important uniqueness constraints.
+
+---
+
+# 42. CONCURRENCY
+
+Review operations must be safe under concurrent requests.
+
+Test cases must include:
+
+* two simultaneous review creations
+* simultaneous review edits
+* simultaneous review removal
+* moderation concurrent with customer edit
+* aggregate updates under concurrency
+* duplicate report submissions
+* duplicate media attachments
+
+Use transactions and appropriate database constraints/locking where necessary.
+
+Do not rely on application-level checks alone when a database constraint can enforce correctness.
+
+---
+
+# 43. PRIVACY
+
+Review APIs must not accidentally expose:
+
+* private customer email
+* phone number
+* address
+* payment information
+* internal account IDs where not required
+* moderation-only information
+* private media
+* internal fraud signals
+
+Define exactly which customer identity information is publicly visible.
+
+If reviewer display names are supported, derive them from the appropriate customer profile/privacy settings.
+
+Do not expose unnecessary personal information.
+
+---
+
+# 44. SECURITY
+
+Threat-model the review system for:
+
+* IDOR
+* privilege escalation
+* review impersonation
+* review ownership bypass
+* rating manipulation
+* moderation bypass
+* report abuse
+* XSS
+* HTML injection
+* SQL injection
+* malicious media
+* unauthorized S3 access
+* enumeration
+* rate-limit bypass
+* automated review spam
+* seller abuse
+* administrative endpoint abuse
+
+Implement server-side controls.
+
+---
+
+# 45. OBSERVABILITY
+
+Integrate with existing observability.
+
+Add:
+
+* structured logs
+* metrics
+* traces
+* audit events
+
+Track important metrics such as:
+
+* review creation attempts
+* successful review creation
+* rejected review attempts
+* moderation actions
+* reports
+* review publication latency
+* rating aggregate updates
+* media processing failures
+* review API latency
+* review API error rate
+* abuse/rate-limit events
+
+Never log:
+
+* passwords
+* authentication tokens
+* payment credentials
+* secrets
+* unnecessary private customer data
+
+---
+
+# 46. TESTING
+
+Implement real tests.
+
+At minimum cover:
+
+## Unit tests
+
+* review eligibility
+* verified-purchase determination
+* review state transitions
+* edit rules
+* deletion rules
+* rating validation
+* moderation policies
+* report policies
+* aggregation logic
+
+## Database/integration tests
+
+* review creation
+* duplicate prevention
+* order-item ownership
+* product relationship
+* aggregate updates
+* concurrent operations
+* report uniqueness
+* moderation transitions
+
+## API tests
+
+* authentication
+* authorization
+* validation
+* pagination
+* filtering
+* sorting
+* error responses
+
+## Security tests
+
+* IDOR attempts
+* seller isolation
+* customer isolation
+* unauthorized moderation
+* media ownership bypass
+* malformed input
+* XSS payloads
+* rate-limit behavior
+
+## Concurrency tests
+
+Explicitly test simultaneous requests that could otherwise create:
+
+* duplicate reviews
+* inconsistent aggregates
+* duplicate reports
+* conflicting state transitions
+
+---
+
+# 47. MIGRATIONS
+
+Create proper Prisma migrations.
+
+Requirements:
+
+* safe migration strategy
+* backward-compatible deployment considerations
+* appropriate indexes
+* foreign keys
+* unique constraints
+* enum changes handled safely
+* no destructive production migration without justification
+
+Never manually edit production data through application startup.
+
+---
+
+# 48. SEED DATA
+
+If the repository has a seed system, extend it where useful.
+
+Seed only deterministic development/test data.
+
+Never seed:
+
+* real credentials
+* real customer information
+* production secrets
+* fake external provider credentials
+
+---
+
+# 49. OPENAPI
+
+Document all new endpoints.
+
+OpenAPI must describe:
+
+* authentication
+* parameters
+* request bodies
+* response schemas
+* pagination
+* errors
+* authorization expectations
+* relevant enums
+
+Do not leave the API undocumented.
+
+---
+
+# 50. PERFORMANCE
+
+Review queries must remain efficient at marketplace scale.
+
+Inspect query plans where appropriate.
+
+Avoid:
+
+* N+1 queries
+* loading all reviews into memory
+* unbounded queries
+* unnecessary joins
+* repeated aggregate calculations
+* inefficient pagination
+* synchronous external calls inside critical review transactions
+
+Use appropriate:
+
+* indexes
+* pagination
+* projections
+* batching
+* caching where justified
+
+---
+
+# 51. FAILURE BEHAVIOR
+
+Define behavior when:
+
+* database temporarily fails
+* Redis fails
+* media processing fails
+* event publishing is delayed
+* search is unavailable
+* queue workers are unavailable
+
+Core review persistence should remain correct even when noncritical infrastructure is unavailable.
+
+Do not silently lose review events.
+
+Do not falsely report successful asynchronous processing when it failed.
+
+---
+
+# 52. BACKGROUND JOBS
+
+If review-related asynchronous processing is required, use the existing BullMQ infrastructure.
+
+Potential jobs:
+
+* review moderation processing
+* media processing coordination
+* aggregate reconciliation
+* abandoned media cleanup
+* report escalation
+* review consistency reconciliation
+
+Each job must define:
+
+* purpose
+* input
+* idempotency key
+* retry behavior
+* timeout
+* backoff
+* concurrency
+* failure handling
+* DLQ behavior if supported
+* observability
+
+Do not create jobs without a real operational purpose.
+
+---
+
+# 53. RECONCILIATION
+
+Where aggregates or projections can drift, implement a safe reconciliation mechanism.
+
+For example:
+
+* recompute product rating summary from authoritative reviews
+* detect aggregate mismatch
+* repair projection
+* audit the repair
+
+Reconciliation must not silently overwrite valid data without clear rules.
+
+---
+
+# 54. ADMINISTRATION
+
+Integrate review moderation with the existing administration system.
+
+Provide authorized administrative functionality for:
+
+* reviewing reports
+* searching reviews
+* filtering by moderation state
+* inspecting review metadata
+* changing moderation state
+* recording reasons
+* viewing audit history
+
+Do not expose these APIs to normal customers.
+
+Use least privilege.
+
+---
+
+# 55. SELLER EXPERIENCE
+
+Where seller-facing review functionality is supported, implement only legitimate seller capabilities.
+
+Sellers may potentially:
+
+* view reviews for their products/offers
+* inspect aggregated ratings
+* access allowed review metadata
+* respond to reviews only if the platform explicitly supports seller responses
+
+Do not automatically add seller responses if that feature is not part of the existing product requirements.
+
+Sellers must not:
+
+* edit reviews
+* delete reviews
+* manipulate ratings
+* access unrelated customer information
+
+---
+
+# 56. API RESPONSE DESIGN
+
+Public review responses should contain only appropriate information.
+
+A review response may include:
+
+* review ID
+* reviewer display information
+* rating
+* title
+* body
+* verified-purchase indicator
+* media references
+* created date
+* edited indicator
+* publication information appropriate for public consumers
+
+Do not expose:
+
+* internal moderation notes
+* internal audit IDs
+* private customer identifiers
+* fraud scores
+* internal seller information
+* database implementation details
+
+---
+
+# 57. DATA RETENTION
+
+Define retention behavior for:
+
+* reviews
+* reports
+* moderation records
+* audit events
+* media
+
+Respect the repository's privacy/deletion architecture.
+
+Do not use hard deletion where it would violate required auditability.
+
+Do not retain unnecessary personal data indefinitely.
+
+---
+
+# 58. DOMAIN EVENTS AND FUTURE INTEGRATION
+
+The implementation should establish clean integration points for later:
+
+* Search
+* Notifications
+* Analytics
+* Recommendations
+* Seller analytics
+* Trust and safety systems
+
+Do not implement those entire domains here.
+
+Events must be sufficient for future consumers without creating tight synchronous coupling.
+
+---
+
+# 59. FILE ORGANIZATION
+
+Follow the repository's existing organization.
+
+Where a new Reviews module is required, maintain clear separation between:
+
+* domain
+* application/use cases
+* infrastructure
+* persistence
+* controllers
+* DTOs
+* guards/policies
+* repositories
+* event handlers
+* jobs
+* tests
+
+Do not force a directory structure if the repository already follows a different but coherent architecture.
+
+Consistency with the existing project is more important than arbitrary folder naming.
+
+---
+
+# 60. QUALITY REQUIREMENTS
+
+The resulting implementation must be:
+
+* production-ready
+* type-safe
+* testable
+* secure
+* observable
+* maintainable
+* horizontally scalable
+* transactionally correct
+* backward-compatible
+* documented
+
+Do not leave incomplete methods.
+
+Do not leave placeholder implementations.
+
+Do not leave fake integrations.
+
+Do not create duplicate domain systems.
+
+---
+
+# 61. VALIDATION
+
+After implementation, run the repository's appropriate:
+
+* dependency checks
+* formatting
+* linting
+* TypeScript compilation
+* Prisma validation
+* Prisma generation
+* migrations
+* unit tests
+* integration tests
+* API tests
+* security tests
+* relevant end-to-end tests
+
+Fix real errors before considering the volume complete.
+
+If an external dependency cannot be tested because credentials or infrastructure are unavailable, report that limitation accurately rather than fabricating successful results.
+
+---
+
+# 62. BACKWARD COMPATIBILITY
+
+Before changing existing models or APIs:
+
+1. Inspect existing consumers.
+2. Preserve existing contracts where possible.
+3. Use additive migrations when possible.
+4. Avoid breaking existing frontend/mobile clients.
+5. Preserve existing authentication and authorization behavior.
+6. Preserve existing event compatibility.
+
+If a breaking change is genuinely required, document:
+
+* why
+* affected contracts
+* migration strategy
+* compatibility strategy
+
+---
+
+# 63. IMPLEMENTATION BOUNDARY
+
+This volume should implement:
+
+* Reviews
+* Ratings
+* Review eligibility
+* Verified purchases
+* Review lifecycle
+* Review editing/removal
+* Review media integration
+* Review reporting
+* Moderation
+* Rating aggregation
+* Customer review APIs
+* Seller review access where appropriate
+* Administrative moderation APIs
+* Review events
+* Review jobs where justified
+* Audit
+* Security
+* Observability
+* Testing
+* Documentation
+
+Do NOT turn this volume into a separate implementation of:
+
+* Search
+* Recommendations
+* Notifications
+* Analytics
+* Seller payouts
+* Advanced warehouse management
+* Tax remittance
+* Full carrier integrations
+
+Those systems should integrate through the existing architecture and may be implemented in later backend units.
+
+---
+
+# 64. NON-NEGOTIABLE RULES
+
+Never:
+
+* trust client-provided customer identity
+* trust client-provided verified-purchase state
+* trust client-provided seller ownership
+* trust client-provided order relationships
+* allow cross-customer review modification
+* allow cross-seller access
+* allow arbitrary moderation
+* allow duplicate reviews when prohibited
+* allow invalid ratings
+* allow unauthorized media attachment
+* expose private customer data
+* store secrets in source code
+* use Redis as authoritative review storage
+* silently lose events
+* create fake provider integrations
+* bypass database constraints when correctness requires them
+* create TODO implementations
+* create placeholder endpoints
+* create mock production behavior
+* claim tests passed when they did not
+* claim implementation exists when it does not
+
+---
+
+# 65. FINAL IMPLEMENTATION REPORT
+
+At the end, provide a factual implementation report based only on the repository after your changes.
+
+Include:
+
+## Implemented
+
+Exact functionality actually implemented.
+
+## Files Added
+
+List actual files added.
+
+## Files Modified
+
+List actual files modified.
+
+## Database Changes
+
+List actual migrations/models/indexes/constraints.
+
+## APIs Added or Changed
+
+List actual endpoints and contracts.
+
+## Events Added
+
+List actual events.
+
+## Jobs Added
+
+List actual background jobs.
+
+## Security Controls
+
+List actual controls implemented.
+
+## Tests
+
+List actual tests created or modified and actual validation results.
+
+## Validation
+
+Report actual:
+
+* build result
+* typecheck result
+* lint result
+* migration result
+* test result
+
+## Limitations
+
+Clearly identify anything that could not be completed and why.
+
+Do not describe planned work as implemented work.
+
+---
+
+# 66. FINAL INSTRUCTION
+
+Inspect the actual repository first.
+
+Then implement the complete **Reviews, Ratings, Review Media, Verification, Reporting, Moderation, and Rating Aggregation backend capability** described above as a production-grade extension of the existing ecommerce marketplace.
+
+Make real repository changes.
+
+Reuse existing architecture and contracts.
+
+Do not create a competing implementation.
+
+Do not stop at an outline.
+
+Do not provide pseudo-code instead of implementation.
+
+Do not leave placeholders.
+
+Validate the implementation.
+
+Report only facts about the actual resulting repository.
+
+This prompt is a standalone implementation unit of one coherent ecommerce marketplace system, and the resulting code must remain compatible with the rest of the marketplace as it exists in the repository.
