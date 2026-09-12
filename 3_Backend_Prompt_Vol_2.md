@@ -1,2938 +1,1360 @@
-# Amazon Ecommerce Marketplace
+# AMAZON ECOMMERCE PLATFORM — BACKEND VOLUME 2 IMPLEMENTATION PROMPT
 
-## Backend Implementation Prompt — Volume 2
+## ROLE
 
-### Catalog, Products, Variants, SKUs, Categories, Brands, Sellers, Offers, Pricing, Promotions, and Marketplace Foundations
+Act as the complete **Backend Engineering Team** responsible for implementing the next production-grade backend capabilities of the Amazon Ecommerce Platform.
 
----
+Operate as a Principal Backend Architect, Staff Backend Engineers, Database Engineer, Distributed Systems Engineer, Payments Engineer, Security Engineer, QA Engineer, and DevOps-aware Backend Engineer working as one engineering team.
 
-# ROLE
+Do not teach the implementation process. Perform the engineering work directly in the repository.
 
-You are the senior backend engineering team responsible for implementing the next production-grade commerce domain layer of an original ecommerce marketplace.
-
-The platform is an **Amazon-style ecommerce marketplace**, not proprietary Amazon software.
-
-You are responsible for implementing real production functionality in the actual repository.
-
-Act as:
-
-* Principal Software Architect
-* Staff Backend Engineer
-* Database Architect
-* Domain-Driven Design Engineer
-* Security Engineer
-* Distributed Systems Engineer
-* QA Engineer
-
-Do not act as a teacher.
-
-Implement the system.
+The objective is to implement the core transactional commerce engine required by a global multi-seller ecommerce marketplace, including pricing, carts, promotions, checkout, orders, payments, refunds, and the transactional foundations required for fulfillment.
 
 ---
 
-# 1. STANDALONE EXECUTION REQUIREMENT
+# PROJECT
 
-This prompt is completely standalone.
+Build the backend for a global, multi-seller ecommerce marketplace comparable in breadth and operational complexity to Amazon Marketplace.
 
-Do not assume:
+The platform supports:
 
-* another prompt exists
-* another conversation exists
-* a previous architecture document is available
-* Claude remembers previous instructions
-* another implementation phase was completed
+* Millions of customers.
+* Thousands of sellers.
+* Millions of products and variants.
+* High-volume catalog and search traffic.
+* Multi-seller shopping carts.
+* Multi-seller checkout.
+* Inventory reservations.
+* Pricing.
+* Promotions.
+* Coupons.
+* Orders.
+* Payments.
+* Refunds.
+* Returns.
+* Shipments.
+* Seller payouts.
+* Notifications.
+* Administration.
+* Auditing.
+* High availability.
+* Horizontal scaling.
+* Asynchronous processing.
+* Continuous deployment.
 
-The actual repository is the only source of implementation state.
-
-Inspect it first.
-
-If functionality already exists:
-
-* preserve it
-* reuse it
-* extend it
-* repair it where necessary
-* avoid duplicate implementations
-
-This prompt describes one implementation unit of one coherent ecommerce marketplace.
-
-It must integrate with the repository's actual existing contracts.
-
----
-
-# 2. PROJECT CONTEXT
-
-Implement the marketplace domains required to establish a production catalog and seller commerce foundation.
-
-This volume covers:
-
-* products
-* product variants
-* SKUs
-* categories
-* brands
-* attributes
-* product media references
-* sellers
-* seller users
-* seller roles
-* seller offers
-* pricing
-* price history
-* promotions
-* coupons
-* seller/catalog authorization
-* catalog visibility
-* marketplace ownership boundaries
-
-These domains will later support:
-
-* inventory
-* cart
-* checkout
-* orders
-* fulfillment
-* reviews
-* search
-* recommendations
-
-Do not implement those future domains unless required to integrate with existing repository functionality.
+The backend must maintain strict transactional correctness for money, inventory, orders, and payment state.
 
 ---
 
-# 3. TECHNOLOGY BASELINE
+# TECHNOLOGY DIRECTION
 
-Use the repository's actual stack when compatible.
+Use the following technology direction unless the repository already contains a compatible production-grade implementation that should be preserved.
 
-Baseline:
+## Backend
 
-* Node.js
-* NestJS
-* TypeScript
-* PostgreSQL
-* Prisma
-* Redis
-* Elasticsearch/OpenSearch where already required
-* AWS S3 for media storage where already integrated
-* REST
-* OpenAPI/Swagger
-* BullMQ for asynchronous work
-* Kafka/Redpanda where justified
+* NestJS.
+* TypeScript.
+* REST APIs.
+* Swagger/OpenAPI.
+* Webhooks.
+* WebSockets or SSE only where justified.
 
-Do not introduce alternative technologies without a clear repository-specific reason.
+## Database
 
----
+* PostgreSQL.
+* Prisma ORM.
 
-# 4. FIRST ACTION — REPOSITORY AUDIT
+## Cache and Coordination
 
-Before changing anything, inspect:
+* Redis.
 
-* backend structure
-* existing modules
-* Prisma schema
-* Prisma migrations
-* authentication
-* authorization
-* user model
-* customer model
-* address model
-* database utilities
-* API conventions
-* DTO conventions
-* error handling
-* pagination
-* logging
-* event infrastructure
-* Redis infrastructure
-* queue infrastructure
-* media infrastructure
-* search infrastructure
-* tests
+## Search
 
-Determine whether any catalog/seller/pricing functionality already exists.
+* Elasticsearch or OpenSearch.
 
-Do not overwrite existing work.
+## Background Processing
 
-Identify compatibility requirements before implementation.
+* BullMQ.
+
+## Storage
+
+* S3-compatible object storage.
+* CloudFront or equivalent CDN.
+
+## Payments
+
+* Stripe or a provider abstraction supporting production payment-provider integration.
+
+## Observability
+
+* OpenTelemetry.
+* Prometheus.
+* Grafana.
+* Loki and/or equivalent centralized logging.
+* Tempo and/or equivalent distributed tracing.
 
 ---
 
-# 5. DOMAIN MODULES
+# SOURCE OF TRUTH
 
-Establish clear modules for:
+The repository is the source of truth for implementation state.
 
-* Catalog
-* Category
-* Brand
-* Product
-* Pricing
-* Seller
-* Offer
-* Promotion
-* Coupon
+Before changing anything:
 
-Separate infrastructure from domain logic.
+1. Inspect the complete backend structure.
+2. Inspect package manifests.
+3. Inspect configuration.
+4. Inspect Prisma schema and migrations.
+5. Inspect existing domain modules.
+6. Inspect existing services.
+7. Inspect controllers.
+8. Inspect DTOs.
+9. Inspect guards and authorization.
+10. Inspect existing cart, catalog, inventory, authentication, seller, event, and queue functionality.
+11. Inspect tests.
+12. Inspect API documentation.
+13. Inspect existing payment abstractions if present.
+14. Inspect existing environment configuration.
+15. Identify reusable infrastructure.
+16. Identify incompatible or incomplete implementations.
+17. Determine exactly what must be added or changed.
 
-Do not create a single giant `ProductsService` responsible for unrelated marketplace behavior.
+Do not blindly recreate existing functionality.
 
----
+Do not assume another AI prompt has been executed.
 
-# 6. CATALOG DOMAIN
+Do not rely on conversation history.
 
-Implement the catalog as the authoritative product information system.
-
-The catalog must distinguish:
-
-* Product
-* ProductVariant
-* SKU
-* SellerOffer
-
-Do not collapse these entities into one model.
-
-The catalog controls product identity and customer-facing product information.
-
-Seller offers control seller-specific commercial availability.
+The repository itself must contain everything necessary to understand the current implementation state.
 
 ---
 
-# 7. PRODUCT MODEL
+# BACKEND IMPLEMENTATION SCOPE
 
-Implement Product.
+Implement the transactional commerce layer.
 
-At minimum support:
+This volume must establish production-grade functionality for:
 
-* ID
-* title
-* slug
-* description
-* brand relationship
-* category relationship
-* product type
-* status
-* metadata where justified
-* createdAt
-* updatedAt
-* publishedAt
-* archivedAt where appropriate
+* Product pricing.
+* Price snapshots.
+* Shopping carts.
+* Cart items.
+* Wishlists where required by existing domain boundaries.
+* Promotions.
+* Coupons.
+* Promotion validation.
+* Checkout preparation.
+* Checkout validation.
+* Multi-seller checkout.
+* Customer orders.
+* Seller order groupings.
+* Order items.
+* Payment intent creation.
+* Payment state handling.
+* Payment webhooks.
+* Refund foundations.
+* Idempotent commerce operations.
+* Order state transitions.
+* Inventory reservation integration.
+* Transactional outbox integration.
+* Commerce events.
+* Background jobs.
+* Commerce audit records.
 
-Define proper constraints.
-
-Product title and slug behavior must be explicitly validated.
-
----
-
-# 8. PRODUCT STATUS
-
-Implement controlled product lifecycle states.
-
-At minimum support:
-
-* DRAFT
-* PENDING_REVIEW
-* ACTIVE
-* SUSPENDED
-* ARCHIVED
-
-Enforce valid transitions.
-
-Do not permit arbitrary status updates from ordinary seller/customer endpoints.
-
-Define who can perform each transition.
+Do not implement frontend or mobile interfaces.
 
 ---
 
-# 9. PRODUCT SLUG
+# PRICING DOMAIN
 
-Implement stable public product slugs.
+Implement a production-grade pricing foundation.
 
-Requirements:
+Pricing must support:
 
-* human-readable
-* unique
-* normalized
-* safe for URLs
-* deterministic where possible
+* Product-level pricing where applicable.
+* Variant-level pricing.
+* Seller-specific offers where the marketplace model requires them.
+* Currency.
+* Monetary precision.
+* Effective timestamps.
+* Active/inactive state.
+* Price history where required.
+* Customer-visible pricing.
+* Transactional price snapshots.
 
-If a title changes, do not automatically break existing URLs without an explicit strategy.
+Never use floating-point arithmetic for money.
 
-Define redirect/history behavior if the repository supports SEO-friendly URL history.
+Use exact decimal representations.
 
----
+Every monetary amount must have explicit currency semantics.
 
-# 10. PRODUCT DESCRIPTION
+Do not allow clients to submit authoritative final prices.
 
-Support structured product information where appropriate.
-
-Do not blindly permit arbitrary HTML.
-
-Protect against:
-
-* stored XSS
-* malicious embedded content
-* unsafe URLs
-* scripts
-* dangerous markup
-
-Sanitize rich content server-side if rich text is supported.
+The backend must calculate authoritative prices.
 
 ---
 
-# 11. PRODUCT VARIANTS
+# PRICE SNAPSHOTS
 
-Implement ProductVariant.
+Orders must preserve the commercial terms that existed when the order was created.
 
-A variant represents a customer-visible configuration such as:
+Persist immutable or effectively immutable snapshots for values such as:
 
-* color
-* size
-* storage
-* capacity
-* configuration
+* Unit price.
+* Currency.
+* Quantity.
+* Discount allocation.
+* Tax where applicable.
+* Shipping charge where applicable.
+* Seller information required for order history.
+* Product information required for order history.
 
-A product may have:
+Do not rely on the current product price to reconstruct historical orders.
 
-* zero variants
-* one variant
-* multiple variants
-
-Define how simple products map to sellable SKUs.
-
-Do not duplicate product-level information unnecessarily.
+Do not mutate historical financial values when a catalog price changes.
 
 ---
 
-# 12. PRODUCT ATTRIBUTES
+# CART DOMAIN
 
-Implement structured attributes.
+Implement production-grade shopping carts.
 
 Support:
 
-* attribute definitions
-* attribute values
-* variant-specific values
-* product-level values where appropriate
-* ordering
-* display labels
-* normalized values
-
-Examples:
-
-* Color
-* Size
-* Material
-* Storage
-* Capacity
-
-Define validation so a variant cannot contain invalid attribute combinations.
-
----
-
-# 13. SKU MODEL
-
-Implement SKU as the inventory-identifiable sellable unit.
-
-A SKU must have:
-
-* unique identifier
-* product relationship
-* variant relationship where applicable
-* merchant/internal SKU code where applicable
-* status
-* metadata where justified
-* timestamps
-
-Define uniqueness rules.
-
-The SKU must be suitable for later inventory reservation.
-
----
-
-# 14. SKU LIFECYCLE
-
-Define states such as:
-
-* ACTIVE
-* INACTIVE
-* DISCONTINUED
-
-Do not delete SKUs that are referenced by historical commerce records.
-
-Historical references must remain valid.
-
----
-
-# 15. SKU UNIQUENESS
-
-Enforce uniqueness at the correct ownership boundary.
-
-If sellers can define seller-specific SKU codes, do not globally require those codes to be unique unless the business model requires it.
-
-Distinguish:
-
-* platform SKU
-* seller SKU
-* offer identifier
-
----
-
-# 16. CATEGORY DOMAIN
-
-Implement hierarchical categories.
-
-Support:
-
-* category name
-* slug
-* parent category
-* status
-* display order
-* metadata
-* timestamps
-
-Define:
-
-* maximum depth if applicable
-* circular-reference prevention
-* parent validation
-* deletion behavior
-
-A category cannot become its own descendant.
-
----
-
-# 17. CATEGORY TREE OPERATIONS
-
-Implement safe operations for:
-
-* create
-* update
-* move
-* activate
-* suspend
-* archive
-
-Moving a category must validate that it does not create a cycle.
-
-Define behavior for products assigned to archived categories.
-
----
-
-# 18. CATEGORY PATH
-
-Provide a reliable category hierarchy representation for:
-
-* product pages
-* breadcrumbs
-* search
-* navigation
-* SEO
-
-Avoid repeatedly calculating expensive recursive relationships at request time if a materialized path or equivalent strategy is justified.
-
-Choose the simplest strategy compatible with expected scale.
-
----
-
-# 19. BRAND DOMAIN
-
-Implement Brand.
-
-Support:
-
-* name
-* normalized name
-* slug
-* status
-* description where applicable
-* media reference where applicable
-* timestamps
-
-Prevent duplicate brands caused by trivial case/format variations where appropriate.
-
----
-
-# 20. BRAND OWNERSHIP
-
-Define who may:
-
-* create brands
-* modify brands
-* associate products
-* suspend brands
-* archive brands
-
-Do not allow sellers to arbitrarily create authoritative platform brands unless the repository's business model explicitly supports seller-created brands.
-
----
-
-# 21. PRODUCT MEDIA REFERENCES
-
-Integrate Product with the existing media infrastructure.
-
-A product media association must support:
-
-* media ID
-* product ID
-* variant association where applicable
-* display order
-* primary image designation
-* media role
-* visibility
-
-Do not duplicate S3 object storage logic inside the catalog domain.
-
-Use the existing media abstraction if available.
-
----
-
-# 22. CATALOG OWNERSHIP
-
-Define product ownership.
-
-The architecture must support the distinction between:
-
-* platform-owned catalog content
-* seller-managed content
-* seller offer content
-
-Do not allow one seller to modify another seller's product information merely because they sell the same SKU.
-
-Define which catalog fields are:
-
-* platform controlled
-* seller editable
-* administrator editable
-
----
-
-# 23. SELLER DOMAIN
-
-Implement Seller.
-
-At minimum support:
-
-* seller ID
-* legal/business name where appropriate
-* display name
-* slug
-* status
-* contact information
-* timestamps
-* onboarding state where appropriate
-
-Avoid storing unnecessary regulated financial information in the seller profile.
-
----
-
-# 24. SELLER STATUS
-
-Implement controlled states such as:
-
-* PENDING
-* ACTIVE
-* SUSPENDED
-* REJECTED
-* CLOSED
-
-Define legal transitions.
-
-A suspended seller must not be able to create new offers or perform restricted commerce actions.
-
-Existing historical orders must remain accessible according to authorization rules.
-
----
-
-# 25. SELLER USERS
-
-Implement seller membership.
-
-A seller may have multiple users.
-
-Support:
-
-* seller-user relationship
-* role
-* status
-* invitation state where applicable
-* timestamps
-
-Enforce seller ownership on every seller-scoped query.
-
----
-
-# 26. SELLER ROLES
-
-Support appropriate seller roles such as:
-
-* SELLER_OWNER
-* SELLER_ADMIN
-* SELLER_OPERATOR
-* SELLER_VIEWER
-
-Define permissions explicitly.
-
-Do not rely solely on role names inside controllers.
-
-Use a reusable authorization mechanism.
-
----
-
-# 27. SELLER ISOLATION
-
-This is a mandatory security boundary.
-
-Every seller-scoped operation must enforce:
-
-* authenticated identity
-* seller membership
-* seller role
-* target seller ownership
-
-Test attempts to access another seller's:
-
-* profile
-* users
-* offers
-* prices
-* catalog data where restricted
-* seller inventory references
-* analytics references
-
-Return safe authorization failures.
-
-Do not leak whether another seller's private resource exists when the security model requires indistinguishable behavior.
-
----
-
-# 28. SELLER OFFER DOMAIN
-
-Implement SellerOffer.
-
-An offer connects:
-
-**Seller → SKU → commercial terms**
-
-An offer should support:
-
-* offer ID
-* seller ID
-* SKU ID
-* price relationship
-* condition
-* fulfillment method
-* status
-* seller SKU where appropriate
-* seller-specific metadata
-* timestamps
-
----
-
-# 29. OFFER STATUS
-
-Implement controlled states such as:
-
-* DRAFT
-* ACTIVE
-* PAUSED
-* SUSPENDED
-* ENDED
-
-Define transitions.
-
-A suspended seller must not have active public offers.
-
-Offer visibility must be evaluated server-side.
-
----
-
-# 30. OFFER UNIQUENESS
-
-Define whether a seller can have multiple active offers for the same SKU.
-
-Unless there is a justified reason otherwise:
-
-* one seller should have one canonical active offer per SKU/condition/fulfillment combination
-
-Enforce appropriate uniqueness constraints.
-
-Do not rely exclusively on application checks.
-
----
-
-# 31. CONDITION MODEL
-
-If marketplace conditions are supported, use explicit values such as:
-
-* NEW
-* USED
-* REFURBISHED
-* OPEN_BOX
-
-Do not store arbitrary condition strings when the business logic requires controlled behavior.
-
-Define which conditions are permitted for each product/seller configuration.
-
----
-
-# 32. PRICING DOMAIN
-
-Implement pricing as a dedicated domain.
-
-Do not place all price logic inside Product or SellerOffer.
-
-Support:
-
-* current price
-* compare-at/reference price where applicable
-* currency
-* effective period
-* price history
-
-Money must use exact representation.
-
----
-
-# 33. PRICE MODEL
-
-Implement a canonical price representation.
-
-At minimum:
-
-* amount in minor currency units
-* ISO currency code
-* effectiveAt
-* expiresAt where applicable
-* seller/offer relationship
-* status where necessary
-
-Never use JavaScript floating-point values as authoritative monetary storage.
-
----
-
-# 34. PRICE HISTORY
-
-Maintain price history where required.
-
-Record:
-
-* previous amount
-* new amount
-* currency
-* actor/source
-* effective timestamp
-* offer ID
-* reason where appropriate
-
-Historical price records must not be silently rewritten.
-
----
-
-# 35. PRICE UPDATE
-
-Implement secure seller price updates.
-
-Validate:
-
-* seller ownership
-* offer status
-* currency
-* amount
-* maximum/minimum business limits
-* effective dates
-
-A seller must not be able to modify another seller's offer price.
-
----
-
-# 36. PRICE CONSISTENCY
-
-The API must never present a price as guaranteed for checkout merely because it was returned by an earlier product request.
-
-The later checkout domain will revalidate authoritative pricing.
-
-Do not treat cached product responses as transactional pricing authority.
-
----
-
-# 37. PROMOTION DOMAIN
-
-Implement foundational promotions.
-
-Support appropriate promotion types such as:
-
-* percentage discount
-* fixed amount discount
-* product-specific discount
-* category discount
-* seller-specific promotion
-* minimum-order promotion
-
-Define applicability rules.
-
----
-
-# 38. PROMOTION LIFECYCLE
-
-Implement states:
-
-* DRAFT
-* SCHEDULED
-* ACTIVE
-* PAUSED
-* EXPIRED
-* CANCELLED
-
-Define transition rules.
-
-Promotions must not become active outside their configured validity period.
-
----
-
-# 39. PROMOTION OWNERSHIP
-
-Define whether a promotion belongs to:
-
-* platform
-* seller
-
-Seller promotions must be seller-scoped.
-
-A seller must not be able to create or modify platform promotions.
-
----
-
-# 40. PROMOTION PRIORITY AND STACKING
-
-Define:
-
-* priority
-* stacking
-* exclusivity
-* maximum discounts
-* order-level vs item-level discounts
-
-Do not allow ambiguous discount application.
-
-Create deterministic rules for multiple eligible promotions.
-
----
-
-# 41. COUPON DOMAIN
-
-Implement coupons.
-
-Support:
-
-* coupon code
-* normalized code
-* promotion relationship
-* seller/platform ownership
-* validity period
-* usage limit
-* per-customer usage limit
-* minimum order requirement
-* status
-
-Coupon codes must be treated case-insensitively if that is the selected business rule.
-
----
-
-# 42. COUPON SECURITY
-
-Protect against:
-
-* brute-force coupon discovery
-* enumeration
-* repeated redemption
-* concurrent redemption
-* unauthorized seller use
-* expired coupon reuse
-
-Rate-limit coupon validation where appropriate.
-
-Do not reveal excessive information about invalid coupons.
-
----
-
-# 43. COUPON REDEMPTION FOUNDATION
-
-Create the persistent redemption model needed for future checkout.
-
-It must support:
-
-* coupon
-* customer
-* order/checkout reference where appropriate
-* redemption timestamp
-* status
-
-Design unique constraints to prevent duplicate redemption where business rules require it.
-
-Future checkout implementation must be able to make redemption concurrency-safe.
-
----
-
-# 44. PRODUCT API
-
-Implement REST endpoints appropriate to the repository for:
-
-* create product
-* retrieve product
-* update product
-* list products
-* publish product
-* suspend product
-* archive product
-
-Separate customer/public endpoints from administrative/seller endpoints.
-
-Do not expose internal management fields to public clients.
-
----
-
-# 45. PRODUCT QUERY
-
-Public product retrieval must return only publicly visible information.
-
-Respect:
-
-* product status
-* seller/offer visibility
-* media visibility
-* category visibility
-* brand visibility
-
-Do not expose:
-
-* internal moderation notes
-* internal seller metadata
-* audit metadata
-* private operational fields
-
----
-
-# 46. PRODUCT LISTING
-
-Implement scalable product listing.
-
-Support appropriate:
-
-* cursor pagination
-* category filtering
-* brand filtering
-* status filtering for authorized users
-* sorting
-
-Do not load unbounded collections.
-
-Use indexes aligned with actual queries.
-
----
-
-# 47. CATEGORY API
-
-Implement appropriate endpoints for:
-
-* category retrieval
-* category listing
-* category tree
-* administrative creation/update
-* status changes
-
-Customer-facing category responses must only expose active/public categories.
-
----
-
-# 48. BRAND API
-
-Implement:
-
-* public brand retrieval/listing
-* authorized brand management
-
-Respect brand status.
-
-Avoid exposing administrative metadata publicly.
-
----
-
-# 49. SELLER API
-
-Implement appropriate endpoints for:
-
-* seller onboarding
-* seller profile
-* seller status management
-* seller users
-* seller membership
-
-Public seller information must be separated from private seller information.
-
----
-
-# 50. SELLER OFFER API
-
-Implement:
-
-* create offer
-* retrieve offer
-* update offer
-* activate offer
-* pause offer
-* list seller offers
-
-Every seller mutation must enforce seller ownership.
-
----
-
-# 51. PRICING API
-
-Implement:
-
-* retrieve offer price
-* update price
-* retrieve price history where authorized
-
-Do not allow public clients to mutate prices.
-
----
-
-# 52. PROMOTION API
-
-Implement appropriate management endpoints for:
-
-* create promotion
-* update promotion
-* activate
-* pause
-* cancel
-* retrieve
-* list
-
-Enforce platform/seller ownership boundaries.
-
----
-
-# 53. COUPON API
-
-Implement appropriate endpoints for:
-
-* create coupon
-* update coupon
-* retrieve coupon
-* list coupons
-* validate coupon where appropriate
-
-Do not expose coupon usage information to unauthorized sellers.
-
----
-
-# 54. DTO ARCHITECTURE
-
-Create clear request/response DTOs.
-
-Do not reuse Prisma models directly as public API contracts.
-
-DTOs must:
-
-* validate input
-* control output
-* prevent accidental field exposure
-* remain stable independently from persistence
-
----
-
-# 55. AUTHORIZATION
-
-Every management endpoint must enforce authorization.
-
-Examples:
-
-A customer cannot:
-
-* create products
-* modify sellers
-* modify prices
-* create promotions
-
-A seller cannot:
-
-* modify another seller's offer
-* change platform-owned product fields
-* modify platform promotions
-* modify another seller's coupons
-
-An administrator may have elevated permissions according to the repository's role model.
-
----
-
-# 56. DATABASE CONSTRAINTS
-
-Implement database-level constraints for critical invariants.
-
-Examples:
-
-* unique product slug
-* unique category slug
-* valid seller membership uniqueness
-* offer ownership relationships
-* coupon uniqueness
-* valid foreign keys
-* appropriate unique price relationships
-
-Application validation remains necessary, but database constraints must protect critical integrity.
-
----
-
-# 57. TRANSACTIONAL OPERATIONS
-
-Use transactions where multiple records must change atomically.
-
-Examples:
-
-### Product publication
-
-Product state + related publication metadata where applicable.
-
-### Seller onboarding
-
-Seller + initial owner membership.
-
-### Offer creation
-
-Offer + initial price where appropriate.
-
-### Promotion creation
-
-Promotion + rules where atomicity is required.
-
-Do not keep transactions open across unnecessary external network calls.
-
----
-
-# 58. CONCURRENCY
-
-Explicitly handle concurrency for:
-
-* offer creation
-* price updates
-* coupon creation
-* coupon redemption preparation
-* category movement
-* seller status changes
-* product publication
-
-Use:
-
-* database constraints
-* transactions
-* row locking
-* optimistic concurrency
-* version fields
-
-where appropriate.
-
----
-
-# 59. EVENT EMISSION
-
-Emit domain events for meaningful changes.
-
-At minimum establish events such as:
-
-* ProductCreated
-* ProductUpdated
-* ProductPublished
-* ProductSuspended
-* ProductArchived
-* CategoryChanged
-* BrandChanged
-* SellerCreated
-* SellerActivated
-* SellerSuspended
-* OfferCreated
-* OfferUpdated
-* OfferActivated
-* OfferPaused
-* PriceChanged
-* PromotionActivated
-* PromotionExpired
-* CouponCreated
-
-Use the repository's established event infrastructure.
-
-Events must contain:
-
-* event ID
-* event type
-* version
-* aggregate ID
-* producer
-* occurredAt
-* correlation ID
-* causation ID where available
-* payload
-
----
-
-# 60. OUTBOX
-
-For domain mutations that produce durable events, use the transactional outbox where the repository's event architecture supports it.
-
-The database transaction should atomically persist:
-
-* domain change
-* outbox event
-
-Do not publish an event first and then hope the database transaction succeeds.
-
----
-
-# 61. SEARCH INTEGRATION
-
-If search infrastructure already exists, integrate catalog changes into it.
-
-If it does not yet exist, establish the correct event contract needed for the later search implementation without creating a fake search system.
-
-Catalog changes that affect public search should eventually produce sufficient events for:
-
-* indexing
-* updating
-* removal
-
-Search must remain a projection, not the source of truth.
-
----
-
-# 62. CACHE INTEGRATION
-
-If Redis caching is implemented for catalog resources, use explicit namespaces.
-
-Examples conceptually:
-
-* product
-* category
-* brand
-* seller
-* offer
-
-Every cache entry must have:
-
-* purpose
-* TTL
-* invalidation event
-* stale behavior
-
-Never cache seller-private information under shared public keys.
-
----
-
-# 63. CACHE INVALIDATION
-
-Invalidate appropriate cached data when:
-
-* product changes
-* category changes
-* brand changes
-* seller status changes
-* offer changes
-* price changes
-* promotion state changes
-
-Do not rely on TTL alone for critical freshness requirements.
-
----
-
-# 64. PUBLIC CATALOG CONSISTENCY
-
-Public product retrieval must correctly account for:
-
-* product status
-* category status
-* brand status
-* seller status
-* offer status
-
-A public product must not accidentally expose suspended or invalid commercial offers.
-
----
-
-# 65. PRICE EXPOSURE
-
-Public price responses must clearly distinguish:
-
-* current authoritative price
-* compare-at/reference price
-* currency
-* seller offer
-
-Do not imply inventory availability unless inventory is actually integrated and authoritative.
-
-Do not expose stale cached prices as guaranteed checkout prices.
-
----
-
-# 66. MEDIA SECURITY
-
-When attaching media:
-
-* validate ownership
-* validate media status
-* validate allowed media type
-* prevent unauthorized attachment of another user's media
-* respect moderation status
-* respect visibility
-
-Do not trust a client-provided media ID without verifying ownership/permission.
-
----
-
-# 67. INPUT SECURITY
-
-Protect catalog APIs against:
-
-* XSS
-* injection
-* oversized payloads
-* malicious strings
-* invalid identifiers
-* dangerous URLs
-* unexpected JSON structures
-* abuse through extremely large attribute collections
-
-Set reasonable limits.
-
----
-
-# 68. RATE LIMITING
-
-Apply appropriate rate limits to:
-
-* seller product creation
-* product updates
-* offer creation
-* price updates
-* promotion creation
-* coupon validation
-* seller management
-* public catalog listing/search-adjacent APIs
-
-Do not make public product retrieval unusably restrictive.
-
----
-
-# 69. AUDIT LOGGING
-
-Audit sensitive operations.
-
-At minimum:
-
-* seller status changes
-* seller membership changes
-* product moderation
-* product publication
-* offer activation/suspension
-* price changes
-* promotion activation
-* coupon changes
-* administrative catalog changes
-
-Do not log secrets or unnecessary personal data.
-
----
-
-# 70. OBSERVABILITY
-
-Instrument:
-
-* catalog API latency
-* seller API latency
-* offer mutation failures
-* price update failures
-* promotion failures
-* database query latency
-* Redis failures
-* event publication failures
-* outbox backlog
-
-Use structured logs and request/correlation IDs.
-
----
-
-# 71. TESTING — UNIT
-
-Add unit tests for:
-
-* product lifecycle
-* category lifecycle
-* category cycle prevention
-* seller lifecycle
-* seller authorization
-* offer lifecycle
-* price validation
-* promotion eligibility rules
-* coupon validation
-* DTO validation
-* slug normalization
-
-Test edge cases.
-
----
-
-# 72. TESTING — DATABASE
-
-Add integration tests for:
-
-* uniqueness
-* foreign keys
-* seller ownership
-* offer uniqueness
-* category relationships
-* product relationships
-* promotion ownership
-* coupon uniqueness
-* transaction rollback
-* concurrent constraint behavior
-
----
-
-# 73. TESTING — API
-
-Test:
-
-* public product retrieval
-* authorized product management
-* seller offer management
-* cross-seller access attempts
-* category management
-* brand management
-* pricing
-* promotions
-* coupons
-* validation errors
-* authentication failures
-* authorization failures
-* pagination
-
----
-
-# 74. SECURITY TESTING
-
-Explicitly test:
-
-### IDOR
-
-Seller A cannot access seller B's private offer.
-
-### Privilege escalation
-
-Seller operator cannot perform owner-only operations.
-
-### Catalog abuse
-
-Unauthorized users cannot publish/suspend products.
-
-### Price manipulation
-
-Unauthorized users cannot modify prices.
-
-### Coupon abuse
-
-Unauthorized users cannot modify seller/platform coupons.
-
-### Media ownership
-
-A seller cannot attach another user's private media.
-
----
-
-# 75. PERFORMANCE
-
-Optimize common catalog queries.
-
-Ensure appropriate indexes exist for:
-
-* slug
-* status
-* category
-* brand
-* seller
-* offer
-* price
-* timestamps
-
-Avoid:
-
-* N+1 relationships
-* unbounded queries
-* unnecessary joins
-* repeated recursive category queries
-
-Use Prisma query selection deliberately.
-
----
-
-# 76. API DOCUMENTATION
-
-Update OpenAPI documentation for all implemented endpoints.
-
-Document:
-
-* authentication
-* authorization
-* request DTOs
-* response DTOs
-* pagination
-* error codes
-* status codes
-
-Documentation must match actual behavior.
-
----
-
-# 77. BACKWARD COMPATIBILITY
-
-If the repository already contains product/seller/pricing APIs:
-
-* preserve compatible behavior
-* avoid breaking clients
-* migrate incrementally
-* document incompatible changes
-* maintain API versioning where required
-
-Do not duplicate endpoints merely because naming differs.
-
----
-
-# 78. MIGRATIONS
-
-Create safe Prisma migrations for all required database changes.
-
-Follow:
-
-* expand/contract principles
-* non-destructive migration
-* appropriate indexes
-* safe uniqueness migration
-* production deployment compatibility
-
-Do not delete existing production data.
-
----
-
-# 79. SEED DATA
-
-If the repository already uses development seed data, update it carefully.
-
-Development seed data may include:
-
-* categories
-* brands
-* example products
-* sellers
-* offers
-
-Never seed fake credentials or production secrets.
-
-Clearly distinguish development seed data from production data.
-
----
-
-# 80. FINAL VALIDATION
-
-Run the actual repository validation commands.
-
-At minimum where applicable:
-
-* Prisma validation
-* migration validation
-* TypeScript type checking
-* linting
-* unit tests
-* integration tests
-* API tests
-* production build
-
-Fix real errors.
-
-Do not suppress failures merely to obtain a successful build.
-
----
-
-# 81. IMPLEMENTATION BOUNDARY
-
-Do not fully implement the following domains in this volume unless they already exist and require integration:
-
-* inventory engine
-* cart
-* checkout
-* order processing
-* Stripe payment processing
-* fulfillment
-* returns
-* reviews
-* notifications
-* analytics
-
-This volume must establish the contracts those domains will consume.
-
----
-
-# 82. FINAL REPOSITORY REVIEW
-
-Before finishing, verify:
-
-### Catalog
-
-* Product works
-* Variant works
-* SKU works
-* Category works
-* Brand works
-* Media associations are secure
-
-### Seller
-
-* Seller lifecycle works
-* Seller users work
-* Seller roles work
-* seller isolation works
-
-### Offers
-
-* Offer lifecycle works
-* Offer ownership works
-* uniqueness works
-
-### Pricing
-
-* exact money representation
-* price updates work
-* history is preserved
-
-### Promotions
-
-* lifecycle works
-* ownership works
-* eligibility rules are deterministic
-
-### Coupons
-
-* uniqueness works
-* ownership works
-* validation is secure
-* redemption foundation exists
-
-### Infrastructure
-
-* events work where implemented
-* outbox works where required
-* caching is safe
-* logging is safe
-* authorization is enforced
-
----
-
-# 83. FINAL IMPLEMENTATION REPORT
-
-At the end report factually:
-
-1. repository state discovered
-2. existing catalog/seller/pricing functionality reused
-3. files created
-4. files modified
-5. database models added/changed
-6. migrations added
-7. API endpoints implemented
-8. authorization rules implemented
-9. event contracts implemented
-10. cache behavior implemented
-11. tests added
-12. validation commands executed
-13. validation results
-14. unresolved issues
-15. integration requirements for later backend volumes
-
-Never claim something was implemented unless it exists in the repository.
-
-Never claim a test passes unless it was actually executed.
-
-Never claim a migration is safe without validating it.
-
----
-
-# 84. ENGINEERING STANDARD
-
-The resulting implementation must be:
-
-* production-grade
-* secure
-* transactional where required
-* concurrency-safe
-* observable
-* testable
-* maintainable
-* backwards-compatible where practical
-* scalable
-* consistent with the existing repository
-
-The implementation must establish a reliable foundation for:
-
-**inventory → cart → checkout → payments → orders → fulfillment → reviews → search → notifications → administration → analytics**
-
-without creating competing domain models.
-
----
-
-# 85. FINAL INSTRUCTION
-
-Inspect the actual repository first.
-
-Then implement this entire backend volume.
-
-Make real repository changes.
-
-Reuse compatible existing work.
-
-Create complete implementations.
-
-Run validation.
-
-Fix errors.
-
-Do not stop at a design explanation.
-
-Do not generate pseudo-code.
-
-Do not create fake functionality.
-
-Finish with a factual implementation report based only on the repository state actually inspected and modifie
-
-You are operating in Senior Engineering Team Mode.
-
-Build the production-ready backend for identity, customer accounts, authentication, profiles, addresses, seller onboarding, seller accounts, seller staff, stores, authorization, and access control for an enterprise-scale global ecommerce marketplace comparable in architectural scope to Amazon Marketplace.
-
-The platform is an original implementation.
-
-Do not copy proprietary source code, internal architecture, branding, confidential implementation details, or proprietary designs from Amazon or any other company.
-
-This prompt is completely independent and may be executed in a separate conversation.
-
-The backend must follow the established ecommerce architecture, database ownership model, API conventions, security model, event architecture, and payment architecture.
-
-Do not redesign the architecture.
-
-Do not generate frontend code.
-
-Do not generate mobile code.
-
-Do not generate Kubernetes manifests.
-
-Do not generate Terraform.
-
-Do not generate infrastructure implementation code.
-
-Do not generate CI/CD workflows.
-
-────────────────────────────────────────
-
-MISSION
-
-Implement the production-ready backend domains for:
-
-• Identity
-• Users
-• Customer accounts
-• Authentication
-• Authorization
-• Profiles
-• Addresses
-• Sessions
-• Devices
-• Seller accounts
-• Seller onboarding
-• Seller verification
-• Seller staff
-• Stores
-• Seller permissions
-• Account security
-• Privacy
-• Audit logging related to identity and seller administration
-
-The implementation must support:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Multiple staff members per seller
-• Multiple addresses per customer
-• Multiple sessions and devices
-• Global deployment
-• High availability
-• Horizontal scaling
-• Strong security
-• Seller isolation
-
-────────────────────────────────────────
-
-TECHNOLOGY STACK
-
-Backend:
-
-• Node.js
-• NestJS
-• TypeScript
-
-Database:
-
-• PostgreSQL
-• Prisma ORM
-
-Cache:
-
-• Redis
-
-Events:
-
-• Kafka or Redpanda
-
-Background Jobs:
-
-• BullMQ
-
-Authentication:
-
-• JWT and/or secure session architecture according to the established design
-
-Testing:
-
-• Jest
-• Supertest
-• Integration testing tools
-
-────────────────────────────────────────
-
-IMPLEMENTATION RULES
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO comments.
-
-Never omit implementations.
-
-Never say:
-
-- "implement similarly"
-- "left as an exercise"
-- "for brevity"
-- "remaining code omitted"
-
-Every generated file must be complete.
-
-Every generated file must compile.
-
-Never regenerate unchanged files.
-
-Only modify existing files when required.
-
-Use strict TypeScript.
-
-Use dependency injection.
-
-Keep controllers thin.
-
-Keep business rules outside controllers.
-
-Use repositories for persistence.
-
-Use DTOs for external contracts.
-
-Use centralized validation.
-
-Use centralized errors.
-
-Use structured logging.
-
-Use the existing observability infrastructure.
-
-────────────────────────────────────────
-
-DOMAIN OWNERSHIP
-
-Keep clear boundaries between:
-
-Identity
-
-Customers
-
-Accounts
-
-Authentication
-
-Authorization
-
-Profiles
-
-Addresses
-
-Sessions
-
-Devices
-
-Seller Management
-
-Seller Verification
-
-Seller Staff
-
-Stores
-
-Privacy
-
-Security
-
-Audit
-
-Do not combine all identity and seller logic into one uncontrolled module.
-
-────────────────────────────────────────
-
-CUSTOMER IDENTITY
-
-Implement:
-
-• User creation
-• User retrieval
-• User status
-• Identity lifecycle
-• Account association
-• Account activation
-• Account suspension
-• Account deactivation
-• Account deletion workflow
-
-Support explicit states such as:
-
-• Pending
-• Active
-• Suspended
-• Disabled
-• Deactivated
-• Deleted
-
-Use stable public identifiers.
-
-Do not expose internal database identifiers unnecessarily.
-
-────────────────────────────────────────
-
-CUSTOMER ACCOUNT
-
-Implement:
-
-• Account creation
-• Account settings
-• Account status
-• Account security settings
-• Account deletion request
-• Account deletion processing
-• Account recovery
-• Account suspension
-• Account reactivation where permitted
-
-Separate:
-
-• Identity
-• Account
-• Profile
-• Address
-• Session
-• Device
-
-Account-level operations must be auditable.
-
-────────────────────────────────────────
-
-PROFILE
-
-Implement:
-
-• Profile creation
-• Profile retrieval
-• Profile updates
-• Display name
-• Avatar reference
-• Contact information
-• Preferences
-
-Do not store large binary images inside PostgreSQL.
-
-Use media/object-storage references.
-
-Return only information appropriate to the requesting user.
-
-────────────────────────────────────────
-
-ADDRESSES
-
-Implement customer address management.
-
-Support:
-
-• Create address
-• Update address
-• Delete address
-• List addresses
-• Default billing address
-• Default shipping address
-
-Address fields must support internationalization where appropriate:
-
-• Full name
-• Organization
-• Address lines
-• City
-• State/province
-• Postal code
-• Country
-• Phone
-• Delivery instructions where appropriate
-
-Validate country and region combinations.
-
-Do not allow deleted addresses to be silently used by future orders.
-
-Historical orders must preserve the appropriate address snapshot.
-
-────────────────────────────────────────
-
-AUTHENTICATION
-
-Implement:
-
-• Registration
-• Login
-• Logout
-• Refresh
-• Session creation
-• Session revocation
-• Email verification
-• Password reset
-• Password change
-
-Prepare architecture for:
-
-• MFA
-• OAuth
-• Passkeys
-• Social authentication
-
-Do not implement unsupported providers as fake placeholders.
-
-────────────────────────────────────────
-
-PASSWORD SECURITY
-
-Implement:
-
-• Industry-standard password hashing
-• Password verification
-• Password change
-• Password reset
-• Reset-token expiration
-• Single-use reset tokens
-• Login-attempt protection
-• Password reuse protection where justified
-
-Never:
-
-• Store plaintext passwords
-• Log passwords
-• Return password hashes
-• Include passwords in events
-
-────────────────────────────────────────
-
-EMAIL VERIFICATION
-
-Implement:
-
-• Verification token generation
-• Verification token expiration
-• Single-use verification
-• Resend limits
-• Verification state
-• Replay prevention
-
-Integrate with the established notification infrastructure.
-
-────────────────────────────────────────
-
-SESSION MANAGEMENT
-
-Implement:
-
-• Session creation
-• Session listing
-• Session retrieval
-• Session refresh
-• Session expiration
-• Session revocation
-• Logout
-• Logout-all-sessions
-
-Track appropriate metadata:
-
-• Device
-• Platform
-• Application version
-• IP metadata where justified
-• Created timestamp
-• Last activity
-• Expiration
-• Revocation state
-
-Do not store sensitive secrets unnecessarily.
-
-────────────────────────────────────────
-
-DEVICE MANAGEMENT
-
-Implement:
-
-• Device registration
-• Device identification
-• Platform
-• Application version
-• Device metadata
-• Push token association
-• Session association
-• Device revocation
-• Remote logout
-
-Do not collect unnecessary device information.
-
-────────────────────────────────────────
-
-CUSTOMER AUTHORIZATION
-
-Implement RBAC and permission infrastructure.
-
-Roles should support:
-
-• Customer
-• Support Agent
-• Moderator
-• Administrator
-• Super Administrator
-• System Service
-
-Permissions must cover:
-
-• Account
-• Profile
-• Addresses
-• Orders
-• Reviews
-• Messaging
-• Returns
-• Administrative operations
-
-Implement:
-
-• Guards
-• Permission decorators
-• Policy checks
-• Resource ownership
-
-────────────────────────────────────────
-
-SELLER DOMAIN
-
-Implement the seller account foundation.
-
-Support:
-
-• Seller registration
-• Seller account
-• Legal/business information
-• Store association
-• Seller status
-• Seller verification
-• Seller staff
-• Seller permissions
-
-Seller states:
-
-• Pending
-• Verification Required
-• Under Review
-• Approved
-• Suspended
-• Rejected
-• Terminated
-
-Define valid transitions.
-
-────────────────────────────────────────
-
-SELLER ONBOARDING
-
-Implement the onboarding workflow.
-
-Support:
-
-• Seller registration
-• Business information
-• Identity information where required
-• Legal entity information
-• Tax information
-• Payout setup boundary
-• Store creation
-• Document references
-• Verification submission
-• Review state
-
-Do not store unnecessary sensitive legal information.
-
-For payment/payout data, use provider references where possible.
-
-────────────────────────────────────────
-
-SELLER VERIFICATION
-
-Implement verification workflows.
-
-Support:
-
-• Verification submission
-• Verification status
-• Review
-• Approval
-• Rejection
-• Resubmission
-• Suspension
-
-Define:
-
-• Required documents
-• Verification requirements
-• State transitions
-• Audit events
-• Administrative permissions
-
-Keep third-party verification providers behind an abstraction.
-
-────────────────────────────────────────
-
-STORE DOMAIN
-
-Implement:
-
-• Store creation
-• Store profile
-• Store name
-• Store description
-• Store logo reference
-• Store status
-• Store settings
-• Store visibility
-
-Store states may include:
-
-• Draft
-• Pending Approval
-• Active
-• Suspended
-• Closed
-
-A seller may have multiple stores only if the established architecture permits it.
-
-────────────────────────────────────────
-
-SELLER STAFF
-
-Implement:
-
-• Staff invitation
-• Staff acceptance
-• Staff removal
-• Staff status
-• Staff roles
-• Staff permissions
-• Staff suspension
-
-Define seller-scoped permissions.
-
-Staff must never be able to access:
-
-• Another seller's products
-• Another seller's customers
-• Another seller's orders
-• Another seller's inventory
-• Another seller's financial information
-
-unless explicitly authorized by platform administration.
-
-────────────────────────────────────────
-
-SELLER PERMISSIONS
-
-Implement role/permission categories for:
-
-• Store management
-• Catalog
-• Products
-• Inventory
-• Orders
-• Fulfillment
-• Shipping
-• Reviews
-• Messaging
-• Promotions
-• Coupons
-• Analytics
-• Financials
-• Payouts
-
-Create explicit seller-scoped authorization policies.
-
-Never trust seller-provided seller IDs.
-
-Always derive seller scope from authenticated identity and authorized resources.
-
-────────────────────────────────────────
-
-SELLER ISOLATION
-
-Implement strong tenant-style seller isolation.
-
-Every seller-owned resource must enforce ownership.
-
-This applies to:
-
-• Stores
-• Products
-• Seller offers
-• Inventory
-• Orders
-• Fulfillment
-• Reviews
-• Messages
-• Promotions
-• Coupons
-• Analytics
-• Financial data
+* Cart creation.
+* Cart retrieval.
+* Cart item addition.
+* Quantity changes.
+* Item removal.
+* Cart clearing.
+* Cart ownership.
+* Guest/session cart behavior if supported by the repository architecture.
+* Cart merging after authentication where applicable.
+* Product/variant validation.
+* Inventory availability checks.
+* Seller ownership validation.
+* Price refresh behavior.
+* Cart expiration or lifecycle handling where required.
+
+Cart operations must be safe under concurrent requests.
 
 Prevent:
 
-• Horizontal privilege escalation
-• Cross-seller data access
-• IDOR vulnerabilities
-• Unauthorized seller impersonation
+* Negative quantities.
+* Zero-value quantities.
+* Invalid variants.
+* Unauthorized cart access.
+* Adding unavailable products without proper state handling.
+* Manipulation of authoritative prices.
 
-────────────────────────────────────────
+---
 
-PRIVACY
+# CART CONCURRENCY
 
-Implement customer privacy controls appropriate to the platform.
+Explicitly protect against concurrent cart modifications.
+
+Handle situations such as:
+
+* Two quantity updates arriving simultaneously.
+* The same item being added repeatedly.
+* Item removal racing with quantity updates.
+* Cart merge racing with cart updates.
+* Product deactivation while a cart contains the item.
+* Inventory becoming unavailable after cart creation.
+
+Do not assume a cart guarantees inventory.
+
+Cart availability is informational until checkout establishes a valid reservation.
+
+---
+
+# PROMOTIONS
+
+Implement the promotion foundation.
+
+Support promotion rules suitable for:
+
+* Percentage discounts.
+* Fixed monetary discounts.
+* Product-level discounts.
+* Variant-level discounts.
+* Category-level discounts.
+* Seller-specific promotions.
+* Cart-level promotions.
+* Minimum subtotal requirements.
+* Start/end timestamps.
+* Activation state.
+* Usage restrictions.
+* Customer eligibility.
+* Seller eligibility where appropriate.
+
+Promotion calculations must be deterministic.
+
+Prevent clients from directly submitting arbitrary discounts.
+
+---
+
+# COUPONS
+
+Implement secure coupon functionality.
 
 Support:
 
-• Profile visibility
-• Contact information visibility
-• Address privacy
-• Notification preferences
-• Communication preferences
+* Coupon codes.
+* Promotion association.
+* Activation/deactivation.
+* Expiration.
+* Usage limits.
+* Per-customer usage limits.
+* Eligibility checks.
+* Seller-specific restrictions where applicable.
+* Minimum order requirements.
+* Idempotent redemption behavior.
 
-Seller users must only receive customer information necessary to fulfill legitimate business operations.
+Coupon codes should be handled securely and consistently.
 
-────────────────────────────────────────
+Prevent:
 
-SECURITY EVENTS
+* Coupon brute force abuse.
+* Unauthorized coupon creation.
+* Coupon reuse beyond configured limits.
+* Race conditions allowing usage limits to be exceeded.
 
-Implement events such as:
+Coupon redemption must be concurrency-safe.
 
-• UserRegistered
-• UserVerified
-• UserLoggedIn
-• LoginFailed
-• SessionCreated
-• SessionRevoked
-• DeviceRegistered
-• DeviceRevoked
-• PasswordChanged
-• PasswordResetRequested
-• PasswordResetCompleted
-• AccountSuspended
-• SellerRegistered
-• SellerVerificationSubmitted
-• SellerApproved
-• SellerRejected
-• SellerSuspended
-• SellerStaffInvited
-• SellerStaffRemoved
-• RoleAssigned
-• RoleRevoked
+---
 
-Events must contain only required information.
+# PROMOTION CALCULATION ENGINE
 
-Never include passwords, access tokens, refresh tokens, payment secrets, or sensitive verification documents.
+Create a deterministic promotion calculation mechanism.
 
-────────────────────────────────────────
+The calculation must clearly establish:
 
-AUDIT LOGGING
+1. Eligible products.
+2. Eligible variants.
+3. Eligible sellers.
+4. Eligible customers.
+5. Promotion precedence.
+6. Discount amount.
+7. Discount allocation.
+8. Maximum discount limits.
+9. Coupon effects.
+10. Final totals.
 
-Audit sensitive identity and seller actions.
+Do not allow ambiguous promotion ordering.
 
-Track:
+Do not apply discounts twice because of duplicate requests.
 
-• Actor
-• Action
-• Resource
-• Resource ID
-• Timestamp
-• Request ID
-• Correlation ID
-• Result
-• Safe metadata
+The calculation result must be reproducible for the same authoritative inputs.
 
-Audit:
+---
 
-• Login
-• Logout
-• Password changes
-• Account suspension
-• Seller approval
-• Seller rejection
-• Seller suspension
-• Staff role changes
-• Permission changes
-• Administrative actions
+# CHECKOUT
 
-────────────────────────────────────────
+Implement checkout preparation and validation.
 
-RATE LIMITING
+Checkout must validate authoritative state before creating an order.
 
-Apply rate limits to:
+Validate:
 
-• Registration
-• Login
-• Password reset
-• Verification
-• Session refresh
-• Device registration
-• Seller registration
-• Seller verification submission
-• Staff invitations
+* Customer identity.
+* Cart ownership.
+* Cart contents.
+* Product status.
+* Variant status.
+* Seller status.
+* Current pricing.
+* Promotion eligibility.
+* Coupon eligibility.
+* Inventory availability.
+* Shipping information.
+* Billing information where required.
+* Currency consistency.
+* Order limits.
+* Required customer information.
 
-Support limits by:
+Do not trust cart totals supplied by clients.
 
-• IP
-• Account
-• Device
-• Identifier
-• Operation
+Recalculate authoritative totals server-side.
 
-Protect against automated abuse.
+---
 
-────────────────────────────────────────
+# MULTI-SELLER CHECKOUT
 
-ACCOUNT RECOVERY
+The marketplace must support one customer purchasing items from multiple sellers in a single checkout flow.
 
-Implement:
+The architecture must distinguish:
 
-• Password reset
-• Credential recovery
-• Session invalidation after recovery
-• Device/session review
-• Security notification
+* Customer order.
+* Seller order grouping.
+* Order item.
+* Shipment.
+* Payment.
+* Seller settlement.
 
-Recovery must invalidate compromised authentication state where appropriate.
+A single customer checkout may contain products belonging to multiple sellers.
 
-────────────────────────────────────────
+Persist enough structure to allow each seller to independently manage:
 
-DATABASE
+* Fulfillment.
+* Shipment.
+* Cancellation where permitted.
+* Returns.
+* Seller financial settlement.
 
-Implement Prisma models and migrations for this volume.
+Do not collapse all seller ownership into a single ambiguous order record.
 
-Include appropriate models such as:
+---
 
-• User
-• Account
-• Profile
-• Address
-• Session
-• Device
-• VerificationToken
-• PasswordResetToken
-• Role
-• Permission
-• RolePermission
-• UserRole
-• Seller
-• SellerVerification
-• SellerDocumentReference
-• SellerStaff
-• SellerStaffRole
-• Store
-• StoreSettings
-• AuditLog
-• SecurityEvent where appropriate
+# ORDER CREATION
+
+Order creation must be transactional and idempotent.
+
+The order workflow must:
+
+1. Validate the cart.
+2. Validate product and seller state.
+3. Recalculate prices.
+4. Apply promotions.
+5. Validate inventory.
+6. Establish inventory reservations.
+7. Create the order.
+8. Create order items.
+9. Create seller order groupings where required.
+10. Persist price and commercial snapshots.
+11. Establish payment intent state.
+12. Record the appropriate event/outbox records.
+13. Release or transition temporary resources appropriately when creation fails.
+
+Do not create partially valid orders.
+
+Do not reserve inventory indefinitely when order creation fails.
+
+Do not charge customers using unverified client-provided totals.
+
+---
+
+# INVENTORY INTEGRATION
+
+Integrate checkout with inventory reservations.
+
+Inventory reservation must be concurrency-safe.
+
+The implementation must handle:
+
+* Concurrent checkouts.
+* Insufficient inventory.
+* Reservation expiration.
+* Duplicate checkout requests.
+* Checkout retries.
+* Payment failures.
+* Order cancellation.
+* Reservation release.
+
+Do not permanently reduce available inventory merely because an item was added to a cart.
+
+Use explicit inventory state transitions.
+
+---
+
+# ORDER STATE MACHINE
+
+Implement explicit order lifecycle rules.
+
+At minimum, support a model capable of representing states such as:
+
+* Pending.
+* Awaiting payment.
+* Paid.
+* Processing.
+* Partially fulfilled.
+* Fulfilled.
+* Delivered.
+* Cancelled.
+* Partially cancelled.
+* Refund pending.
+* Refunded.
+* Completed.
+
+Use the exact repository/domain model when one already exists, but enforce explicit valid transitions.
+
+Prevent arbitrary state mutation through generic update endpoints.
+
+State transitions must be validated server-side.
+
+---
+
+# ORDER ITEM STATE
+
+Order items may have lifecycle states independent from the overall customer order.
+
+Support the architecture necessary for:
+
+* Pending.
+* Confirmed.
+* Processing.
+* Shipped.
+* Delivered.
+* Cancelled.
+* Returned.
+* Refunded.
+
+Seller fulfillment boundaries must be respected.
+
+A seller must not be able to modify another seller's order items.
+
+---
+
+# PAYMENT ARCHITECTURE
+
+Implement a provider-agnostic payment foundation.
+
+Core business logic must not depend directly on Stripe-specific objects everywhere.
+
+Define a payment abstraction capable of supporting:
+
+* Payment intent creation.
+* Payment confirmation.
+* Payment status retrieval.
+* Payment cancellation.
+* Refund creation.
+* Refund status retrieval.
+* Provider webhook processing.
+* Provider-specific identifiers.
+* Provider failure codes.
+* Idempotency keys.
+
+The payment domain must own business payment state.
+
+The payment provider must not become the source of truth for marketplace order state.
+
+---
+
+# PAYMENT STATE MACHINE
+
+Implement explicit payment states.
+
+Support the repository's appropriate equivalent of:
+
+* Created.
+* Pending.
+* Requires action.
+* Authorized.
+* Succeeded.
+* Failed.
+* Cancelled.
+* Partially refunded.
+* Refunded.
+
+Validate every transition.
+
+Prevent impossible transitions.
+
+Never allow an API client to directly mark an order as paid.
+
+Payment success must come from a trusted payment workflow.
+
+---
+
+# PAYMENT INTENTS
+
+Implement payment-intent handling appropriate to the marketplace checkout architecture.
+
+A payment intent must contain sufficient information to correlate:
+
+* Customer.
+* Order.
+* Currency.
+* Amount.
+* Provider.
+* Provider payment ID.
+* Idempotency identity.
+* Current payment state.
+
+The backend must calculate and persist the authoritative amount before initiating payment.
+
+Do not trust a client-provided payment amount.
+
+---
+
+# PAYMENT IDEMPOTENCY
+
+Every payment operation that can create financial side effects must support idempotency.
+
+Protect against:
+
+* Client retries.
+* Network retries.
+* Duplicate webhook deliveries.
+* Worker retries.
+* Application restarts.
+* Provider retry behavior.
+
+Repeated processing of the same logical payment operation must not create duplicate financial effects.
+
+Persist durable idempotency information where required.
+
+Do not rely exclusively on in-memory locks.
+
+---
+
+# PAYMENT WEBHOOKS
+
+Implement secure payment webhook processing.
+
+Validate provider signatures using secure configuration.
+
+Reject:
+
+* Invalid signatures.
+* Malformed payloads.
+* Unsupported event types.
+* Unauthorized requests.
+
+Webhook processing must be idempotent.
+
+Persist provider event identifiers where required to prevent duplicate processing.
+
+Do not assume webhook delivery occurs exactly once.
+
+Do not perform expensive processing synchronously inside the webhook endpoint when asynchronous processing is more appropriate.
+
+Acknowledge valid events reliably while ensuring durable processing state.
+
+---
+
+# REFUNDS
+
+Implement refund foundations.
+
+Support:
+
+* Full refunds.
+* Partial refunds where the business rules permit.
+* Refund reason.
+* Refund amount.
+* Currency.
+* Payment association.
+* Order association.
+* Provider refund ID.
+* Refund state.
+* Idempotency.
+
+Refunds must never exceed the refundable amount.
+
+Refund calculations must account for:
+
+* Previous refunds.
+* Partial refunds.
+* Order/item boundaries.
+* Payment state.
+
+Do not allow clients to arbitrarily choose refund amounts without server-side authorization and validation.
+
+---
+
+# FINANCIAL INTEGRITY
+
+All commerce calculations must be deterministic and auditable.
+
+Maintain clear relationships among:
+
+* Subtotal.
+* Discounts.
+* Shipping.
+* Taxes where applicable.
+* Fees where applicable.
+* Total.
+* Payment amount.
+* Refund amount.
+
+Ensure:
+
+`subtotal - discounts + applicable charges = authoritative total`
+
+subject to the marketplace's explicit tax, shipping, and fee model.
+
+Never silently round money.
+
+Define currency and rounding behavior explicitly.
+
+---
+
+# TRANSACTIONAL OUTBOX
+
+Use a transactional outbox mechanism for business events where required to guarantee consistency between database state changes and asynchronous event publication.
+
+For example, order creation should not commit the order while silently losing its required event.
+
+The outbox record must be persisted atomically with the relevant database transaction.
+
+A worker or publisher must safely process outbox records.
+
+Processing must tolerate:
+
+* Duplicate delivery.
+* Worker crashes.
+* Retries.
+* Temporary broker/queue failures.
+
+---
+
+# COMMERCE EVENTS
+
+Implement strongly typed events for relevant operations, such as:
+
+* CartUpdated.
+* InventoryReserved.
+* InventoryReservationReleased.
+* CheckoutStarted.
+* OrderCreated.
+* OrderPaymentPending.
+* OrderPaid.
+* OrderPaymentFailed.
+* OrderCancelled.
+* RefundCreated.
+* RefundSucceeded.
+* RefundFailed.
+* PromotionRedeemed.
+
+Use versioned event contracts.
+
+Do not place sensitive payment credentials or unnecessary personal information in event payloads.
+
+---
+
+# BACKGROUND JOBS
+
+Implement background jobs where asynchronous processing is appropriate.
+
+Potential workloads include:
+
+* Expiring inventory reservations.
+* Publishing outbox events.
+* Processing payment-related asynchronous workflows.
+* Releasing abandoned checkout reservations.
+* Coupon usage reconciliation.
+* Promotion usage processing.
+* Commerce notifications.
+* Cleanup.
+
+Every job must define:
+
+* Payload.
+* Purpose.
+* Retry strategy.
+* Backoff.
+* Timeout.
+* Concurrency.
+* Idempotency.
+* Failure behavior.
+* Observability.
+
+---
+
+# NOTIFICATIONS FOUNDATION
+
+Integrate commerce events with the notification architecture without building frontend notification UI.
+
+Support the backend foundation required for notifications such as:
+
+* Order created.
+* Payment succeeded.
+* Payment failed.
+* Order cancelled.
+* Refund initiated.
+* Refund completed.
+
+Do not block critical transactional operations on non-critical notification delivery.
+
+Notification delivery must be asynchronous where appropriate.
+
+---
+
+# CUSTOMER ORDER ACCESS
+
+Customers may only retrieve and mutate orders they own.
+
+Implement authorization checks for:
+
+* Order retrieval.
+* Order item retrieval.
+* Cancellation where allowed.
+* Payment information.
+* Refund information.
+* Shipment information.
+
+Do not expose another customer's order data through predictable IDs.
+
+---
+
+# SELLER ORDER ACCESS
+
+Seller users may only access order data belonging to their authorized seller organization.
+
+Seller APIs must prevent:
+
+* Cross-seller order access.
+* Cross-seller item modification.
+* Unauthorized cancellation.
+* Unauthorized pricing manipulation.
+* Unauthorized refund manipulation.
+* Unauthorized customer-data access.
+
+Expose only customer information required for legitimate fulfillment operations.
+
+Minimize unnecessary personal-data exposure to sellers.
+
+---
+
+# CUSTOMER DATA PROTECTION
+
+Protect personal data contained in:
+
+* Orders.
+* Addresses.
+* Payments.
+* Customer profiles.
+
+Apply data minimization.
+
+Do not expose:
+
+* Full payment credentials.
+* Provider secrets.
+* Internal fraud/security metadata.
+* Unnecessary customer information.
+
+Logs, events, audit records, and API responses must use appropriate redaction.
+
+---
+
+# API CONTRACTS
+
+Implement stable REST APIs for the functionality in this volume.
+
+Document:
+
+* Authentication.
+* Authorization.
+* Request bodies.
+* Response DTOs.
+* Validation.
+* Error responses.
+* Pagination.
+* Idempotency requirements.
+* Relevant headers.
+* Webhook behavior.
+
+Potential endpoint areas include:
+
+* `/cart`
+* `/cart/items`
+* `/checkout`
+* `/orders`
+* `/orders/:id`
+* `/payments`
+* `/payments/:id`
+* `/refunds`
+* `/promotions`
+* `/coupons`
+
+Use the repository's established routing conventions when they already exist.
+
+Do not create duplicate endpoints for an existing capability.
+
+---
+
+# IDEMPOTENCY API DESIGN
+
+Implement idempotency for operations capable of causing side effects.
+
+At minimum, consider:
+
+* Checkout creation.
+* Order creation.
+* Payment creation.
+* Refund creation.
+* Coupon redemption.
+* Inventory reservation.
+
+Idempotency keys must be scoped appropriately.
+
+The same key must not accidentally suppress unrelated operations.
+
+Persist enough information to safely replay or return the original operation result.
+
+---
+
+# RATE LIMITING
+
+Protect commerce endpoints against abuse.
+
+Apply appropriate controls to:
+
+* Coupon validation.
+* Coupon redemption.
+* Checkout.
+* Payment creation.
+* Refund requests.
+* Cart mutation.
+* Order operations.
+
+Do not allow rate limiting to become a substitute for authorization.
+
+---
+
+# SECURITY
+
+Perform a security review of every commerce workflow.
+
+Protect against:
+
+* Price manipulation.
+* Quantity manipulation.
+* Seller-ID manipulation.
+* Coupon abuse.
+* Promotion abuse.
+* Payment tampering.
+* Refund abuse.
+* Order-ID enumeration.
+* IDOR.
+* Replay attacks.
+* Webhook forgery.
+* Race conditions.
+* Double charging.
+* Double refunding.
+* Inventory overselling.
+* Privilege escalation.
+
+Never trust:
+
+* Client totals.
+* Client discounts.
+* Client seller identifiers.
+* Client inventory availability.
+* Client payment status.
+* Client order status.
+
+Recalculate and verify all authoritative business state server-side.
+
+---
+
+# OBSERVABILITY
+
+Instrument commerce operations with structured logs, metrics, and traces.
+
+Capture useful signals such as:
+
+* Cart mutation latency.
+* Checkout attempts.
+* Checkout failures.
+* Inventory reservation failures.
+* Order creation rate.
+* Order creation failures.
+* Payment intent failures.
+* Payment success rate.
+* Payment webhook processing latency.
+* Refund failures.
+* Queue retry counts.
+* Outbox processing latency.
+* Idempotency conflicts.
+* Promotion/coupon failures.
+
+Use correlation and trace identifiers across:
+
+* HTTP requests.
+* Database operations.
+* Redis.
+* Queue jobs.
+* Payment providers.
+* Domain events.
+
+Never log payment credentials or sensitive secrets.
+
+---
+
+# RELIABILITY
+
+Design for partial failure.
+
+Explicitly handle:
+
+* PostgreSQL failure.
+* Redis failure.
+* Payment provider timeout.
+* Payment provider outage.
+* Duplicate payment requests.
+* Duplicate webhook events.
+* Queue failure.
+* Worker crash.
+* Network timeout.
+* Application restart.
+* Reservation expiration.
+* Checkout retry.
 
 Use:
 
-• Primary keys
-• Foreign keys
-• Unique constraints
-• Composite indexes
-• Check constraints
-• Created timestamps
-• Updated timestamps
-• Soft deletion where justified
+* Timeouts.
+* Retries.
+* Exponential backoff.
+* Idempotency.
+* Durable state.
+* Reconciliation.
+* Dead-letter/recovery mechanisms.
 
-Do not store raw payment-card information.
+Never assume an external provider response is received exactly once.
+
+---
+
+# TESTING
+
+Implement comprehensive tests.
 
-Do not create full product/order/inventory schemas in this volume.
+## Unit Tests
 
-────────────────────────────────────────
+Cover:
 
-API
+* Pricing calculations.
+* Promotion rules.
+* Coupon rules.
+* Cart rules.
+* Checkout validation.
+* Order state transitions.
+* Payment state transitions.
+* Refund calculations.
+* Idempotency behavior.
+
+## Integration Tests
+
+Cover:
+
+* PostgreSQL transactions.
+* Cart persistence.
+* Checkout persistence.
+* Inventory reservations.
+* Order creation.
+* Payment persistence.
+* Refund persistence.
+* Outbox behavior.
+* Redis-backed functionality.
+* Queue processing.
 
-Implement production-ready REST APIs.
+## API Tests
 
-AUTHENTICATION
+Cover:
 
-• Register
-• Login
-• Logout
-• Refresh
-• Verify
-• Password reset
-• Password change
+* Customer access.
+* Seller access.
+* Unauthorized access.
+* Invalid checkout.
+* Invalid coupon.
+* Invalid promotion.
+* Payment creation.
+* Duplicate payment requests.
+* Refund authorization.
+* Pagination.
+* Error contracts.
 
-ACCOUNT
+## Webhook Tests
 
-• Get account
-• Update account
-• Delete account
-• Security settings
-
-PROFILE
-
-• Get profile
-• Update profile
-
-ADDRESSES
-
-• Create
-• List
-• Update
-• Delete
-• Set default billing
-• Set default shipping
+Cover:
 
-SESSIONS
+* Valid signature.
+* Invalid signature.
+* Duplicate event.
+* Unsupported event.
+* Provider failure.
+* Retry behavior.
 
-• List sessions
-• Revoke session
-• Revoke all sessions
-
-DEVICES
-
-• Register device
-• List devices
-• Update device
-• Revoke device
-
-SELLER
-
-• Register seller
-• Get seller
-• Update seller
-• Submit verification
-• Get verification status
+## Concurrency Tests
 
-STORE
+Explicitly test:
 
-• Create store
-• Get store
-• Update store
-• Store status
-
-SELLER STAFF
-
-• Invite
-• Accept invitation
-• List staff
-• Update staff
-• Remove staff
-
-ADMINISTRATION
-
-• Approve seller
-• Reject seller
-• Suspend seller
-• Manage roles
-• Manage permissions
-• View audit logs
-
-Every endpoint must include:
-
-• Authentication
-• Authorization
-• DTO validation
-• Rate limiting
-• OpenAPI documentation
-• Consistent errors
-• Idempotency where appropriate
-
-────────────────────────────────────────
-
-EVENTS
-
-Publish events using the established event infrastructure.
-
-Use transactional outbox where database transactions require event publication.
-
-Events include:
-
-• UserRegistered
-• UserVerified
-• UserLoggedIn
-• SessionCreated
-• SessionRevoked
-• DeviceRegistered
-• DeviceRevoked
-• PasswordChanged
-• AccountSuspended
-• SellerRegistered
-• SellerVerificationSubmitted
-• SellerApproved
-• SellerRejected
-• SellerSuspended
-• StoreCreated
-• StoreUpdated
-• SellerStaffInvited
-• SellerStaffAdded
-• SellerStaffRemoved
-• RoleAssigned
-• RoleRevoked
-• AddressCreated
-• AddressUpdated
-• AddressDeleted
-
-Consumers must be idempotent.
-
-────────────────────────────────────────
-
-BACKGROUND JOBS
-
-Implement appropriate jobs for:
-
-• Verification cleanup
-• Password-reset cleanup
-• Session cleanup
-• Device cleanup
-• Seller verification processing
-• Seller invitation expiration
-• Account deletion processing
-• Audit retention
-
-Every job must support:
-
-• Retry
-• Backoff
-• Timeout
-• Idempotency
-• Dead-letter handling
-• Monitoring
-
-────────────────────────────────────────
-
-OBSERVABILITY
-
-Instrument:
-
-• Registration
-• Login
-• Authentication failures
-• Session operations
-• Device operations
-• Seller onboarding
-• Seller verification
-• Staff invitations
-• Permission checks
-• Administrative operations
-
-Measure:
-
-• Authentication latency
-• Registration failures
-• Login failure rate
-• Rate-limit events
-• Seller verification latency
-• Authorization failures
-
-Never log:
-
-• Passwords
-• Tokens
-• Payment credentials
-• Sensitive verification documents
-
-────────────────────────────────────────
-
-TESTING
-
-UNIT TESTS
-
-Test:
-
-• Authentication services
-• Password handling
-• Session policies
-• Authorization
-• Seller isolation
-• Seller verification rules
-• Staff permissions
-• Address validation
-• Privacy rules
-
-INTEGRATION TESTS
-
-Test:
-
-• Registration
-• Login
-• Refresh
-• Logout
-• Password reset
-• Session revocation
-• Device registration
-• Address operations
-• Seller registration
-• Seller verification
-• Store creation
-• Staff management
-• Role management
-
-SECURITY TESTS
-
-Test:
-
-• Brute-force protection
-• Token replay
-• Session invalidation
-• Authorization bypass
-• Seller isolation
-• IDOR
-• Privilege escalation
-• User enumeration
-• Rate-limit bypass
+* Two customers purchasing the final inventory.
+* Duplicate checkout requests.
+* Duplicate payment requests.
+* Duplicate refund requests.
+* Concurrent coupon redemption.
+* Concurrent cart updates.
 
-API TESTS
+Prove that financial and inventory invariants remain correct.
 
-Test all endpoints generated in this volume.
+---
 
-────────────────────────────────────────
+# DATABASE VALIDATION
 
-DOCUMENTATION
+Validate all schema changes.
 
-Generate:
+Run:
 
-• Identity architecture
-• Authentication flows
-• Session lifecycle
-• Device lifecycle
-• Authorization model
-• Customer account model
-• Address model
-• Seller onboarding
-• Seller verification
-• Seller isolation
-• Seller staff roles
-• Permission model
-• Security events
-• Audit logging
-• API documentation
-• Database documentation
-• Testing documentation
+* Prisma validation.
+* Migration validation.
+* TypeScript compilation.
+* Linting.
+* Unit tests.
+* Integration tests.
+* API tests.
+* Concurrency tests.
 
-────────────────────────────────────────
+Verify that:
 
-PROJECT INDEX
+* Unique constraints work.
+* Foreign keys work.
+* Monetary precision is correct.
+* State transitions are enforced.
+* Idempotency constraints work.
+* Refund limits are enforced.
+* Coupon usage limits are concurrency-safe.
 
-Update the backend Project Index with:
+Do not modify historical migrations destructively.
 
-• Identity modules
-• Customer modules
-• Authentication modules
-• Profile modules
-• Address modules
-• Session modules
-• Device modules
-• Authorization modules
-• Seller modules
-• Store modules
-• Seller staff modules
-• Security modules
-• Audit modules
-• Database objects
-• Migrations
-• API endpoints
-• Events
-• Background jobs
-• Tests
-• Generated files
-• Remaining work
-• Dependencies
-• Current milestone
+---
 
-────────────────────────────────────────
+# DOCUMENTATION
 
-IMPLEMENTATION MILESTONES
+Update documentation for:
 
-BACKEND MILESTONE 1
+* Cart APIs.
+* Checkout APIs.
+* Order APIs.
+* Payment APIs.
+* Refund APIs.
+* Promotion APIs.
+* Coupon APIs.
+* Idempotency requirements.
+* Webhook contracts.
+* Commerce events.
+* Background jobs.
+* Database changes.
+* Environment variables.
 
-Customer identity, users, accounts, profiles, addresses, and database models.
-
-BACKEND MILESTONE 2
-
-Authentication, password handling, verification, sessions, devices, and security.
-
-BACKEND MILESTONE 3
-
-Authorization, RBAC, permissions, policies, and administrative roles.
-
-BACKEND MILESTONE 4
+Swagger/OpenAPI must match the implementation.
 
-Seller registration, seller verification, seller lifecycle, and store management.
+Document important financial and transactional invariants.
 
-BACKEND MILESTONE 5
+---
 
-Seller staff, seller-scoped permissions, seller isolation, and administrative workflows.
+# IMPLEMENTATION BOUNDARIES
+
+This volume is backend-only.
+
+Do not implement:
+
+* Web UI.
+* Mobile UI.
+* React components.
+* React Native screens.
+* Tailwind styling.
+* Frontend state stores.
 
-BACKEND MILESTONE 6
+Do not implement unrelated infrastructure changes.
 
-Security events, audit logging, recovery workflows, cleanup jobs, and notifications integration.
+Do not redesign the entire architecture.
 
-BACKEND MILESTONE 7
+Do not replace compatible existing modules unnecessarily.
 
-API completion, integration testing, security testing, observability, and production hardening.
-
-Each milestone should contain approximately 20–40 files where practical.
-
-Every milestone must compile before proceeding.
-
-────────────────────────────────────────
+Do not introduce speculative abstractions.
 
-OUTPUT FORMAT
-
-For every generated file provide:
-
-1. Exact file path
-2. Complete file contents
-
-Never truncate code.
-
-Never summarize source code instead of generating it.
-
-Never generate pseudo-code.
-
-Never generate placeholders.
-
-Never generate TODO implementations.
-
-When modifying an existing file:
-
-1. Provide the exact file path.
-2. State why it must change.
-3. Provide the complete updated file.
-
-Never regenerate unchanged files.
-
-────────────────────────────────────────
-
-SCOPE RESTRICTION
-
-This volume covers:
-
-• Identity
-• Users
-• Customer accounts
-• Authentication
-• Authorization
-• Profiles
-• Addresses
-• Sessions
-• Devices
-• Seller onboarding
-• Seller verification
-• Seller accounts
-• Stores
-• Seller staff
-• Seller permissions
-• Seller isolation
-• Security events
-• Audit foundations
-
-Do not implement complete:
-
-• Catalog
-• Products
-• Variants
-• Pricing
-• Promotions
-• Coupons
-• Inventory
-• Cart
-• Checkout
-• Orders
-• Payments
-• Fulfillment
-• Shipping
-• Returns
-• Reviews
-• Search
-• Recommendations
-• Notifications
-• Messaging
-• Analytics
-• CMS
-• Moderation
-
-Those belong to later backend implementation volumes.
-
-────────────────────────────────────────
-
-QUALITY BAR
-
-Treat customer identity and seller access as critical production infrastructure.
-
-Assume:
-
-• Millions of customers
-• Hundreds of thousands of sellers
-• Multiple seller staff members
-• Large login volume
-• Automated attacks
-• Seller fraud attempts
-• Privilege escalation attempts
-• Global deployment
-• Strict privacy requirements
-• Strict security requirements
-
-Prioritize:
-
-• Security
-• Seller isolation
-• Correct authorization
-• Auditability
-• Reliability
-• Scalability
-• Maintainability
-• Observability
-• Production readiness
+---
+
+# ABSOLUTE IMPLEMENTATION RULES
+
+You must not:
+
+* Generate pseudo-code.
+* Leave placeholder implementations.
+* Leave TODO/FIXME gaps for required functionality.
+* Use fake payment success behavior as production logic.
+* Trust client-supplied financial totals.
+* Trust client-supplied order status.
+* Trust client-supplied payment status.
+* Hardcode payment credentials.
+* Store raw payment credentials.
+* Ignore concurrency.
+* Ignore idempotency.
+* Create duplicate transactional side effects.
+* Disable security controls to make tests pass.
+* Suppress compiler errors without fixing their causes.
+* Break existing working functionality unnecessarily.
+* Use “implement similarly.”
+* Use “remaining code omitted.”
+* Use “left as an exercise.”
+* Use “for brevity.”
+
+Every required implementation must be complete, integrated, type-safe, testable, and operationally observable.
+
+---
+
+# REPOSITORY COMPATIBILITY
+
+Inspect and follow the repository's existing:
+
+* Module structure.
+* Naming conventions.
+* Prisma conventions.
+* API conventions.
+* Authentication model.
+* Authorization model.
+* Event model.
+* Queue model.
+* Testing conventions.
+* Error handling.
+* Logging.
+* Configuration.
+
+Reuse existing infrastructure when compatible.
+
+When an existing implementation is incomplete, improve it rather than creating competing infrastructure.
+
+Maintain backward compatibility whenever practical.
+
+Update all affected callers and tests when a contract must change.
+
+---
+
+# VALIDATION AND COMPLETION
+
+Before considering this volume complete:
+
+1. Inspect the repository.
+2. Implement the commerce domains.
+3. Validate database schema.
+4. Validate migrations.
+5. Compile/typecheck the backend.
+6. Run linting.
+7. Run unit tests.
+8. Run integration tests.
+9. Run API tests.
+10. Run webhook tests.
+11. Run concurrency tests.
+12. Verify payment idempotency.
+13. Verify refund idempotency.
+14. Verify inventory reservation correctness.
+15. Verify coupon usage limits.
+16. Verify seller/customer authorization.
+17. Verify event and outbox behavior.
+18. Verify queue retry behavior.
+19. Verify no secrets were introduced.
+20. Verify API documentation.
+21. Verify existing functionality remains operational.
+
+Fix implementation-caused failures before reporting completion.
+
+If an environmental limitation prevents a test, clearly identify it and execute every other possible validation.
+
+---
+
+# IMPLEMENTATION REPORT
+
+At completion, provide a concise engineering report containing:
+
+## Files Created
+
+List every newly created file.
+
+## Files Modified
+
+List every modified file and summarize the reason.
+
+## Database Changes
+
+Describe:
+
+* Tables/models.
+* Relations.
+* Indexes.
+* Constraints.
+* Migrations.
+* Transactional behavior.
+
+## Commerce APIs
+
+List implemented endpoints and their purpose.
+
+## Pricing and Promotions
+
+Describe pricing, discount, coupon, and promotion behavior.
+
+## Cart and Checkout
+
+Describe cart, checkout, inventory reservation, and multi-seller behavior.
+
+## Orders
+
+Describe order and order-item state handling.
+
+## Payments and Refunds
+
+Describe:
+
+* Provider abstraction.
+* Payment state machine.
+* Webhooks.
+* Idempotency.
+* Refund behavior.
+
+## Events and Queues
+
+List:
+
+* Events.
+* Outbox records.
+* Jobs.
+* Retry behavior.
+* Failure handling.
+
+## Tests
+
+List all tests added.
+
+## Validation Results
+
+Report:
+
+* Typecheck/compile.
+* Lint.
+* Unit tests.
+* Integration tests.
+* API tests.
+* Webhook tests.
+* Concurrency tests.
+* Migration validation.
+
+Clearly identify any unavailable validation and its exact reason.
+
+## Operational Notes
+
+Document required configuration, external provider setup, queue workers, and database requirements.
+
+---
+
+# FINAL DIRECTIVE
+
+Implement this commerce backend volume directly in the repository.
+
+Inspect the actual repository before modifying it.
+
+Build real production-grade pricing, cart, checkout, multi-seller order, payment, refund, promotion, coupon, event, and queue functionality.
+
+Preserve transactional integrity.
+
+Make financial operations deterministic and idempotent.
+
+Make inventory reservations concurrency-safe.
+
+Protect customers, sellers, payments, and order data.
+
+Treat external payment providers as dependencies rather than authoritative marketplace state.
+
+Use PostgreSQL as the authoritative transactional source.
+
+Use durable state, transactional outbox patterns, asynchronous processing, retries, observability, and reconciliation where required.
+
+Do not stop at scaffolding.
+
+Do not provide pseudo-code.
+
+Do not leave required functionality incomplete.
+
+Compile, test, validate, integrate, and report the completed implementation.

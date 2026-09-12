@@ -1,1884 +1,1112 @@
-# Amazon Ecommerce Marketplace — Frontend Prompt — Volume 2
+# AMAZON ECOMMERCE PLATFORM — FRONTEND VOLUME 2 IMPLEMENTATION PROMPT
 
-## Checkout, Payments, Orders, Fulfillment, Returns, Reviews, Notifications, Account, and Production Hardening
+## ROLE
 
-You are implementing the second production-grade frontend implementation unit for an original Amazon-style enterprise ecommerce marketplace.
+Act as a Principal Frontend Architect, Staff Frontend Engineer, UI/UX Engineer, Accessibility Engineer, Performance Engineer, Security Engineer, QA Engineer, and Technical Writer working together as a senior production engineering organization.
 
-This is a **standalone implementation prompt**. It must contain everything necessary to execute this phase without relying on any previous prompt, architecture document, conversation, generated artifact, or remembered decision.
+Your responsibility is to implement the frontend scope defined in this prompt as a complete, production-grade web application inside the existing repository.
 
-The actual repository is the only source of truth for the current implementation state.
-
-Do not assume that any previous implementation phase was completed successfully. Inspect the repository and integrate with what actually exists.
-
-This phase is part of **one coherent ecommerce marketplace web application**, not a separate application.
+Do not behave as a teacher or provide a tutorial. Inspect the repository, understand its actual implementation state, implement the required functionality, integrate it with the existing application, validate it, and leave the repository in a coherent production-ready state.
 
 ---
 
-# 1. Mission
+# PROJECT
 
-Implement the remaining major customer-facing web experience using the existing:
+Build the customer account, purchasing, checkout, order, payment, fulfillment, and post-purchase web experience for a large-scale global Amazon-style ecommerce marketplace.
 
-* Next.js
-* React
-* TypeScript
+The application supports:
+
+* Millions of customers.
+* Thousands of sellers.
+* Millions of products and variants.
+* Multi-seller carts and orders.
+* Server-authoritative pricing and inventory.
+* Checkout.
+* Payments.
+* Shipping and fulfillment.
+* Returns and refunds.
+* Customer reviews.
+* Notifications.
+* Account management.
+* Addresses.
+* Wishlists.
+* Promotions and coupons.
+* Order tracking.
+* High-volume transactional activity.
+
+The web frontend must provide a secure, accessible, responsive, and production-grade customer experience for these workflows.
+
+The backend remains authoritative for all transactional and financial state.
+
+The frontend must consume actual backend contracts and must never become the authoritative source for:
+
+* Inventory.
+* Prices.
+* Taxes.
+* Discounts.
+* Promotions.
+* Payment status.
+* Order status.
+* Shipment status.
+* Refund status.
+* Return eligibility.
+* Customer authorization.
+* Seller financial information.
+
+---
+
+# TECHNOLOGY DIRECTION
+
+Use the following technology direction unless the repository already contains a compatible implementation that should be preserved:
+
+* Next.js 15+
+* React 19+
+* TypeScript with strict type safety
 * Tailwind CSS
 * shadcn/ui
 * TanStack Query
 * Zustand
+* React Hook Form
+* Zod
+* date-fns
+* Recharts where appropriate
+* Framer Motion where appropriate
+* REST/OpenAPI-compatible backend integration
+* WebSockets or SSE where justified by actual backend contracts
 
-Integrate with the actual backend capabilities present in the repository.
+Reuse existing compatible packages and conventions.
 
-This phase covers:
-
-* Customer account
-* Addresses
-* Checkout
-* Checkout validation
-* Shipping selection
-* Tax presentation
-* Promotions/coupons
-* Payment UI
-* Stripe integration where actually configured
-* Order creation
-* Order history
-* Order details
-* Order status
-* Shipment tracking
-* Returns
-* Refund status
-* Reviews
-* Review media
-* Notifications
-* Notification preferences
-* Production-grade error handling
-* Security hardening
-* Accessibility hardening
-* SEO completion
-* Performance optimization
-* Analytics integration
-* End-to-end customer-flow testing
-
-Do not invent backend functionality that does not exist.
-
-Where a backend capability is missing, integrate only with the actual available contract and report the dependency accurately.
+Do not introduce dependencies unnecessarily.
 
 ---
 
-# 2. Repository-First Execution
+# SOURCE OF TRUTH
 
-Before changing anything:
+The repository is the authoritative source of truth.
 
-1. Inspect the repository.
-2. Inspect the current web frontend.
-3. Inspect all existing routes.
-4. Inspect components.
-5. Inspect TanStack Query configuration.
-6. Inspect Zustand stores.
-7. Inspect API clients.
-8. Inspect authentication/session handling.
-9. Inspect checkout APIs.
-10. Inspect payment APIs.
-11. Inspect order APIs.
-12. Inspect fulfillment/shipment APIs.
-13. Inspect return APIs.
-14. Inspect review APIs.
-15. Inspect notification APIs.
-16. Inspect customer/address APIs.
-17. Inspect backend DTOs/contracts.
-18. Inspect OpenAPI/generated API types if present.
-19. Inspect tests.
-20. Inspect environment configuration.
-21. Inspect analytics/telemetry.
-22. Inspect existing design system.
+Before implementing anything:
 
-The repository is authoritative.
+1. Inspect the existing Next.js application.
+2. Inspect route structure.
+3. Inspect shared layouts and components.
+4. Inspect API clients.
+5. Inspect generated API types where available.
+6. Inspect authentication/session handling.
+7. Inspect TanStack Query configuration.
+8. Inspect Zustand stores.
+9. Inspect form infrastructure.
+10. Inspect existing customer storefront functionality.
+11. Inspect existing cart functionality.
+12. Inspect existing testing infrastructure.
+13. Inspect environment configuration without exposing secrets.
+14. Inspect documentation.
+15. Determine which account, checkout, order, payment, or fulfillment functionality already exists.
+16. Reuse compatible functionality instead of creating parallel implementations.
 
-Do not replace working architecture merely to match this prompt.
+Do not assume missing functionality merely because a route does not exist.
 
-Do not create duplicate:
-
-* API clients
-* Query clients
-* Authentication
-* State stores
-* Payment systems
-* Form systems
-* UI libraries
-* Analytics systems
+Do not rewrite stable existing functionality without a concrete reason.
 
 ---
 
-# 3. Application Architecture
+# IMPLEMENTATION SCOPE
 
-Maintain a clear separation between:
+Implement the production-grade customer purchasing and account experience, including:
 
-* Route/page composition
-* Feature components
-* UI components
-* API clients
-* Server state
-* Client state
-* Forms
-* Validation
-* Authentication
-* Payment integration
-* Analytics
-* Error handling
+1. Customer account foundation.
+2. Account profile management.
+3. Address management.
+4. Authentication-aware account navigation.
+5. Wishlist functionality.
+6. Saved customer preferences where supported.
+7. Checkout architecture.
+8. Multi-seller checkout presentation.
+9. Checkout address selection.
+10. Shipping method selection.
+11. Order summary.
+12. Promotions and coupon presentation.
+13. Payment integration UI.
+14. Payment failure and recovery states.
+15. Order placement.
+16. Order confirmation.
+17. Order history.
+18. Order detail pages.
+19. Shipment tracking presentation.
+20. Cancellation flows where supported.
+21. Return request flows.
+22. Refund status presentation.
+23. Customer reviews and ratings.
+24. Notification center foundations.
+25. Real-time order/notification updates where supported.
+26. Customer-facing transactional error handling.
+27. Accessibility and responsive behavior.
+28. Security hardening.
+29. Testing.
+30. Documentation.
 
-Do not place large amounts of business logic inside page components.
-
-Do not duplicate backend business rules.
-
-The backend remains authoritative for:
-
-* Price
-* Inventory
-* Tax
-* Discounts
-* Shipping cost
-* Payment status
-* Order state
-* Refund status
-* Return eligibility
-* Review eligibility
-
----
-
-# 4. Customer Account
-
-Implement the customer account area.
-
-Support, where backend contracts exist:
-
-* Profile
-* Account information
-* Addresses
-* Preferences
-* Security/session information where appropriate
-* Orders
-* Returns
-* Reviews
-* Notifications
-
-Use protected routes.
-
-Never expose private account data to unauthenticated users.
+Do not implement seller-admin functionality or internal administrative tooling as part of this scope unless required by existing shared contracts.
 
 ---
 
-# 5. Account Navigation
+# CUSTOMER ACCOUNT ARCHITECTURE
 
-Create a clear responsive account navigation.
+Implement a scalable account area.
 
-Possible sections:
+Support appropriate routes and interfaces for:
 
-* Account overview
-* Profile
-* Addresses
-* Orders
-* Returns
-* Reviews
-* Notifications
-* Preferences
-* Security
+* Account overview.
+* Profile.
+* Addresses.
+* Orders.
+* Wishlist.
+* Notifications.
+* Preferences where supported.
 
-Use the actual backend capabilities.
+The account area must clearly distinguish:
 
-Do not expose navigation entries for nonexistent functionality.
+* Public storefront.
+* Authenticated customer experience.
+* Sensitive account operations.
 
----
+Do not expose private account data before authentication is confirmed.
 
-# 6. Customer Profile
+Account pages must handle:
 
-Implement profile viewing/editing.
+* Loading.
+* Unauthorized access.
+* Session expiration.
+* API failures.
+* Empty states.
+* Successful mutations.
 
-Support actual backend fields such as:
+Use reusable account navigation components.
 
-* Name
-* Contact information
-* Preferences
-* Other supported customer-profile fields
-
-Requirements:
-
-* Client validation
-* Server validation
-* Loading state
-* Save state
-* Error state
-* Success feedback
-* Accessible forms
-
-Do not allow client-side modification of server-controlled fields.
+Maintain consistent responsive behavior across desktop and mobile web.
 
 ---
 
-# 7. Address Management
+# PROFILE MANAGEMENT
 
-Implement customer address management.
+Implement customer profile management according to the backend contract.
+
+Support appropriate fields such as:
+
+* Display name.
+* Contact information where supported.
+* Profile preferences.
+* Other non-sensitive customer attributes exposed by the backend.
+
+Use React Hook Form and Zod.
+
+Handle:
+
+* Client validation.
+* Server validation.
+* Dirty state.
+* Submission state.
+* Success feedback.
+* Failure feedback.
+* Concurrent update conflicts where supported.
+
+Never assume that a client-side profile value was successfully persisted until the backend confirms it.
+
+Refresh authoritative customer state after successful updates when appropriate.
+
+---
+
+# ADDRESS MANAGEMENT
+
+Implement a production-grade address management interface.
 
 Support:
 
-* Address list
-* Create address
-* Edit address
-* Delete address where supported
-* Default address
-* Shipping address selection
-* Billing address selection if supported
+* Address list.
+* Add address.
+* Edit address.
+* Delete address where permitted.
+* Default address selection.
+* Address validation.
+* Shipping-address selection during checkout.
 
-Use the actual backend address model.
+The interface must correctly distinguish:
 
-Do not assume a specific country-specific address format.
+* Billing address.
+* Shipping address.
+* Default address.
+* Address associated with an existing order.
 
-Support internationalization where the backend supports multiple countries.
+Do not allow an address mutation to silently alter historical order data.
 
----
+Historical orders must display the appropriate order-specific address snapshot supplied by the backend.
 
-# 8. Address Security
-
-Never trust client-provided address ownership.
-
-The backend must authorize every address operation.
-
-Frontend behavior must gracefully handle:
-
-* Address deleted elsewhere
-* Address no longer valid
-* Address unavailable during checkout
-* Authorization failure
-
-Do not expose internal customer identifiers unnecessarily.
+Handle address mutations with appropriate confirmation and error states.
 
 ---
 
-# 9. Checkout Architecture
+# WISHLIST
+
+Implement the customer wishlist experience where supported.
+
+Support:
+
+* Wishlist listing.
+* Product presentation.
+* Remove item.
+* Move/add item to cart where supported.
+* Product availability.
+* Price information.
+* Empty wishlist.
+* Loading and error states.
+
+Do not assume wishlist items remain purchasable.
+
+If an item is unavailable, clearly communicate the backend-provided state.
+
+Use server state through TanStack Query.
+
+Do not duplicate the entire wishlist into a persistent Zustand store.
+
+---
+
+# CHECKOUT ARCHITECTURE
 
 Implement a production-grade checkout experience.
 
-The checkout should guide the customer through appropriate stages such as:
+The checkout UI must support the backend's authoritative checkout model.
 
-```text
-Cart
- ↓
-Customer information
- ↓
-Shipping address
- ↓
-Shipping method
- ↓
-Promotion/coupon
- ↓
-Order review
- ↓
-Payment
- ↓
-Order confirmation
-```
+A checkout may contain products from multiple sellers.
 
-Use the actual backend checkout-session lifecycle.
+The frontend must therefore support clear presentation of:
 
-Do not assume the checkout state machine.
+* Customer order.
+* Seller groupings.
+* Order items.
+* Seller-specific fulfillment/shipping information.
+* Payment information.
+* Discounts.
+* Taxes where provided.
+* Shipping charges.
+* Final total.
+
+Do not imply that a multi-seller purchase is necessarily one physical shipment.
+
+Clearly represent seller and shipment boundaries when supplied by the backend.
 
 ---
 
-# 10. Checkout Session
+# CHECKOUT STATE
 
-Create frontend state around the backend checkout session.
+Implement checkout as an explicit multi-step experience where appropriate.
+
+Potential stages include:
+
+1. Cart validation.
+2. Customer/address selection.
+3. Shipping method selection.
+4. Promotion/coupon application.
+5. Payment method.
+6. Order review.
+7. Order submission.
+8. Confirmation.
+
+Use the backend as the authority for the current valid checkout state.
+
+Do not store a complete checkout transaction as an uncontrolled client-side object.
+
+Ensure refreshing the browser does not produce an invalid or misleading checkout state.
+
+Support recovery from:
+
+* Expired checkout.
+* Changed inventory.
+* Changed price.
+* Removed product.
+* Invalid promotion.
+* Shipping-method failure.
+* Payment failure.
+* Backend validation failure.
+
+---
+
+# CHECKOUT PRICE AND INVENTORY INTEGRITY
+
+Never calculate the final order total as an authoritative frontend value.
+
+The UI may display derived values for presentation, but the backend response remains authoritative.
+
+When the backend reports:
+
+* Price changes.
+* Inventory changes.
+* Quantity changes.
+* Promotion changes.
+* Shipping changes.
+* Tax changes.
+* Seller changes.
+
+Refresh the relevant checkout state and clearly communicate the change to the customer.
+
+Do not allow stale client state to produce a misleading final purchase confirmation.
+
+---
+
+# PROMOTIONS AND COUPONS
+
+Implement customer-facing promotion and coupon interfaces according to backend capabilities.
 
 Support:
 
-* Session creation
-* Session restoration
-* Session validation
-* Session expiration
-* Session cancellation
-* Checkout completion
-* Checkout failure
+* Coupon entry.
+* Apply coupon.
+* Remove coupon.
+* Promotion summaries.
+* Discount presentation.
+* Invalid coupon states.
+* Expired coupon states.
+* Usage-limit failures.
+* Minimum-order failures.
+* Seller/product-specific restrictions where supplied.
 
-The backend checkout session is authoritative.
+Do not reproduce complex promotion eligibility rules in the browser.
 
-Do not store authoritative checkout totals in Zustand.
-
----
-
-# 11. Checkout Validation
-
-Before payment/order completion, display server validation results.
-
-Possible failures:
-
-* Product unavailable
-* Inventory insufficient
-* Price changed
-* Seller offer changed
-* Coupon expired
-* Coupon invalid
-* Address invalid
-* Shipping unavailable
-* Tax calculation failure
-* Checkout expired
-
-Clearly communicate each issue.
-
-Provide recovery actions.
-
-Never silently modify the customer's order.
+The backend determines eligibility and final discount amounts.
 
 ---
 
-# 12. Checkout Pricing
+# SHIPPING METHODS
 
-Display:
-
-* Items subtotal
-* Discounts
-* Promotion savings
-* Coupon discount
-* Shipping
-* Tax
-* Total
-* Currency
-
-Use backend-provided authoritative values.
-
-Do not recalculate authoritative totals using JavaScript floating-point arithmetic.
-
-If values change, refresh from the server.
-
----
-
-# 13. Promotion and Coupon UI
-
-Implement coupon/promotion interactions where supported.
+Implement shipping-method selection.
 
 Support:
 
-* Coupon input
-* Apply
-* Remove
-* Validation errors
-* Applied state
-* Discount display
-* Expiration/invalid state
+* Available methods.
+* Delivery estimates.
+* Shipping costs.
+* Seller-specific shipping options where applicable.
+* Shipment grouping where applicable.
+* Selection state.
+* Invalid/expired shipping methods.
+* Recalculation states.
 
-Do not expose internal promotion rules unnecessarily.
+Dates and times must be formatted consistently using the application's date utilities.
 
-Do not claim a coupon is valid based only on client-side validation.
+Do not hardcode delivery estimates.
 
----
-
-# 14. Shipping Selection
-
-Implement shipping-method selection against the actual backend.
-
-Display:
-
-* Shipping method
-* Estimated delivery information where provided
-* Shipping cost
-* Availability
-* Selected state
-
-Do not invent carrier promises.
-
-Do not calculate shipping cost independently if the backend provides authoritative values.
+Do not assume a selected shipping method remains valid until order placement.
 
 ---
 
-# 15. Tax Display
+# PAYMENT EXPERIENCE
 
-Display tax values returned by the backend.
+Implement the customer-facing payment workflow around the repository's actual payment-provider abstraction.
 
-If tax is unavailable or estimated, communicate that accurately.
+Support the appropriate payment lifecycle:
 
-Do not invent tax calculations.
+* Payment method selection.
+* Payment initialization.
+* Payment confirmation.
+* Processing state.
+* Success.
+* Failure.
+* Retry.
+* Cancellation.
+* Authentication/verification flows when required by the provider.
+* Backend-confirmed payment status.
 
-Do not implement tax-remittance logic in the frontend.
+Never store raw payment credentials in application state.
 
----
+Never log sensitive payment information.
 
-# 16. Checkout Review
+Do not treat a frontend payment callback alone as proof that an order was paid.
 
-Implement a final review screen.
-
-Show:
-
-* Items
-* Seller information where appropriate
-* Quantities
-* Prices
-* Discounts
-* Shipping address
-* Shipping method
-* Taxes
-* Total
-* Payment method summary
-* Terms/consent where required
-
-Allow editing previous sections without losing valid checkout state unnecessarily.
+The backend remains authoritative for payment status.
 
 ---
 
-# 17. Payment UI
+# PAYMENT FAILURE AND RECOVERY
 
-Integrate with the actual payment backend.
-
-If Stripe is configured and the backend exposes Stripe PaymentIntent/client-secret flow, use the official Stripe client integration appropriate to the repository.
-
-Never expose:
-
-* Stripe secret key
-* Backend credentials
-* Provider secrets
-
-The frontend may receive only client-safe payment information.
-
----
-
-# 18. Stripe Integration
-
-Where Stripe is actually configured:
-
-* Use the backend-created PaymentIntent/payment session.
-* Use the client-side Stripe SDK only for client-safe operations.
-* Follow the backend's payment state.
-* Handle required customer actions.
-* Handle payment failure.
-* Handle payment cancellation.
-* Handle retry.
-* Prevent duplicate payment submissions.
-
-Never create authoritative payment amounts solely in the browser.
-
-The backend determines the payment amount.
-
----
-
-# 19. Payment State
-
-Clearly distinguish:
-
-* Payment requires action
-* Processing
-* Authorized
-* Captured
-* Failed
-* Cancelled
-
-Do not assume that clicking "Pay" means payment succeeded.
-
-Display the actual backend/payment state.
-
----
-
-# 20. Payment Failure Recovery
+Implement robust recovery for payment failures.
 
 Handle:
 
-* Card/payment failure
-* Authentication-required payment
-* Network failure
-* Session expiration
-* Duplicate submission
-* Provider error
-* Backend error
+* Declined payment.
+* Provider timeout.
+* Authentication failure.
+* Invalid payment state.
+* Duplicate submission.
+* Network interruption.
+* Backend failure.
+* Payment requiring additional customer action.
 
-Do not automatically create duplicate payment attempts.
+Prevent accidental duplicate order submission.
 
-Allow safe retry where the backend indicates retry is appropriate.
+Disable or otherwise protect critical submission controls while an operation is in progress.
 
----
+Ensure retry behavior is safe and consistent with backend idempotency.
 
-# 21. Order Creation
-
-Order creation must occur through the backend checkout/order contract.
-
-The frontend must never:
-
-* Construct authoritative order totals
-* Set order status
-* Set payment status
-* Assign inventory
-* Assign sellers
-* Bypass checkout validation
-
-After successful order creation, refresh authoritative order data.
+Do not automatically repeat financial operations without an explicit safe contract.
 
 ---
 
-# 22. Order Confirmation
+# ORDER PLACEMENT
 
-Create a production-quality confirmation page.
+Implement the customer-facing order submission workflow.
 
-Show:
+Before submission:
 
-* Order number
-* Order date
-* Items
-* Seller information where appropriate
-* Shipping information
-* Payment summary
-* Total
-* Delivery estimate where provided
-* Order status
-* Next actions
+* Validate the current checkout state.
+* Ensure required selections are present.
+* Display authoritative totals.
+* Display seller/shipment grouping.
+* Display selected shipping information.
+* Display payment information without exposing sensitive credentials.
 
-Do not expose internal database IDs unless intentionally part of the public contract.
+During submission:
 
----
+* Provide clear progress state.
+* Prevent accidental duplicate submissions.
+* Handle network interruption.
+* Handle backend validation failures.
+* Preserve recoverable checkout information.
 
-# 23. Order History
+After submission:
 
-Implement:
-
-* Order list
-* Pagination
-* Filtering where supported
-* Sorting where supported
-* Order status
-* Date
-* Total
-* Item summary
-
-Use server-side pagination.
-
-Do not request the customer's entire order history in one unbounded request.
+* Use the backend response as the authoritative result.
+* Navigate to an order confirmation experience.
+* Display order identifiers supplied by the backend.
+* Display payment/order status.
+* Display seller and shipment information.
+* Avoid claiming fulfillment that has not been confirmed.
 
 ---
 
-# 24. Order Details
+# ORDER CONFIRMATION
 
-Implement a detailed order page.
+Create a production-grade confirmation experience.
+
+Display appropriate:
+
+* Order information.
+* Order identifier.
+* Order date.
+* Customer information relevant to the order.
+* Seller grouping.
+* Order items.
+* Payment status.
+* Shipping information.
+* Estimated delivery information where available.
+* Total.
+* Next actions.
+
+Provide useful navigation to:
+
+* Order details.
+* Continue shopping.
+* Account.
+* Support/help where supported.
+
+Do not expose information belonging to other customers or sellers.
+
+---
+
+# ORDER HISTORY
+
+Implement a scalable order-history interface.
 
 Support:
 
-* Order number
-* Order status
-* Items
-* Seller
-* Product
-* Quantity
-* Price snapshot
-* Discounts
-* Shipping
-* Tax
-* Total
-* Payment state
-* Fulfillment state
-* Shipments
-* Tracking
-* Returns
-* Refund status
+* Paginated or cursor-based order retrieval.
+* Order status.
+* Order date.
+* Total.
+* Seller information.
+* Shipment summary.
+* Item summary.
+* Search/filtering where supported.
+* Empty state.
+* Loading state.
+* Error state.
 
-Use authoritative backend data.
+Use URL state for filters when appropriate.
+
+Do not fetch an unbounded order history into the browser.
+
+Use backend pagination contracts.
 
 ---
 
-# 25. Order State Display
+# ORDER DETAILS
 
-Map backend order states into human-readable UI labels.
+Implement detailed customer order pages.
 
-Do not hardcode assumptions about state transitions.
+Display:
 
-If the backend introduces an unknown state, provide a safe fallback rather than breaking rendering.
+* Order metadata.
+* Items.
+* Product information.
+* Seller.
+* Quantities.
+* Prices.
+* Discounts.
+* Shipping.
+* Taxes where provided.
+* Payment status.
+* Shipment status.
+* Tracking information.
+* Delivery estimate.
+* Cancellation state.
+* Return eligibility/state.
+* Refund information where available.
 
-Do not let the client mutate state.
+Historical information must be treated as immutable snapshots supplied by the backend.
+
+Do not re-query current product prices and substitute them for historical order prices.
 
 ---
 
-# 26. Shipment Tracking
+# ORDER CANCELLATION
+
+Implement cancellation UX where supported.
+
+Before cancellation:
+
+* Display whether cancellation is currently available.
+* Display appropriate confirmation.
+* Communicate potential consequences.
+
+After cancellation:
+
+* Refresh order state.
+* Display backend-confirmed cancellation status.
+* Display refund information only when actually supplied.
+* Handle cancellation race conditions.
+
+If cancellation is rejected because fulfillment progressed or another state transition occurred, display the authoritative backend response rather than assuming success.
+
+---
+
+# SHIPMENT TRACKING
 
 Implement customer-facing shipment tracking.
 
+Support:
+
+* Shipment grouping.
+* Carrier.
+* Tracking identifier where appropriate.
+* Current shipment state.
+* Delivery estimate.
+* Tracking events.
+* Delivered state.
+* Failed delivery state.
+* Returned-to-sender state where supported.
+
+Provide clear visual state progression without inventing shipment events.
+
+Format timestamps consistently.
+
+Where real-time updates are supported, integrate them without making the UI dependent on a persistent connection.
+
+The page must remain functional through normal request-based refreshes.
+
+---
+
+# REAL-TIME CUSTOMER UPDATES
+
+Integrate WebSocket or SSE functionality only where actual backend contracts support it.
+
+Appropriate customer-facing uses include:
+
+* Order status updates.
+* Shipment updates.
+* Notifications.
+* Payment status changes where appropriate.
+
+Implement:
+
+* Authentication.
+* Authorization.
+* Connection lifecycle.
+* Reconnection.
+* Duplicate event handling.
+* Event ordering considerations.
+* Cache invalidation.
+* Graceful fallback to normal queries.
+* Backoff.
+
+Do not assume that real-time delivery is guaranteed.
+
+The UI must remain correct when events are delayed, duplicated, lost, or unavailable.
+
+---
+
+# RETURNS
+
+Implement the customer-facing return request flow according to backend capabilities.
+
+Support:
+
+* Eligible order items.
+* Return reason.
+* Quantity.
+* Optional customer-provided explanation.
+* Required information.
+* Return-method selection where supported.
+* Review before submission.
+* Submission.
+* Confirmation.
+* Return status.
+
+Do not determine eligibility solely in the browser.
+
+Use backend-provided eligibility and constraints.
+
+Prevent returning quantities that exceed the backend-authorized amount.
+
+---
+
+# REFUNDS
+
+Implement customer-facing refund status presentation.
+
 Display:
 
-* Shipment
-* Carrier name where provided
-* Tracking reference where safe
-* Shipment state
-* Tracking timeline
-* Estimated delivery where available
+* Refund status.
+* Amount.
+* Associated order/item.
+* Relevant dates.
+* Payment destination where safely exposed.
+* Failure or pending states.
 
-Use immutable tracking history supplied by the backend.
+Never expose sensitive payment information.
 
-Do not fabricate carrier events.
+Do not state that money has been returned merely because a refund request was submitted.
 
----
-
-# 27. Shipment Timeline
-
-Create an accessible timeline showing:
-
-```text
-Shipment created
-      ↓
-Label created
-      ↓
-Ready to ship
-      ↓
-Shipped
-      ↓
-In transit
-      ↓
-Out for delivery
-      ↓
-Delivered
-```
-
-Only display states/events actually returned by the backend.
-
-Handle partial shipments correctly.
-
-An order may contain multiple shipments.
+Use backend-confirmed refund status.
 
 ---
 
-# 28. Multi-Seller Orders
+# CUSTOMER REVIEWS AND RATINGS
 
-The UI must support orders containing products from multiple sellers.
+Implement customer review functionality where supported.
+
+Support:
+
+* Rating submission.
+* Review text.
+* Product association.
+* Existing review display.
+* Edit/delete where permitted.
+* Submission state.
+* Moderation/pending state.
+* Validation errors.
+* Abuse/report controls where supported.
 
 Clearly distinguish:
 
-* Seller
-* Items
-* Fulfillment groups
-* Shipments
-* Delivery status
+* Published review.
+* Pending moderation.
+* Rejected review.
+* Deleted review.
 
-Do not assume one order always maps to one shipment or one seller.
+Do not present unmoderated content as permanently published unless the backend explicitly defines that behavior.
 
----
-
-# 29. Order Cancellation
-
-Where the backend supports cancellation:
-
-* Display cancellation only when authorized by backend state.
-* Confirm user intent.
-* Submit mutation.
-* Show loading state.
-* Refresh order.
-* Display actual result.
-
-Do not determine cancellation eligibility exclusively on the frontend.
+Treat user-generated content as untrusted.
 
 ---
 
-# 30. Returns
+# NOTIFICATION CENTER
 
-Implement customer-facing return workflows.
+Implement a reusable customer notification experience.
 
 Support:
 
-* Eligible order items
-* Return request
-* Return reason
-* Quantity
-* Description where supported
-* Submission
-* Return status
-* Return timeline
-* Refund status
+* Notification list.
+* Read/unread state.
+* Mark as read.
+* Mark all as read where supported.
+* Notification categories.
+* Navigation targets.
+* Empty state.
+* Loading state.
+* Error state.
 
-The backend determines eligibility.
+Where real-time notifications exist, integrate them through the established event mechanism.
 
-Do not allow arbitrary item/quantity selection without backend validation.
-
----
-
-# 31. Return Eligibility
-
-If the backend exposes eligibility information, display it.
-
-Handle:
-
-* Eligible
-* Ineligible
-* Partially eligible
-* Expired return window
-* Previously returned quantity
-* Invalid state
-
-Do not invent return-window rules.
+Do not create duplicate notifications when the same event arrives through both real-time delivery and polling.
 
 ---
 
-# 32. Return Submission
+# ERROR HANDLING
 
-Implement a secure return form.
+Create consistent customer-facing handling for:
 
-Support:
+* Validation errors.
+* Authentication errors.
+* Authorization errors.
+* Not found.
+* Conflict.
+* Rate limiting.
+* Payment failures.
+* Inventory conflicts.
+* Checkout expiration.
+* Network failures.
+* Backend unavailability.
+* Unexpected server errors.
 
-* Item selection
-* Quantity
-* Reason
-* Optional details
-* Media where supported
-* Confirmation
+Map backend errors into safe, understandable user messages.
 
-Validate:
+Never expose internal stack traces, database errors, provider credentials, or implementation details.
 
-* Quantity
-* Required fields
-* Allowed reasons
-
-The backend remains authoritative.
-
----
-
-# 33. Return Tracking
-
-Display:
-
-* Requested
-* Approved
-* Label pending
-* In transit
-* Received
-* Inspecting
-* Approved for refund
-* Refunded
-* Rejected/cancelled
-* Closed
-
-Use the actual backend state values.
-
-Do not assume every return reaches every state.
+Preserve diagnostic information only through secure observability mechanisms.
 
 ---
 
-# 34. Refund Status
+# SECURITY
 
-Display refund information linked to the return/order.
+Treat all client-side state as untrusted.
 
-Support:
+Protect against:
 
-* Pending
-* Processing
-* Completed
-* Failed
-* Partial refund
-* Full refund
+* XSS.
+* Unsafe HTML.
+* Open redirects.
+* Token leakage.
+* Sensitive browser persistence.
+* Unauthorized route access.
+* IDOR through client-controlled identifiers.
+* Malicious query parameters.
+* Manipulated checkout values.
+* Price manipulation.
+* Coupon manipulation.
+* Payment manipulation.
+* Duplicate submission.
+* CSRF where applicable to the authentication architecture.
 
-Do not expose sensitive payment-provider information.
+Never trust:
 
----
+* Client-calculated totals.
+* Client-selected authorization roles.
+* Client-provided seller identifiers.
+* Client-provided payment status.
+* Client-provided order ownership.
 
-# 35. Review Experience
-
-Implement customer review functionality.
-
-Support:
-
-* Review eligibility
-* Review creation
-* Rating
-* Text
-* Media where supported
-* Review editing
-* Review removal where supported
-* Review status
-* Review submission feedback
-
-The backend determines verified purchase eligibility.
-
-Do not allow users to review arbitrary products without backend authorization.
+The backend must enforce all security-sensitive decisions.
 
 ---
 
-# 36. Rating UI
+# PERFORMANCE
 
-Build accessible rating components.
+Optimize account, checkout, and order workflows for real production usage.
 
-Support:
+Use:
 
-* 1–5 rating
-* Visual stars
-* Textual rating representation
-* Keyboard operation
-* Screen-reader labels
+* Server rendering where appropriate.
+* Client components only where required.
+* Efficient query caching.
+* Targeted cache invalidation.
+* Lazy loading for expensive interfaces.
+* Code splitting.
+* Optimized images.
+* Avoidance of unnecessary rerenders.
+* Efficient large order/item rendering.
+* Proper loading boundaries.
 
-Do not communicate rating solely through color.
+Do not prefetch sensitive customer information unnecessarily.
 
----
-
-# 37. Review Media
-
-If the backend supports review media:
-
-* Use existing media-upload infrastructure.
-* Validate file types client-side for UX.
-* Respect server-side validation.
-* Show upload progress where supported.
-* Allow removal before submission.
-* Handle failed uploads.
-* Prevent exposing private object URLs.
-
-Client-side validation is not a security boundary.
+Do not preload expensive private pages merely because navigation exists.
 
 ---
 
-# 38. Review Editing and Removal
+# ACCESSIBILITY
 
-Support existing backend capabilities.
+All implemented customer workflows must meet strong accessibility standards.
 
-Display:
+Ensure:
 
-* Current review
-* Review state
-* Edit
-* Remove
-* Moderation status where appropriate
+* Keyboard navigation.
+* Focus management.
+* Accessible dialogs.
+* Accessible form errors.
+* Screen-reader announcements for important state changes.
+* Accessible progress indicators.
+* Proper labels.
+* Semantic headings.
+* Logical navigation.
+* Accessible tables or list structures where used.
+* Accessible status indicators.
+* Reduced-motion support.
 
-Do not allow editing a review merely because a UI button exists.
+Particular attention must be paid to:
 
-The backend determines authorization.
-
----
-
-# 39. Notification Center
-
-Implement customer-facing in-app notifications.
-
-Support:
-
-* Notification list
-* Unread count
-* Read/unread state
-* Mark read
-* Mark all read
-* Pagination
-* Notification categories
-* Navigation to relevant resources
-
-Use the actual notification contracts.
+* Checkout steps.
+* Payment failures.
+* Address dialogs.
+* Coupon errors.
+* Order status changes.
+* Return forms.
+* Confirmation messages.
 
 ---
 
-# 40. Real-Time Notifications
+# RESPONSIVE EXPERIENCE
 
-If the backend supports SSE:
+All account and purchasing workflows must work on:
 
-* Establish authenticated SSE connection appropriately.
-* Handle connection failures.
-* Reconnect safely.
-* Avoid duplicate notifications.
-* Refresh through REST when necessary.
-
-REST remains the recovery mechanism.
-
-Do not make the UI dependent exclusively on SSE.
-
----
-
-# 41. Notification Preferences
-
-Implement notification preferences where supported.
-
-Allow customers to control appropriate categories/channels.
-
-Examples:
-
-* Orders
-* Shipping
-* Returns
-* Reviews
-* Marketing
-
-Respect mandatory transactional/security notifications.
-
-Do not allow users to disable notifications that the backend defines as mandatory.
-
----
-
-# 42. Account Security UX
-
-If backend security/session APIs exist, expose appropriate account-security functionality.
-
-Examples:
-
-* Active sessions/devices
-* Sign out of session
-* Sign out everywhere
-* Recent security activity
-
-Never display:
-
-* Session secrets
-* Refresh tokens
-* Password hashes
-
----
-
-# 43. Password Changes
-
-If supported by the backend:
-
-* Current password
-* New password
-* Confirmation
-* Validation
-* Server error handling
-* Success state
-
-Never log or persist passwords in client state beyond the immediate form lifecycle.
-
-Clear sensitive form state after submission where appropriate.
-
----
-
-# 44. Session Expiration
-
-The application must handle expired sessions gracefully.
-
-Possible behavior:
-
-* Preserve safe navigation context.
-* Prompt for authentication.
-* Redirect to login.
-* Refresh public data.
-* Prevent unauthorized mutations.
-
-Do not enter infinite retry/redirect loops.
-
----
-
-# 45. Deep Links
-
-Support direct navigation to:
-
-* Product
-* Category
-* Search
-* Cart
-* Checkout
-* Order
-* Return
-* Account
-
-Protected deep links must require authentication.
-
-After successful authentication, restore the intended destination safely.
-
-Prevent open redirects.
-
----
-
-# 46. Navigation Security
-
-Any redirect destination supplied by:
-
-* Query parameters
-* Backend metadata
-* Notification payloads
-
-must be validated.
-
-Do not navigate blindly to arbitrary external URLs.
-
----
-
-# 47. Accessibility Hardening
-
-Review the entire web application for:
-
-* Keyboard navigation
-* Focus management
-* Semantic landmarks
-* Heading hierarchy
-* Form labels
-* Error announcements
-* Dialog accessibility
-* Drawer accessibility
-* Autocomplete accessibility
-* Table accessibility
-* Timeline accessibility
-* Rating accessibility
-* Toast accessibility
-
-Ensure important information is available without relying on color, hover, or animation.
-
----
-
-# 48. Responsive UX
-
-Validate all major flows on:
-
-* Mobile
-* Tablet
-* Desktop
+* Desktop.
+* Tablet.
+* Mobile web.
 
 Pay particular attention to:
 
-* Checkout
-* Payment
-* Order details
-* Tracking
-* Returns
-* Product pages
-* Cart
-* Account
+* Checkout on narrow screens.
+* Sticky summaries.
+* Address selection.
+* Payment controls.
+* Order timelines.
+* Tracking information.
+* Tables that may contain many fields.
+* Modal dialogs.
+* Form layouts.
 
-Avoid horizontally scrolling forms or tables unless intentionally designed.
-
----
-
-# 49. Loading and Error UX
-
-Every asynchronous operation must have:
-
-* Loading state
-* Success state where relevant
-* Error state
-* Retry/recovery behavior
-
-Critical flows must not leave the user uncertain about whether an operation succeeded.
-
-Especially protect:
-
-* Payment
-* Order creation
-* Refund/return submission
-* Account mutations
+Do not rely on horizontal scrolling for critical checkout actions.
 
 ---
 
-# 50. Duplicate Submission Protection
+# TESTING
 
-Prevent accidental duplicate mutations.
+Implement comprehensive tests for the introduced functionality.
 
-Especially:
+Cover:
 
-* Pay
-* Place order
-* Apply coupon
-* Create return
-* Submit review
-* Update address
-* Update profile
+* Authentication-aware account routes.
+* Profile editing.
+* Address management.
+* Wishlist behavior.
+* Checkout state.
+* Multi-seller presentation.
+* Coupon behavior.
+* Shipping selection.
+* Payment states.
+* Duplicate-submission protection.
+* Order placement.
+* Order history.
+* Order details.
+* Cancellation.
+* Shipment tracking.
+* Return submission.
+* Refund display.
+* Review submission.
+* Notification behavior.
+* Real-time update handling.
+* Error states.
+* Accessibility-critical interactions.
 
-Use:
+Include integration and end-to-end coverage for critical purchase flows where the repository supports it.
 
-* Disabled submit state
-* Mutation state
-* Backend idempotency where required
-* Safe recovery after network failures
-
-Do not rely solely on disabled buttons for financial idempotency.
-
----
-
-# 51. Query Cache Management
-
-Use TanStack Query consistently.
-
-Invalidate or update only affected queries after mutations.
-
-Examples:
-
-### Cart
-
-Refresh:
-
-* Cart
-* Cart count
-
-### Order creation
-
-Refresh:
-
-* Cart
-* Checkout session
-* Order detail
-
-### Return
-
-Refresh:
-
-* Order
-* Return
-* Refund
-
-### Review
-
-Refresh:
-
-* Review
-* Product rating summary
-
-### Notification
-
-Refresh:
-
-* Notification list
-* Unread count
-
-Avoid global cache invalidation.
+Prioritize tests around failure and concurrency-sensitive behavior rather than only successful paths.
 
 ---
 
-# 52. Optimistic Updates
+# OBSERVABILITY
 
-Use optimistic updates only when rollback is reliable.
+Integrate appropriate frontend telemetry for:
 
-Suitable examples:
+* Checkout failures.
+* Payment failures.
+* Order submission failures.
+* API errors.
+* Authentication failures.
+* Route errors.
+* Return submission failures.
+* Critical customer workflow failures.
 
-* Mark notification read
-* UI preferences
+Never record:
 
-Be conservative with:
+* Passwords.
+* Access tokens.
+* Session secrets.
+* Payment credentials.
+* Full sensitive personal information.
+* Sensitive financial details.
 
-* Payment
-* Order
-* Refund
-* Return
-* Inventory-sensitive actions
-
-Use authoritative server responses for financially important operations.
-
----
-
-# 53. Frontend Analytics
-
-Integrate with the existing analytics architecture.
-
-Potential events:
-
-* Product viewed
-* Search submitted
-* Add to cart
-* Checkout started
-* Checkout completed
-* Payment UI failure
-* Order confirmation viewed
-* Return started
-* Review submitted
-
-Do not treat frontend analytics as authoritative.
-
-Do not emit:
-
-* Passwords
-* Payment credentials
-* Full addresses
-* Sensitive personal data
-* Authentication tokens
-
-Backend business events remain authoritative for financial/order analytics.
+Use correlation identifiers where available.
 
 ---
 
-# 54. Performance Hardening
+# DOCUMENTATION
 
-Optimize:
+Update documentation for:
 
-* Initial page load
-* Product page rendering
-* Search
-* Cart
-* Checkout
-* Account
-* Order pages
+* Account routing.
+* Checkout architecture.
+* Customer state management.
+* Payment integration boundaries.
+* Order data handling.
+* Real-time update behavior.
+* Error handling.
+* Testing strategy.
+* Environment requirements.
+* Local development.
+* Important security assumptions.
 
-Use:
-
-* Server rendering where appropriate
-* Streaming where beneficial
-* Code splitting
-* Image optimization
-* Lazy loading
-* Query caching
-* Request cancellation
-
-Avoid unnecessary client components.
+Document actual implementation only.
 
 ---
 
-# 55. Checkout Performance
+# IMPLEMENTATION BOUNDARIES
 
-The checkout flow should minimize unnecessary requests.
+Do not redesign backend contracts.
 
-Avoid:
+Do not modify database ownership merely to simplify frontend implementation.
 
-```text
-Address request
-→ shipping request
-→ pricing request
-→ coupon request
-→ inventory request
-→ tax request
-→ payment request
-```
+Do not create fake payment integrations.
 
-when the backend already provides an appropriate aggregated checkout contract.
+Do not make frontend calculations authoritative.
 
-Use the existing backend checkout orchestration rather than recreating orchestration in the browser.
+Do not expose internal seller or administrative information.
 
----
+Do not create client-side authorization as a substitute for backend authorization.
 
-# 56. SEO Completion
+Do not implement unsupported backend capabilities through mocked production behavior.
 
-Complete SEO for public pages.
+Do not create a second competing checkout architecture.
 
-Implement where appropriate:
-
-* Product metadata
-* Category metadata
-* Canonical URLs
-* Open Graph
-* Structured data
-* Breadcrumb schema
-* Sitemap integration
-* Robots rules
-
-Do not index:
-
-* Cart
-* Checkout
-* Account
-* Orders
-* Returns
-* Private notifications
-* Seller/private administrative pages
+Do not duplicate order or payment state into unrelated client stores.
 
 ---
 
-# 57. Structured Product Data
+# ABSOLUTE IMPLEMENTATION RULES
 
-Where appropriate, expose schema.org product information based only on authoritative backend data.
+The implementation must contain:
 
-Do not generate structured data containing:
+* No pseudo-code.
+* No placeholders.
+* No TODO comments.
+* No FIXME comments.
+* No fake APIs.
+* No hardcoded secrets.
+* No hardcoded payment credentials.
+* No incomplete workflows.
+* No intentionally broken routes.
+* No omitted required implementation.
+* No “implement similarly.”
+* No “remaining code omitted.”
+* No “left as an exercise.”
+* No “for brevity.”
+* No knowingly broken TypeScript.
+* No knowingly broken builds.
+* No duplicate competing state systems.
+* No insecure storage of sensitive credentials.
 
-* Fake prices
-* Fake availability
-* Fake ratings
-* Fake reviews
+Every implemented workflow must handle success, loading, failure, and recovery states.
 
-If structured data cannot be accurately produced, omit the unsupported field.
+Every mutation must protect against accidental duplicate submission where relevant.
 
----
-
-# 58. Error Boundaries
-
-Implement route/feature-level error boundaries.
-
-Critical application shell functionality should remain available when a noncritical component fails.
-
-Provide:
-
-* Human-readable error
-* Retry
-* Return/navigation option
-
-Do not expose stack traces.
-
----
-
-# 59. Security Review
-
-Review the entire frontend for:
-
-* XSS
-* Unsafe HTML
-* Open redirects
-* URL injection
-* Token leakage
-* Sensitive data exposure
-* Insecure local storage
-* Third-party script risks
-* CSRF assumptions
-* Clickjacking
-* Dependency vulnerabilities
-
-Never assume frontend security replaces backend authorization.
+Every financial or transactional value displayed as authoritative must originate from backend responses.
 
 ---
 
-# 60. Content Security
+# REPOSITORY COMPATIBILITY
 
-If the application renders user-generated content:
+Integrate all functionality with the repository's existing frontend architecture.
 
-* Escape by default.
-* Sanitize explicitly where rich content is required.
-* Do not execute arbitrary HTML/scripts.
-* Prevent dangerous URL schemes.
+Preserve:
 
-Review:
+* Existing routing conventions.
+* Existing design system.
+* Existing authentication mechanisms.
+* Existing API client.
+* Existing TanStack Query configuration.
+* Existing state-management conventions.
+* Existing form infrastructure.
+* Existing testing tools.
+* Existing observability integrations.
 
-* Product descriptions
-* Reviews
-* Seller-provided content
-* Notification content
+If existing functionality conflicts with the requirements, determine the safest production-grade integration strategy before changing it.
 
----
+Avoid unnecessary rewrites.
 
-# 61. Third-Party Scripts
-
-Audit third-party scripts.
-
-Any third-party analytics/payment/script integration must:
-
-* Be necessary
-* Be documented
-* Avoid unnecessary data collection
-* Load securely
-* Not receive secrets
-* Respect privacy requirements
-
-Do not add arbitrary tracking scripts.
+Do not create parallel implementations merely because a different approach appears cleaner.
 
 ---
 
-# 62. Environment Security
-
-Audit all environment variables.
-
-Client-exposed variables must contain only safe public values.
-
-Never expose:
-
-* Database URLs
-* AWS secrets
-* Stripe secret keys
-* Redis credentials
-* Kafka credentials
-* Internal API credentials
-
----
-
-# 63. API Failure Handling
-
-Handle backend dependency failures gracefully.
-
-Examples:
-
-### Catalog unavailable
-
-Show retryable catalog error.
-
-### Search unavailable
-
-Show search-specific error.
-
-### Cart unavailable
-
-Prevent checkout until authoritative cart state is available.
-
-### Checkout unavailable
-
-Explain that checkout cannot currently proceed.
-
-### Payment unavailable
-
-Do not claim order success.
-
-### Notifications unavailable
-
-Do not block core commerce.
-
----
-
-# 64. Offline/Network Resilience
-
-Where useful, detect temporary network failures.
-
-Do not pretend an operation succeeded because the request was interrupted.
-
-For critical operations:
-
-* Reconcile with backend state.
-* Refresh the relevant resource.
-* Show actual status.
-
-This is especially important for:
-
-* Payments
-* Orders
-* Returns
-
----
-
-# 65. Payment Reconciliation UX
-
-If payment submission times out but the result is unknown:
-
-Do not immediately create another payment.
-
-Instead:
-
-1. Re-query the checkout/payment/order state.
-2. Determine whether payment succeeded.
-3. Display the authoritative result.
-4. Allow retry only when safe.
-
----
-
-# 66. Order Reconciliation UX
-
-If order creation times out:
-
-Do not automatically submit another order.
-
-Instead:
-
-1. Query the checkout/order state.
-2. Determine whether an order was created.
-3. Show the existing order if available.
-4. Allow retry only when the backend confirms it is safe.
-
----
-
-# 67. Testing Strategy
-
-Implement or extend:
-
-* Unit tests
-* Component tests
-* Integration tests
-* API integration tests
-* Accessibility tests
-* E2E tests
-
-Prioritize complete customer journeys.
-
----
-
-# 68. Authentication E2E
-
-Test:
-
-```text
-Register
- ↓
-Login
- ↓
-Browse catalog
- ↓
-Add product
- ↓
-View cart
- ↓
-Checkout
- ↓
-Payment
- ↓
-Order confirmation
-```
-
-Where payment test infrastructure is available, use safe test-mode credentials/configuration.
-
-Never use real production credentials in tests.
-
----
-
-# 69. Checkout E2E
-
-Test:
-
-* Valid checkout
-* Invalid address
-* Shipping selection
-* Coupon
-* Price change
-* Inventory change
-* Session expiration
-* Payment failure
-* Payment requires action
-* Successful order
-
----
-
-# 70. Order E2E
-
-Test:
-
-* Order history
-* Order detail
-* Multiple sellers
-* Multiple shipments
-* Tracking
-* Cancellation where supported
-* Return initiation
-* Refund status
-
----
-
-# 71. Review E2E
-
-Test:
-
-* Eligible review
-* Ineligible review
-* Rating
-* Text
-* Media
-* Edit
-* Remove
-* Moderation status
-
----
-
-# 72. Notification E2E
-
-Test:
-
-* Notification loading
-* Unread count
-* Mark read
-* Mark all read
-* Navigation
-* SSE delivery if available
-* Reconnection
-* REST recovery
-
----
-
-# 73. Accessibility Testing
-
-Test complete critical flows with keyboard interaction.
-
-Verify:
-
-* Login
-* Search
-* Product selection
-* Cart
-* Checkout
-* Payment
-* Orders
-* Returns
-* Reviews
-
-Use the existing accessibility tooling.
-
----
-
-# 74. Responsive Testing
-
-Validate critical flows at representative:
-
-* Mobile
-* Tablet
-* Desktop
-
-Ensure no important control becomes inaccessible.
-
----
-
-# 75. Browser Testing
-
-Run the repository's supported browser test matrix.
-
-At minimum validate the major customer flow in the browsers officially supported by the project.
-
-Do not claim unsupported browsers were tested.
-
----
-
-# 76. Visual Regression
-
-If the repository has visual regression testing, update and validate relevant snapshots.
-
-If it does not, do not introduce an unnecessarily large visual-regression framework solely for this phase.
-
----
-
-# 77. Frontend Observability
-
-Instrument important user-flow failures.
-
-Capture:
-
-* Route errors
-* API failures
-* Query failures
-* Payment UI errors
-* Checkout errors
-* Order-flow errors
-* Return-flow errors
-* Review-flow errors
-
-Never record sensitive payment or authentication data.
-
----
-
-# 78. Logging
-
-Avoid production `console.log` statements containing:
-
-* User information
-* Tokens
-* Payment information
-* Internal identifiers unnecessarily
-* Backend payloads containing sensitive data
-
-Use the existing logging/telemetry mechanism.
-
----
-
-# 79. Internationalization Boundary
-
-Structure customer-visible strings so internationalization can be introduced cleanly.
-
-Do not hardcode locale-sensitive:
-
-* Dates
-* Currency
-* Numbers
-
-Use appropriate formatting utilities.
-
-Do not invent translations unless the repository supports them.
-
----
-
-# 80. Currency and Dates
-
-Display monetary values using:
-
-* Backend currency
-* Correct precision
-* Locale-aware formatting
-
-Display dates using consistent timezone semantics.
-
-Do not use browser-local time to reinterpret backend timestamps incorrectly.
-
----
-
-# 81. Final Integration Review
-
-After implementation, verify that:
-
-* Product browsing works.
-* Search works.
-* Cart works.
-* Authentication works.
-* Checkout works against actual backend contracts.
-* Payment works where configured.
-* Orders work.
-* Shipment tracking works.
-* Returns work.
-* Reviews work.
-* Notifications work.
-* Account management works.
-* SEO works.
-* Accessibility works.
-* Responsive behavior works.
-* Errors are handled.
-* No fake commerce data remains.
-* No secrets are exposed.
-* No duplicate frontend architecture exists.
-
----
-
-# 82. Backward Compatibility
-
-Do not break:
-
-* Existing routes
-* Existing APIs
-* Existing query keys
-* Existing state
-* Authentication
-* Product pages
-* Search
-* Cart
-* Existing design system
-
-If a breaking change is necessary:
-
-* Assess actual repository impact.
-* Migrate safely.
-* Update consumers.
-* Update tests.
-* Document the change.
-
----
-
-# 83. What This Volume Must NOT Implement
-
-Do not expand beyond the customer-facing web application into:
-
-* Seller portal
-* Administrative portal
-* Full analytics dashboard
-* Recommendation engine
-* Advertising platform
-* Warehouse management UI
-* Tax-remittance UI
-* Seller payout/settlement UI
-* Internal operations dashboard
-
-Those are separate concerns unless already implemented in the repository.
-
----
-
-# 84. Production Validation
+# VALIDATION AND COMPLETION
 
 Before completion:
 
-1. Run frontend build.
-2. Run TypeScript validation.
-3. Run lint.
-4. Run unit tests.
-5. Run component tests.
-6. Run integration tests.
-7. Run accessibility tests.
-8. Run E2E tests.
-9. Validate authentication.
-10. Validate checkout.
-11. Validate payment.
-12. Validate order creation.
-13. Validate returns.
-14. Validate reviews.
-15. Validate notifications.
-16. Validate SEO.
-17. Validate responsive behavior.
-18. Inspect browser console.
-19. Inspect network requests.
-20. Verify no sensitive values are exposed.
-21. Run existing regression tests.
+* Run formatting checks.
+* Run linting.
+* Run TypeScript checks.
+* Run unit tests.
+* Run integration tests where available.
+* Run end-to-end tests for critical workflows where available.
+* Validate authenticated and unauthenticated routing.
+* Validate account management.
+* Validate address management.
+* Validate wishlist.
+* Validate checkout.
+* Validate multi-seller presentation.
+* Validate payment success and failure states.
+* Validate order placement.
+* Validate order history/details.
+* Validate shipment tracking.
+* Validate cancellation.
+* Validate returns.
+* Validate refund presentation.
+* Validate notifications.
+* Validate responsive layouts.
+* Validate accessibility-critical behavior.
+* Validate production build.
+* Confirm no secrets were introduced.
+* Confirm no incomplete implementation markers remain.
+* Confirm documentation is synchronized.
 
-Fix actual failures.
+Fix discovered implementation problems before reporting completion.
 
-Do not mark untested behavior as validated.
-
----
-
-# 85. Final Repository Inspection
-
-Inspect the final repository state and verify:
-
-* No duplicate API clients.
-* No duplicate state-management systems.
-* No duplicate authentication implementation.
-* No duplicate payment integration.
-* No fake production data.
-* No exposed secrets.
-* No insecure redirects.
-* No client-only authorization.
-* No broken backend contracts.
-* No inaccessible critical controls.
-* No major responsive regressions.
-* No broken SEO behavior.
-* No critical-flow error handling gaps.
+Do not claim successful validation if a required check was not actually executed.
 
 ---
 
-# 86. Final Implementation Report
+# IMPLEMENTATION REPORT
 
-Provide a factual report based only on the actual repository.
+After implementation, provide:
 
-Include:
+1. Summary of completed customer account functionality.
+2. Summary of checkout functionality.
+3. Summary of payment integration.
+4. Summary of order and fulfillment functionality.
+5. Summary of returns/refunds functionality.
+6. Summary of reviews and notifications.
+7. Files created.
+8. Files modified.
+9. API contracts consumed.
+10. Authentication/session behavior.
+11. Real-time behavior.
+12. Tests executed.
+13. Validation commands executed.
+14. Genuine limitations or repository constraints.
 
-### Implemented
-
-Actual functionality implemented.
-
-### Routes
-
-Actual pages/routes created or modified.
-
-### Account
-
-Actual customer-account functionality.
-
-### Checkout
-
-Actual checkout flow.
-
-### Payments
-
-Actual payment integration and behavior.
-
-### Orders
-
-Actual order-history/detail functionality.
-
-### Fulfillment
-
-Actual shipment/tracking functionality.
-
-### Returns
-
-Actual return functionality.
-
-### Reviews
-
-Actual review functionality.
-
-### Notifications
-
-Actual notification functionality.
-
-### API Integration
-
-Actual backend endpoints consumed.
-
-### State Management
-
-Actual TanStack Query/Zustand changes.
-
-### Security
-
-Actual security improvements.
-
-### Accessibility
-
-Actual accessibility implementation and tests.
-
-### SEO
-
-Actual SEO implementation.
-
-### Performance
-
-Actual performance improvements.
-
-### Testing
-
-Actual tests and commands/results.
-
-### Remaining Work
-
-Only genuinely incomplete functionality discovered in the repository.
-
-Never claim functionality that was not actually implemented and validated.
+Report only actual implementation results.
 
 ---
 
-# 87. Non-Negotiable Rules
+# FINAL DIRECTIVE
 
-* Inspect the repository first.
-* The actual repository is the source of truth.
-* This prompt is standalone.
-* This is one implementation unit of one coherent ecommerce marketplace.
-* Integrate with the existing frontend and backend.
-* Do not create competing implementations.
-* Do not regenerate unchanged files.
-* Do not invent backend endpoints.
-* Do not invent provider capabilities.
-* Do not use fake production commerce data.
-* Never trust the frontend as the authorization boundary.
-* Never expose secrets.
-* Never expose payment credentials.
-* Never put tokens or secrets in URLs.
-* Never use floating-point arithmetic for authoritative monetary values.
-* Never assume payment succeeded merely because the user clicked Pay.
-* Never create duplicate orders after an ambiguous network failure.
-* Never create duplicate payment attempts unnecessarily.
-* Never bypass backend checkout validation.
-* Never bypass inventory, order, payment, return, or review rules.
-* Do not expose private customer or seller information.
-* Do not render unsafe user-generated HTML.
-* Do not sacrifice accessibility for visual appearance.
-* Do not sacrifice performance through unnecessary client-side rendering.
-* Do not use TODOs or placeholders as substitutes for implementation.
-* Do not falsely claim completion.
-* Implement real production-grade functionality.
-* Add real tests.
-* Validate the actual repository.
+Inspect the repository first.
 
-Now inspect the repository and implement this entire **Checkout, Payments, Orders, Fulfillment, Returns, Reviews, Notifications, Customer Account, and Production Hardening frontend implementation unit** as a production-grade extension of the existing Amazon-style ecommerce marketplace.
+Then implement the complete production-grade customer account, checkout, payment, order, fulfillment, return, refund, review, and notification frontend scope defined by this prompt.
+
+Build these capabilities as one coherent customer experience.
+
+Use the backend as the authoritative source for all transactional state.
+
+Protect customers against stale state, duplicate submissions, payment failures, inventory conflicts, checkout expiration, and network failures.
+
+Maintain strong accessibility, responsive behavior, security, performance, observability, and test coverage.
+
+Do not stop at scaffolding.
+
+Do not provide a conceptual proposal instead of implementation.
+
+Implement the actual code, integrate it with the existing repository, validate it thoroughly, fix discovered issues, update documentation, and leave the application in a working production-grade state.

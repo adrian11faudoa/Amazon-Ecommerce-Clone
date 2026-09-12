@@ -1,1562 +1,1386 @@
-# Amazon Ecommerce Marketplace — Backend Prompt — Volume 3
+# AMAZON ECOMMERCE PLATFORM — BACKEND VOLUME 3 IMPLEMENTATION PROMPT
 
-## Role
+## ROLE
 
-You are operating as the senior backend engineering team responsible for implementing the next production-grade backend implementation unit of an original Amazon-style ecommerce marketplace.
+Act as the complete **Backend Engineering Team** responsible for implementing the next production-grade backend capabilities of the Amazon Ecommerce Platform.
 
-Act as:
+Operate as a Principal Backend Architect, Staff Backend Engineers, Database Engineer, Distributed Systems Engineer, Fulfillment Engineer, Search Engineer, Security Engineer, QA Engineer, and DevOps-aware Backend Engineer working as one engineering team.
 
-* Principal Software Architect
-* Staff Backend Engineer
-* Database Architect
-* Security Engineer
-* Distributed Systems Engineer
-* QA Engineer
-* DevOps Engineer
+Do not teach the implementation process. Perform the engineering work directly in the repository.
 
-This is an implementation task, not a tutorial.
-
-The objective is to make real, production-quality changes to the existing repository.
+The objective is to implement the operational commerce capabilities surrounding fulfillment, shipping, returns, reviews, notifications, seller financial settlement, and the search platform while preserving the transactional integrity of the ecommerce system.
 
 ---
 
-# 1. Project Context
+# PROJECT
 
-Build an original, production-grade ecommerce marketplace supporting customers, products, sellers, offers, inventory, carts, checkout, orders, payments, fulfillment, reviews, search, notifications, administration, and analytics.
+Build the backend for a global, multi-seller ecommerce marketplace comparable in breadth and operational complexity to Amazon Marketplace.
 
-The backend technology baseline is:
+The platform supports:
 
-* Node.js
-* NestJS
-* TypeScript
-* PostgreSQL
-* Prisma ORM
-* Redis
-* Elasticsearch/OpenSearch
-* BullMQ
-* AWS S3
-* AWS CloudFront
-* Stripe
-* REST APIs
-* OpenAPI / Swagger
-* Webhooks
-* Kafka/Redpanda where justified
-* Docker
-* AWS
-* Terraform/OpenTofu
-* Kubernetes where justified
+* Millions of customers.
+* Thousands of sellers.
+* Millions of products and variants.
+* High-volume product search.
+* Multi-seller orders.
+* Seller-specific fulfillment.
+* Shipments.
+* Returns.
+* Refunds.
+* Reviews.
+* Notifications.
+* Seller payouts.
+* Disputes.
+* Search indexing.
+* Administrative operations.
+* Background processing.
+* High availability.
+* Horizontal scaling.
+* Auditable financial operations.
 
-Use:
-
-* Clean Architecture
-* Domain-Driven Design
-* SOLID
-* Repository Pattern
-* Service Layer
-* Explicit domain boundaries
-* Strong typing
-* Transactional consistency
-* Idempotent distributed operations
-
-The repository is the source of truth for the actual implementation state.
-
-Do not assume that code described by requirements already exists.
+The backend must distinguish clearly between customer-facing order state, seller fulfillment state, shipment state, return state, payment state, and seller settlement state.
 
 ---
 
-# 2. Repository-First Rule
+# TECHNOLOGY DIRECTION
+
+Use the following technology direction unless the repository already contains a compatible production-grade implementation that should be preserved.
+
+## Backend
+
+* NestJS.
+* TypeScript.
+* REST APIs.
+* Swagger/OpenAPI.
+* Webhooks.
+* WebSockets or SSE only where operationally justified.
+
+## Database
+
+* PostgreSQL.
+* Prisma ORM.
+
+## Cache
+
+* Redis.
+
+## Search
+
+* Elasticsearch or OpenSearch.
+
+## Background Processing
+
+* BullMQ.
+
+## Object Storage
+
+* S3-compatible object storage.
+* CloudFront or equivalent CDN.
+
+## Payments
+
+* Stripe or an existing provider abstraction.
+
+## Observability
+
+* OpenTelemetry.
+* Prometheus.
+* Grafana.
+* Loki and/or equivalent centralized logging.
+* Tempo and/or equivalent tracing.
+
+---
+
+# SOURCE OF TRUTH
+
+The repository is the source of truth for implementation state.
 
 Before modifying anything:
 
-1. Inspect the complete repository structure relevant to the backend.
-2. Inspect package configuration.
-3. Inspect NestJS modules.
-4. Inspect Prisma schema and migrations.
-5. Inspect existing domain entities.
-6. Inspect repositories and services.
-7. Inspect controllers and DTOs.
-8. Inspect authentication and authorization.
-9. Inspect existing Redis infrastructure.
-10. Inspect existing event/outbox infrastructure.
-11. Inspect existing BullMQ infrastructure.
-12. Inspect existing API conventions.
-13. Inspect existing tests.
-14. Inspect environment/configuration conventions.
-15. Inspect existing catalog, seller, product, SKU, offer, and pricing implementations.
+1. Inspect the repository.
+2. Inspect backend modules.
+3. Inspect Prisma schema and migrations.
+4. Inspect order and payment models.
+5. Inspect inventory functionality.
+6. Inspect seller authorization.
+7. Inspect event and queue infrastructure.
+8. Inspect existing search infrastructure.
+9. Inspect storage/media infrastructure.
+10. Inspect notification infrastructure.
+11. Inspect tests.
+12. Inspect API documentation.
+13. Inspect configuration.
+14. Identify reusable abstractions.
+15. Identify existing implementations that must be extended rather than duplicated.
 
-Do not recreate functionality that already exists.
+Do not assume that any functionality exists simply because it is architecturally required.
 
-If the repository already contains compatible implementations, extend and integrate them.
-
-If the implementation differs from the requirements, preserve working behavior where possible and make the smallest safe change required to achieve the intended architecture.
-
-Do not create competing models, duplicate services, parallel repositories, duplicate APIs, or incompatible abstractions.
+Do not regenerate compatible infrastructure unnecessarily.
 
 ---
 
-# 3. Scope of This Implementation Unit
+# BACKEND IMPLEMENTATION SCOPE
 
-Implement the production-grade backend foundation for:
+Implement the marketplace operational layer:
 
-1. Inventory
-2. Inventory locations
-3. Inventory items
-4. Inventory movements
-5. Inventory reservations
-6. Stock availability
-7. Inventory concurrency control
-8. Reservation expiration
-9. Cart
-10. Cart items
-11. Cart ownership
-12. Anonymous cart support where compatible with the existing architecture
-13. Authenticated-cart merging
-14. Cart pricing freshness
-15. Cart validation
-16. Inventory/cart API contracts
-17. Inventory and cart events
-18. Inventory background jobs
-19. Redis usage where appropriate
-20. Auditability
-21. Observability
-22. Security
-23. Automated testing
+* Fulfillment.
+* Shipments.
+* Shipment items.
+* Shipping lifecycle.
+* Seller fulfillment operations.
+* Order cancellation integration.
+* Returns.
+* Return items.
+* Refund integration.
+* Customer reviews.
+* Ratings.
+* Review moderation foundations.
+* Notifications.
+* Notification preferences.
+* Search indexing.
+* Product search.
+* Search filters and facets.
+* Search suggestions.
+* Seller payouts.
+* Seller settlement calculations.
+* Dispute foundations.
+* Operational background jobs.
+* Relevant real-time updates.
+* Auditability.
+* Operational observability.
 
-This volume must integrate with the existing:
-
-* Product
-* ProductVariant
-* SKU
-* Seller
-* SellerOffer
-* Pricing
-* Customer
-* Authentication
-* Authorization
-* PostgreSQL
-* Prisma
-* Redis
-* Outbox/event infrastructure
-
-already present in the repository.
-
-Do not implement the complete checkout, order, payment, fulfillment, returns, reviews, notification, or analytics domains in this volume.
-
-However, inventory and cart must expose the contracts required by later commerce workflows.
+Do not implement web or mobile UI.
 
 ---
 
-# 4. Inventory Domain
+# FULFILLMENT DOMAIN
 
-Create or extend an explicit Inventory bounded context.
+Implement production-grade seller fulfillment.
 
-Inventory must be authoritative in PostgreSQL.
+The system must support seller-specific fulfillment workflows within multi-seller customer orders.
 
-Redis must never become the sole durable source of inventory truth.
+Fulfillment must distinguish:
 
-Inventory operations must be transactional and concurrency-safe.
+* Customer order.
+* Seller order grouping.
+* Order item.
+* Shipment.
+* Shipment item.
 
-The system must prevent:
+A seller must only manage fulfillment for items belonging to that seller.
 
-* Overselling
-* Negative available inventory
-* Duplicate reservations
-* Double release
-* Lost updates
-* Race conditions
-* Cross-seller inventory access
-* Unauthorized stock modification
+Implement appropriate fulfillment operations for:
 
----
+* Confirming fulfillment.
+* Preparing items.
+* Packing.
+* Creating shipments.
+* Marking shipments as shipped.
+* Marking deliveries.
+* Cancelling eligible items.
+* Handling fulfillment failures.
 
-# 5. Inventory Locations
-
-Implement inventory locations.
-
-A location may represent:
-
-* Warehouse
-* Fulfillment center
-* Seller warehouse
-* Other supported inventory facility defined by the repository architecture
-
-Each location should have appropriate fields such as:
-
-* id
-* seller ownership where applicable
-* name
-* code
-* status
-* address/reference data where required
-* timestamps
-* lifecycle fields
-
-Define appropriate statuses.
-
-Examples may include:
-
-* ACTIVE
-* INACTIVE
-* CLOSED
-
-Do not introduce unnecessary statuses if the existing repository already defines an equivalent lifecycle.
-
-Location codes must be unique within the appropriate ownership boundary.
-
-Enforce seller isolation.
-
-A seller must never be able to read or modify another seller's inventory location.
+Do not allow sellers to arbitrarily transition orders into impossible states.
 
 ---
 
-# 6. Inventory Items
+# SHIPMENT DOMAIN
 
-Implement inventory items tied to the correct sellable identity.
+Implement shipments as first-class entities.
 
-Inventory must not be ambiguously attached only to a product name.
+A shipment must support relationships to:
 
-Use the existing repository's canonical SKU / SellerOffer model.
+* Seller.
+* Customer order.
+* Seller order grouping.
+* Shipment items.
+* Shipping address snapshot.
+* Carrier.
+* Tracking number.
+* Shipment status.
+* Timestamps.
+* Delivery metadata.
 
-An inventory record should represent stock for the appropriate sellable SKU/offer at a specific inventory location.
-
-Track quantities such as:
-
-* on hand
-* reserved
-* available
-
-The exact persisted representation must be chosen based on the existing schema.
-
-Maintain the invariant:
-
-`available = onHand - reserved`
-
-unless the repository architecture intentionally models additional states such as damaged, unavailable, quarantined, or allocated stock.
-
-If additional inventory states exist, define their semantics explicitly.
-
-Never allow:
-
-* negative on-hand stock unless explicitly supported
-* reserved greater than on-hand
-* available below zero
-* arithmetic inconsistencies between persisted quantities
-
-Use database constraints and transactional logic where possible.
+Persist the appropriate historical snapshots so shipment behavior does not depend on mutable customer or product data.
 
 ---
 
-# 7. Inventory Quantity Representation
+# SHIPMENT STATE MACHINE
 
-Choose a representation that is safe for concurrency and high-volume ecommerce operations.
+Implement explicit shipment lifecycle behavior.
 
-Quantities must use integer-compatible representations appropriate for discrete sellable units.
+Support states appropriate to the repository's model, including concepts such as:
 
-Do not use floating-point arithmetic for inventory quantities.
+* Pending.
+* Preparing.
+* Packed.
+* Shipped.
+* In transit.
+* Out for delivery.
+* Delivered.
+* Failed.
+* Cancelled.
+* Returned.
+
+Enforce valid transitions.
+
+Prevent arbitrary direct status mutation.
+
+Shipment status must be changed through authorized business operations.
+
+---
+
+# SHIPPING INFORMATION
+
+Protect customer shipping information.
+
+Customer addresses used by orders and shipments must be stored as appropriate historical snapshots.
+
+Do not rely on a mutable address record to reconstruct the address used for a historical shipment.
+
+Seller access to customer shipping information must be limited to information required for fulfillment.
+
+Do not expose unnecessary customer profile information.
+
+---
+
+# SHIPPING PROVIDER ABSTRACTION
+
+If external shipping providers are supported, implement a provider abstraction.
+
+The abstraction should support capabilities such as:
+
+* Rate retrieval.
+* Label creation.
+* Shipment creation.
+* Tracking lookup.
+* Shipment cancellation where supported.
+* Delivery updates.
+* Provider webhook processing.
+
+Do not hardcode the entire business domain around one shipping provider.
+
+Provider-specific identifiers must be stored separately from internal shipment identifiers.
+
+---
+
+# SHIPPING WEBHOOKS
+
+If carrier webhooks are supported, implement secure webhook handling.
 
 Validate:
 
-* positive quantities for stock additions
-* positive quantities for reservations
-* positive quantities for releases
-* positive quantities for adjustments
+* Provider authenticity.
+* Signatures where available.
+* Event format.
+* Event identity.
+* Shipment association.
 
-Reject zero or negative mutation quantities unless an explicit operation semantics requires them.
+Webhook processing must be idempotent.
 
----
+Do not assume webhook events arrive in order.
 
-# 8. Inventory Movements
+Handle duplicate events safely.
 
-Implement immutable inventory movement records.
-
-Inventory movements provide an auditable history of stock changes.
-
-Examples:
-
-* STOCK_RECEIVED
-* STOCK_ADJUSTED
-* STOCK_RESERVED
-* STOCK_RELEASED
-* STOCK_DEDUCTED
-* STOCK_RETURNED
-* STOCK_DAMAGED
-* STOCK_TRANSFERRED
-
-Only create movement types that are actually required by the implemented domain.
-
-Each movement should capture enough information to reconstruct why inventory changed.
-
-Include appropriate fields such as:
-
-* movement ID
-* inventory item
-* location
-* quantity
-* movement type
-* before quantity
-* after quantity
-* reference type
-* reference ID
-* actor/user where applicable
-* reason
-* correlation/request ID
-* timestamp
-
-Movement records must be immutable.
-
-Do not allow arbitrary modification after creation.
-
-If correction is required, create a compensating movement.
+Persist provider event identifiers where necessary.
 
 ---
 
-# 9. Inventory Reservations
+# ORDER CANCELLATION INTEGRATION
 
-Implement a durable reservation model.
+Implement cancellation rules compatible with fulfillment and payment state.
 
-Reservations are required to prevent multiple concurrent customers from consuming the same available inventory.
+A cancellation must consider:
 
-A reservation should have a lifecycle such as:
+* Order state.
+* Order item state.
+* Shipment state.
+* Payment state.
+* Inventory state.
+* Seller permissions.
+* Customer permissions.
 
-* ACTIVE
-* RELEASED
-* CONSUMED
-* EXPIRED
-* CANCELLED
+Cancellation may require:
 
-Use the repository's existing naming conventions if equivalent states already exist.
+* Inventory release.
+* Payment cancellation.
+* Refund initiation.
+* Seller notification.
+* Shipment cancellation.
 
-A reservation should contain enough information to identify:
-
-* reservation ID
-* inventory item
-* quantity
-* owning cart/checkout context where applicable
-* expiration timestamp
-* lifecycle state
-* creation timestamp
-* release/consumption timestamp where appropriate
-* idempotency/reference information
-
-Do not allow a reservation to be silently reused for another operation.
+Do not execute irreversible side effects without validating the complete state transition.
 
 ---
 
-# 10. Reservation Algorithm
+# RETURNS
 
-Implement a concurrency-safe reservation algorithm.
+Implement a production-grade return foundation.
 
-The critical requirement is:
+Support:
 
-Multiple simultaneous requests must never reserve more stock than is actually available.
+* Return requests.
+* Return items.
+* Return reasons.
+* Return eligibility.
+* Return status.
+* Seller review.
+* Return authorization where required.
+* Return shipment information.
+* Refund integration.
 
-Use PostgreSQL transactional guarantees and appropriate locking or atomic conditional updates.
+Return requests must be associated with the correct customer, order, seller, and order items.
 
-A safe implementation may use a pattern equivalent to:
-
-1. Begin transaction.
-2. Lock or atomically update the inventory row.
-3. Verify sufficient available quantity.
-4. Increase reserved quantity.
-5. Create reservation.
-6. Create movement/audit information.
-7. Commit transaction.
-
-The actual implementation must follow the repository's database architecture.
-
-Do not rely on:
-
-* JavaScript in-memory locks
-* process-local mutexes
-* Redis-only locks
-* frontend checks
-
-for correctness.
-
-Database-level correctness is mandatory.
+Prevent unauthorized return requests for another customer's order.
 
 ---
 
-# 11. Reservation Idempotency
+# RETURN STATE MACHINE
 
-Reservation creation must be idempotent where requests may be retried.
+Implement explicit return lifecycle behavior.
 
-Support an appropriate idempotency/reference mechanism.
+Support appropriate states such as:
 
-A repeated request with the same logical operation must not create multiple reservations.
+* Requested.
+* Approved.
+* Rejected.
+* Awaiting shipment.
+* In transit.
+* Received.
+* Inspected.
+* Refund pending.
+* Refunded.
+* Cancelled.
 
-The system must distinguish:
+Use the repository's exact state naming when already established.
 
-* safe retry of the same request
-* same reference with conflicting payload
-* genuinely new reservation
+Only authorized actors may perform state transitions.
 
-Return deterministic results for retries.
-
-Protect idempotency records from cross-user access.
-
----
-
-# 12. Reservation Release
-
-Implement reservation release.
-
-Release must:
-
-1. Validate ownership/context.
-2. Validate reservation state.
-3. Prevent double release.
-4. Decrease reserved quantity exactly once.
-5. Create the appropriate movement/audit information.
-6. Persist the state transition atomically.
-7. Emit the appropriate event after successful commit.
-
-Repeated release requests must be safely idempotent.
+Prevent invalid transitions.
 
 ---
 
-# 13. Reservation Consumption
+# RETURN ELIGIBILITY
 
-Implement the inventory contract needed for later order/checkout consumption.
-
-A reservation must be consumable exactly once.
-
-Consumption should:
-
-* validate active reservation
-* decrement reserved stock
-* decrement on-hand stock where appropriate
-* transition reservation to consumed
-* record inventory movement
-* remain atomic
-
-Do not implement the complete order/payment workflow here.
-
-Expose a clean domain/service contract that later order workflows can use.
-
----
-
-# 14. Reservation Expiration
-
-Implement expiration handling.
-
-Reservations must not remain active forever.
-
-Create a BullMQ-based expiration mechanism where appropriate.
-
-The expiration process must:
-
-* find expired active reservations
-* attempt safe release
-* remain idempotent
-* tolerate retries
-* avoid double release
-* avoid releasing already consumed reservations
-* produce appropriate audit/event records
-* expose metrics
-
-Do not rely solely on a scheduled application process without durable job semantics if BullMQ is already established in the repository.
-
----
-
-# 15. Inventory Adjustments
-
-Implement controlled inventory adjustments.
-
-Only authorized users/services may modify stock.
-
-Examples:
-
-* receive stock
-* increase stock
-* decrease stock
-* correction
-* return
-* damage
-
-Every adjustment must:
-
-* execute transactionally
-* validate authorization
-* validate quantity
-* record movement
-* update authoritative inventory
-* maintain invariants
-* create audit information
-* emit domain events where appropriate
-
-Never expose an unrestricted endpoint that allows arbitrary inventory manipulation.
-
----
-
-# 16. Seller Inventory Isolation
-
-For marketplace inventory:
-
-* sellers may manage only their own inventory
-* seller users inherit permissions according to seller roles
-* platform administrators may have broader privileges
-* customers must never access private seller inventory data
-* inventory identifiers must not be sufficient to bypass authorization
-
-Prevent IDOR through server-side ownership validation.
-
-Never rely on:
-
-* hidden frontend controls
-* route obscurity
-* client-provided seller IDs
-* UI permissions
-
-for security.
-
----
-
-# 17. Stock Availability
-
-Expose a reliable stock availability service.
-
-The service should answer questions such as:
-
-* Is an offer purchasable?
-* How many units are currently available?
-* Is sufficient stock available for a requested quantity?
-* Which eligible locations can fulfill the request?
-
-Do not expose internal inventory implementation details unnecessarily.
-
-Customer-facing responses must reveal only information appropriate for the product experience.
-
-Avoid exposing exact seller-private inventory data when business rules do not require it.
-
----
-
-# 18. Inventory Location Selection
-
-If the existing architecture supports multiple fulfillment locations, define deterministic location selection.
+Return eligibility must be evaluated server-side.
 
 Consider:
 
-* available quantity
-* location status
-* seller ownership
-* fulfillment eligibility
-* geographic/operational constraints already present
-* future shipping requirements
+* Order state.
+* Delivery date.
+* Product category.
+* Seller policy.
+* Return window.
+* Item state.
+* Previous return activity.
+* Existing refund.
+* Existing return.
 
-Do not implement a complete shipping optimizer here.
+Do not trust clients to determine eligibility.
 
-Create an extensible service boundary so later fulfillment logic can build on it.
-
----
-
-# 19. Cart Domain
-
-Implement or extend the Cart bounded context.
-
-A cart belongs to a customer or supported anonymous session identity.
-
-A cart should contain:
-
-* cart ID
-* customer/session ownership
-* status
-* currency where appropriate
-* timestamps
-* version/concurrency field where appropriate
-
-Cart lifecycle may include:
-
-* ACTIVE
-* CHECKOUT
-* CONVERTED
-* ABANDONED
-* EXPIRED
-
-Use only the states required by the repository.
+Return rules must be deterministic and auditable.
 
 ---
 
-# 20. Cart Items
+# REFUND INTEGRATION
 
-Implement cart items.
+Integrate returns with the existing payment/refund domain.
 
-A cart item must reference the correct sellable identity.
+Ensure:
 
-Do not use a product ID alone when a SellerOffer/SKU is the actual purchasable unit.
+* Refund amounts cannot exceed refundable amounts.
+* Duplicate refund attempts are idempotent.
+* Partial refunds are tracked correctly.
+* Return decisions are auditable.
+* Payment provider state is reconciled with internal state.
 
-A cart item should capture:
-
-* cart
-* seller offer
-* SKU/product references as appropriate
-* quantity
-* pricing snapshot/current pricing metadata where required
-* timestamps
-
-Enforce uniqueness according to the business model.
-
-For example, a cart should not accidentally contain duplicate rows representing the same sellable offer when the intended behavior is quantity aggregation.
+Do not directly manipulate payment-provider state outside the payment abstraction.
 
 ---
 
-# 21. Cart Quantity Changes
+# REVIEW DOMAIN
 
-Implement:
+Implement customer reviews and ratings.
 
-* add item
-* update quantity
-* remove item
-* clear cart
+Support:
 
-Validate:
+* Product reviews.
+* Ratings.
+* Review title/body where applicable.
+* Verified-purchase indicators.
+* Review status.
+* Review creation.
+* Review updates according to policy.
+* Review deletion/moderation rules.
+* Seller/product relationships.
 
-* authentication/ownership
-* offer visibility
-* offer availability
-* SKU validity
-* quantity bounds
-* seller/catalog state
-* purchase restrictions where already supported
+Only authorized customers may create reviews.
 
-Do not trust frontend pricing or availability.
-
-Every mutation must be validated server-side.
+Prevent arbitrary review creation for products the customer did not legitimately purchase when verified-purchase rules are enabled.
 
 ---
 
-# 22. Cart Ownership
+# REVIEW INTEGRITY
 
-A customer must only access their own authenticated cart.
-
-For anonymous carts, if anonymous cart support exists or is required by the repository architecture:
-
-* use a secure opaque identifier
-* avoid predictable identifiers
-* avoid storing sensitive data in client-controlled identifiers
-* apply expiration
-* rate-limit mutations
-* validate ownership on every request
-
-Do not expose another user's cart through guessed IDs.
-
----
-
-# 23. Anonymous-to-Authenticated Cart Merge
-
-If anonymous carts are supported, implement secure cart merging during authentication.
-
-The merge operation must define deterministic behavior for:
-
-* same offer in both carts
-* different quantities
-* unavailable offer
-* deleted offer
-* changed price
-* quantity limits
-* seller restrictions
-
-The merge must be transactional.
-
-Do not silently lose valid cart contents.
-
-Return enough information for the client to explain conflicts where required.
-
----
-
-# 24. Cart and Inventory Interaction
-
-Do not automatically reserve inventory merely because an item is added to a cart unless the repository's architecture explicitly requires cart reservations.
-
-The default design should distinguish:
-
-* cart intent
-* inventory availability
-* inventory reservation
-
-If cart reservations are intentionally implemented, define:
-
-* reservation duration
-* expiration
-* extension rules
-* concurrency behavior
-* release behavior
-* cart abandonment behavior
-
-Do not create a reservation model that later checkout cannot safely reconcile.
-
----
-
-# 25. Cart Pricing Freshness
-
-Cart prices must never be trusted as authoritative payment amounts.
-
-When displaying or validating a cart:
-
-* retrieve current authoritative pricing as required
-* detect price changes
-* detect promotions becoming invalid
-* detect seller-offer changes
-* detect unavailable products
-* detect inventory changes
-
-Represent cart validation results explicitly.
-
-The final checkout/order amount must always be calculated server-side from authoritative data.
-
-Never trust:
-
-* client-provided unit prices
-* client-provided discounts
-* client-provided totals
-* client-provided taxes
-* client-provided seller pricing
-
----
-
-# 26. Cart Validation Service
-
-Create a reusable cart validation service.
-
-It should be capable of determining:
-
-* invalid offers
-* unavailable offers
-* insufficient inventory
-* quantity violations
-* changed prices
-* expired promotions
-* invalid coupons where applicable
-* seller state changes
-* catalog visibility changes
-
-Do not implement complete checkout/payment behavior here.
-
-The service should provide a clean contract that checkout can later consume.
-
----
-
-# 27. Cart Totals
-
-Implement cart calculation using authoritative backend data.
-
-Separate conceptual values such as:
-
-* subtotal
-* discounts
-* shipping estimate if supported
-* tax estimate if supported
-* total
-
-Do not persist derived totals as authoritative unless the architecture explicitly requires snapshots.
-
-Money must use the repository's safe integer/decimal monetary representation.
-
-Never use floating-point arithmetic for currency.
-
----
-
-# 28. Cart Concurrency
-
-Prevent conflicting cart updates.
-
-Consider:
-
-* concurrent quantity updates
-* simultaneous add/remove
-* multiple browser tabs
-* mobile + web clients
-* retries
-* stale clients
-
-Use appropriate optimistic concurrency/versioning or transactional behavior.
-
-Do not overwrite newer cart state blindly because a client sent stale data.
-
----
-
-# 29. Redis Usage
-
-Use Redis only where it provides real value.
-
-Potential uses:
-
-* short-lived cart cache
-* cart lookup acceleration
-* stock availability cache
-* rate limiting
-* distributed coordination
-* ephemeral state
-
-PostgreSQL remains authoritative.
-
-For every new Redis key:
-
-* define namespace
-* define ownership
-* define TTL
-* define serialization
-* define invalidation
-* define stale-data behavior
-* define failure behavior
-
-Never allow Redis failure to corrupt authoritative inventory or cart state.
-
----
-
-# 30. Cache Invalidation
-
-Whenever authoritative data changes, invalidate or update affected cache entries.
-
-Relevant changes include:
-
-* offer activation/deactivation
-* price changes
-* inventory changes
-* cart mutation
-* product visibility changes
-* seller suspension
-
-Prevent stale cache data from being treated as authoritative during checkout.
-
----
-
-# 31. API Contracts
-
-Implement REST APIs following the repository's existing API conventions.
-
-At minimum, provide appropriate endpoints for:
-
-### Inventory
-
-* inventory locations
-* inventory item lookup
-* availability
-* stock adjustments
-* reservations
-* reservation release
-* reservation consumption
-
-### Cart
-
-* get current cart
-* add item
-* update item quantity
-* remove item
-* clear cart
-* validate cart
-* merge anonymous/authenticated cart where applicable
-
-Use proper resource naming and HTTP semantics.
-
-Do not expose unnecessary internal administrative operations to customers.
-
----
-
-# 32. DTOs and Validation
-
-Create explicit request and response DTOs.
-
-Do not expose Prisma models directly from controllers.
-
-Validate:
-
-* IDs
-* quantities
-* identifiers
-* idempotency keys
-* ownership
-* enum values
-* request size
-* pagination parameters
-
-Reject malformed input before business logic executes.
-
-Use the repository's established validation library and conventions.
-
----
-
-# 33. Error Contracts
-
-Use the project's standardized error response.
-
-Add explicit domain error codes for situations such as:
-
-* INVENTORY_NOT_FOUND
-* INSUFFICIENT_STOCK
-* RESERVATION_NOT_FOUND
-* RESERVATION_EXPIRED
-* RESERVATION_ALREADY_RELEASED
-* RESERVATION_ALREADY_CONSUMED
-* CART_NOT_FOUND
-* CART_ITEM_NOT_FOUND
-* CART_ITEM_UNAVAILABLE
-* CART_PRICE_CHANGED
-* CART_QUANTITY_INVALID
-* CART_OWNERSHIP_VIOLATION
-* OFFER_NOT_PURCHASABLE
-
-Use equivalent existing codes when already defined.
-
-Do not expose internal database errors.
-
----
-
-# 34. Events
-
-Integrate inventory and cart changes with the existing event architecture.
-
-Potential events include:
-
-* inventory.stock.received
-* inventory.stock.adjusted
-* inventory.reservation.created
-* inventory.reservation.released
-* inventory.reservation.expired
-* inventory.reservation.consumed
-* cart.created
-* cart.item.added
-* cart.item.updated
-* cart.item.removed
-* cart.cleared
-* cart.validated
-
-Use the repository's established event naming conventions if they already exist.
-
-Every event must contain an appropriate event envelope including, where applicable:
-
-* event ID
-* event type
-* event version
-* aggregate ID
-* aggregate type
-* producer
-* occurred timestamp
-* correlation ID
-* causation ID
-* trace context
-* schema version
-* payload
-
-Do not publish events from a database transaction in a way that can produce false events.
-
-Use the transactional outbox pattern where the repository supports it.
-
----
-
-# 35. Event Reliability
-
-Assume:
-
-* at-least-once delivery
-* duplicates
-* retries
-* delayed processing
-* consumer failure
-* replay
-* out-of-order delivery where ordering is not guaranteed
-
-Consumers must be idempotent.
-
-Do not build correctness around exactly-once assumptions.
-
-Inventory correctness must remain protected by PostgreSQL transactions regardless of event delivery behavior.
-
----
-
-# 36. BullMQ Jobs
-
-Implement appropriate background jobs for:
-
-* reservation expiration
-* abandoned cart processing where justified
-* cart cleanup where justified
-* cache maintenance only if required
-* inventory reconciliation hooks if the existing architecture requires them
-
-Every job must define:
-
-* queue
-* job name
-* payload
-* timeout
-* retries
-* exponential/backoff strategy
-* concurrency
-* idempotency
-* failure behavior
-* logging
-* metrics
-* graceful shutdown behavior
-
-Do not create jobs that duplicate synchronous business logic in unsafe ways.
-
----
-
-# 37. Database Design
-
-Extend Prisma carefully.
-
-Use:
-
-* foreign keys
-* unique constraints
-* composite indexes
-* appropriate indexes for query patterns
-* check constraints where supported through migration SQL
-* timestamps
-* lifecycle state constraints
-* ownership constraints where possible
-
-Optimize indexes for actual access patterns.
-
-Consider queries for:
-
-* customer cart lookup
-* cart item lookup
-* inventory by offer/SKU
-* inventory by location
-* active reservations
-* expiring reservations
-* inventory movement history
-* seller inventory
-* stock availability
-* reservation references
-
-Do not add indexes blindly.
-
----
-
-# 38. Transactions
-
-Use transactions for critical multi-record operations.
-
-Required transactional areas include:
-
-* inventory reservation
-* reservation release
-* reservation consumption
-* inventory adjustment
-* cart merge
-* cart mutation when multiple records must change atomically
-* idempotency state changes where necessary
-* outbox creation together with authoritative mutations
-
-Keep transactions short.
-
-Do not perform slow external network calls inside database transactions.
-
----
-
-# 39. External Dependency Boundaries
-
-Do not call:
-
-* Stripe
-* Elasticsearch/OpenSearch
-* S3
-* external APIs
-
-inside critical database transactions unless there is an explicitly justified architecture.
-
-For asynchronous side effects:
-
-1. commit authoritative state
-2. persist outbox/event/job intent
-3. process external side effect
-4. retry safely
-5. reconcile failures
-
-Do not create inconsistent inventory because an external dependency is unavailable.
-
----
-
-# 40. Security
-
-Threat-model this implementation.
+Implement safeguards against review abuse.
 
 Protect against:
 
-* IDOR
-* privilege escalation
-* seller isolation bypass
-* cart ownership bypass
-* inventory manipulation
-* reservation abuse
-* quantity abuse
-* brute-force cart mutation
-* enumeration
-* replay
-* duplicate requests
-* malformed payloads
-* injection
-* excessive request sizes
-* rate-limit bypass
-* cache poisoning
+* Duplicate reviews where prohibited.
+* Unauthorized review ownership.
+* Fake verified-purchase flags.
+* Seller manipulation.
+* Review bombing.
+* Excessive automated submissions.
 
-Authorization must happen server-side.
+Verified-purchase state must be determined server-side from order history.
 
-Use least privilege.
-
-Do not expose internal database identifiers unnecessarily when an opaque public identifier is appropriate.
+Do not accept a client-provided `verifiedPurchase` flag as authoritative.
 
 ---
 
-# 41. Rate Limiting and Abuse Prevention
+# REVIEW MODERATION
 
-Apply appropriate rate limits to:
+Implement moderation foundations.
 
-* cart mutations
-* reservation operations
-* inventory administrative mutations
-* anonymous cart creation
-* validation endpoints
+Support:
 
-Do not apply one simplistic global limit to every operation.
+* Pending moderation where required.
+* Published reviews.
+* Hidden reviews.
+* Removed reviews.
+* Moderation reason.
+* Moderator identity.
+* Moderation timestamp.
 
-Use appropriate identities and scopes.
+Moderation operations must be auditable.
 
-Prevent a malicious actor from creating unlimited reservations or carts.
-
----
-
-# 42. Audit Logging
-
-Audit security-sensitive and business-critical operations.
-
-At minimum consider:
-
-* inventory adjustments
-* reservation manipulation
-* seller inventory changes
-* cart ownership changes
-* administrative operations
-
-Audit records must include enough context for investigation without logging secrets or unnecessary private data.
+Do not allow ordinary customers or sellers to modify moderation state.
 
 ---
 
-# 43. Observability
+# RATINGS AGGREGATION
 
-Instrument the implementation with the repository's existing observability stack.
+Implement reliable rating aggregation.
 
-Include metrics such as:
+Support:
 
-* inventory reservation success/failure
-* insufficient stock
-* reservation expiration
-* reservation release
-* reservation consumption
-* cart creation
-* cart mutation latency
-* cart validation failures
-* cache hit/miss where meaningful
-* BullMQ job success/failure
-* database transaction failures
+* Average rating.
+* Rating distribution.
+* Review counts.
 
-Add distributed tracing across:
+Do not calculate expensive aggregations from the entire review table on every product request when a derived aggregate is appropriate.
 
-* HTTP
-* PostgreSQL
-* Redis
-* queues
-* event publishing
-* critical inventory/cart operations
+Ensure aggregate updates remain consistent with review state.
 
-Use structured logs.
-
-Never log:
-
-* passwords
-* access tokens
-* refresh tokens
-* payment secrets
-* private authentication credentials
-* unnecessary personal information
+If asynchronous aggregation is used, design for temporary eventual consistency and safe retries.
 
 ---
 
-# 44. Testing
+# NOTIFICATION DOMAIN
 
-Implement meaningful automated tests.
+Implement backend notification infrastructure.
+
+Support notification records and delivery state for relevant channels such as:
+
+* In-app.
+* Email.
+* Push notification.
+* SMS where the architecture supports it.
+
+Notification records should support:
+
+* Recipient.
+* Notification type.
+* Title/content or template reference.
+* Related entity.
+* Delivery state.
+* Read state where applicable.
+* Created timestamp.
+* Delivery timestamp.
+* Failure metadata.
+
+Do not place provider credentials in notification records.
+
+---
+
+# NOTIFICATION PREFERENCES
+
+Implement customer notification preferences.
+
+Support preferences for relevant categories such as:
+
+* Order updates.
+* Payment updates.
+* Shipment updates.
+* Delivery updates.
+* Returns.
+* Refunds.
+* Promotions.
+* Seller communications where applicable.
+
+Critical transactional notifications must remain distinguishable from optional marketing notifications.
+
+Do not allow users to disable legally or operationally required communications if the business rules prohibit doing so.
+
+---
+
+# NOTIFICATION DELIVERY
+
+Notification delivery must be asynchronous.
+
+Use BullMQ or existing queue infrastructure.
+
+Implement:
+
+* Retry behavior.
+* Backoff.
+* Provider failure handling.
+* Idempotency.
+* Deduplication where necessary.
+* Delivery status.
+* Dead-letter/recovery behavior.
+
+Do not block order creation or payment processing on an email or push provider.
+
+---
+
+# REAL-TIME UPDATES
+
+Where the repository supports real-time functionality, implement appropriate real-time backend events for operationally valuable changes such as:
+
+* Order status.
+* Shipment status.
+* Delivery status.
+* Seller fulfillment updates.
+* Notifications.
+
+Real-time channels must be:
+
+* Authenticated.
+* Authorized.
+* Scoped.
+* Observable.
+* Resistant to abuse.
+
+Handle:
+
+* Reconnection.
+* Duplicate events.
+* Ordering where required.
+* Backpressure.
+* Disconnects.
+
+Do not make critical transactional correctness dependent on WebSocket delivery.
+
+---
+
+# SEARCH PLATFORM
+
+Implement production-grade product search infrastructure.
+
+Search must be based on derived product data.
+
+PostgreSQL remains authoritative.
+
+Search indexing must support:
+
+* Product title.
+* Description.
+* Brand.
+* Category.
+* Attributes.
+* Variant information where useful.
+* Seller/offer information where appropriate.
+* Price.
+* Availability.
+* Ratings.
+* Searchable metadata.
+
+---
+
+# SEARCH INDEXING
+
+Implement reliable indexing workflows.
+
+Support:
+
+* Product creation indexing.
+* Product update indexing.
+* Product deletion/deactivation indexing.
+* Inventory availability updates where necessary.
+* Price updates where necessary.
+* Category updates.
+* Brand updates.
+* Bulk reindexing foundations.
+
+Search updates should normally occur asynchronously.
+
+Do not make PostgreSQL transactions depend synchronously on search availability.
+
+---
+
+# SEARCH CONSISTENCY
+
+Design search for eventual consistency.
+
+If Elasticsearch/OpenSearch is unavailable:
+
+* Preserve authoritative PostgreSQL state.
+* Record failed indexing work.
+* Retry indexing.
+* Make failures observable.
+* Support reconciliation/reindexing.
+
+Do not silently lose index updates.
+
+Do not make search index data the authoritative source for checkout pricing or inventory.
+
+---
+
+# SEARCH API
+
+Implement product search APIs supporting appropriate combinations of:
+
+* Query text.
+* Categories.
+* Brands.
+* Attributes.
+* Price ranges.
+* Availability.
+* Ratings.
+* Seller.
+* Sorting.
+* Pagination.
+
+Use efficient pagination.
+
+Avoid unbounded search result sets.
+
+Return only fields required by the search experience.
+
+---
+
+# SEARCH FACETS
+
+Implement search facets where appropriate.
+
+Potential facets include:
+
+* Category.
+* Brand.
+* Price range.
+* Rating.
+* Seller.
+* Availability.
+* Product attributes.
+
+Facet behavior must remain consistent with applied filters.
+
+---
+
+# SEARCH SUGGESTIONS
+
+Implement search suggestion foundations.
+
+Support:
+
+* Prefix suggestions.
+* Popular queries where applicable.
+* Product suggestions where appropriate.
+
+Protect suggestion endpoints against abuse and expensive unbounded queries.
+
+---
+
+# SEARCH FAILURE RECOVERY
+
+Implement operational mechanisms for:
+
+* Failed indexing.
+* Retry.
+* Reindexing.
+* Index versioning where appropriate.
+* Alias switching where appropriate.
+* Index rebuilds.
+* Search cluster outages.
+
+A search rebuild must not corrupt the transactional catalog.
+
+---
+
+# SELLER PAYOUT DOMAIN
+
+Implement the foundation for seller financial settlement.
+
+Seller settlement must distinguish:
+
+* Gross merchandise sales.
+* Discounts.
+* Platform fees.
+* Shipping charges where applicable.
+* Taxes where applicable.
+* Refunds.
+* Chargebacks.
+* Disputes.
+* Other marketplace adjustments.
+* Net seller amount.
+* Payout eligibility.
+* Payout status.
+* External provider reference.
+
+Financial calculations must be reproducible.
+
+---
+
+# SELLER SETTLEMENT SNAPSHOTS
+
+Do not reconstruct historical seller payouts using current product or fee configuration.
+
+Persist appropriate immutable settlement information.
+
+A payout calculation should be traceable back to:
+
+* Order.
+* Order item.
+* Seller.
+* Payment.
+* Refunds.
+* Adjustments.
+* Fees.
+
+Financial records must be auditable.
+
+---
+
+# SELLER PAYOUT STATE MACHINE
+
+Implement explicit payout lifecycle behavior.
+
+Support appropriate states such as:
+
+* Pending.
+* Eligible.
+* Processing.
+* Paid.
+* Failed.
+* Reversed.
+* On hold.
+
+Payout transitions must be controlled.
+
+Never allow seller-facing APIs to directly mark payouts as paid.
+
+External payment-provider results must be validated and reconciled.
+
+---
+
+# PAYOUT IDEMPOTENCY
+
+Payout creation and provider operations must be idempotent.
+
+Protect against:
+
+* Worker retries.
+* Application restarts.
+* Provider timeouts.
+* Duplicate requests.
+* Duplicate webhook events.
+
+A seller must never receive the same payout twice because of retry behavior.
+
+---
+
+# DISPUTES
+
+Implement dispute foundations.
+
+Support disputes associated with:
+
+* Orders.
+* Order items.
+* Payments.
+* Refunds.
+* Sellers.
+* Customers.
+
+Implement:
+
+* Dispute creation.
+* Status.
+* Reason.
+* Evidence metadata.
+* Resolution.
+* Resolution timestamp.
+* Responsible actor.
+
+Do not expose internal fraud/security information unnecessarily.
+
+---
+
+# ADMINISTRATION
+
+Implement backend foundations needed for administrative operations introduced in this scope.
+
+Administrators must be able to perform authorized operations involving:
+
+* Orders.
+* Returns.
+* Reviews.
+* Sellers.
+* Payouts.
+* Disputes.
+* Search/indexing operations.
+
+Administrative operations must be:
+
+* Authenticated.
+* Authorized.
+* Audited.
+* Rate-limited where appropriate.
+
+Never expose administrative capabilities to ordinary customer or seller roles.
+
+---
+
+# AUDITABILITY
+
+Extend audit logging across:
+
+* Fulfillment state changes.
+* Shipment state changes.
+* Return decisions.
+* Refund-related actions.
+* Review moderation.
+* Seller payout changes.
+* Dispute decisions.
+* Administrative actions.
+
+Audit records must contain enough context to reconstruct important operational decisions without storing unnecessary sensitive information.
+
+---
+
+# EVENTS
+
+Implement typed domain events for the new capabilities.
+
+Examples include:
+
+* ShipmentCreated.
+* ShipmentShipped.
+* ShipmentDelivered.
+* ShipmentFailed.
+* OrderCancelled.
+* ReturnRequested.
+* ReturnApproved.
+* ReturnReceived.
+* RefundCompleted.
+* ReviewCreated.
+* ReviewPublished.
+* ReviewModerated.
+* NotificationCreated.
+* SearchIndexRequested.
+* SearchIndexFailed.
+* SellerPayoutEligible.
+* SellerPayoutCreated.
+* SellerPayoutCompleted.
+* DisputeCreated.
+* DisputeResolved.
+
+Use versioned contracts.
+
+Consumers must be idempotent.
+
+Do not assume ordered delivery unless explicitly guaranteed.
+
+---
+
+# BACKGROUND JOBS
+
+Implement background processing for appropriate workloads, including:
+
+* Search indexing.
+* Search retry.
+* Reservation cleanup.
+* Notification delivery.
+* Review aggregation.
+* Return workflows.
+* Shipment synchronization.
+* Payout processing.
+* Reconciliation.
+* Cleanup.
+
+Every job must define:
+
+* Purpose.
+* Payload.
+* Retry behavior.
+* Backoff.
+* Timeout.
+* Concurrency.
+* Idempotency.
+* Failure handling.
+* Observability.
+
+---
+
+# RECONCILIATION
+
+Implement foundations for reconciliation between internal state and external systems.
+
+Relevant reconciliation targets include:
+
+* Payment providers.
+* Shipping providers.
+* Seller payout providers.
+* Search indexes.
+
+Reconciliation must detect:
+
+* Missing events.
+* Stale state.
+* Duplicate state.
+* Failed operations.
+* Provider/internal mismatches.
+
+Reconciliation must not silently overwrite authoritative data.
+
+---
+
+# SECURITY
+
+Perform a security review of all implemented domains.
+
+Protect against:
+
+* Cross-seller access.
+* Cross-customer access.
+* Review manipulation.
+* Shipment-data exposure.
+* Refund abuse.
+* Payout abuse.
+* Search injection.
+* Unauthorized administrative actions.
+* Webhook forgery.
+* Replay attacks.
+* IDOR.
+* Privilege escalation.
+* Sensitive-data leakage.
+
+Apply least privilege.
+
+Validate every resource relationship server-side.
+
+---
+
+# PRIVACY
+
+Apply data minimization throughout fulfillment and operations.
+
+Protect:
+
+* Customer names.
+* Addresses.
+* Contact information.
+* Order history.
+* Seller financial information.
+
+Do not expose unnecessary personal information through:
+
+* Seller APIs.
+* Search APIs.
+* Notifications.
+* Logs.
+* Events.
+* Audit records.
+
+---
+
+# OBSERVABILITY
+
+Instrument:
+
+* Fulfillment.
+* Shipments.
+* Returns.
+* Reviews.
+* Notifications.
+* Search.
+* Payouts.
+* Disputes.
+* Reconciliation.
+
+Track:
+
+* Shipment creation failures.
+* Delivery failures.
+* Return rates.
+* Refund failures.
+* Notification failures.
+* Search indexing latency.
+* Search indexing failures.
+* Search latency.
+* Payout failures.
+* Reconciliation mismatches.
+* Queue retries.
+* Dead-lettered jobs.
+
+Use structured logs, metrics, traces, and correlation IDs.
+
+Never log sensitive payment credentials or unnecessary personal information.
+
+---
+
+# RELIABILITY
+
+Design for partial failures involving:
+
+* Search cluster.
+* Shipping provider.
+* Payment provider.
+* Payout provider.
+* Notification provider.
+* Redis.
+* Queue workers.
+* PostgreSQL.
+
+Use:
+
+* Timeouts.
+* Retries.
+* Backoff.
+* Idempotency.
+* Reconciliation.
+* Durable state.
+* Recovery workflows.
+
+Do not allow external provider outages to corrupt internal transactional state.
+
+---
+
+# TESTING
+
+Implement comprehensive tests.
 
 ## Unit Tests
 
 Cover:
 
-* inventory availability calculation
-* reservation rules
-* reservation lifecycle
-* expiration rules
-* cart quantity rules
-* cart merge behavior
-* price-change detection
-* authorization policies
+* Shipment transitions.
+* Return eligibility.
+* Return transitions.
+* Review validation.
+* Rating aggregation.
+* Notification preferences.
+* Search document construction.
+* Payout calculations.
+* Payout transitions.
+* Dispute rules.
 
 ## Integration Tests
 
 Cover:
 
-* Prisma transactions
-* reservation creation
-* concurrent reservation attempts
-* release
-* consumption
-* expiration
-* cart mutations
-* cart merge
-* Redis behavior where relevant
-* outbox creation
+* Fulfillment persistence.
+* Shipment persistence.
+* Return/refund integration.
+* Review persistence.
+* Notification queues.
+* Search indexing.
+* Payout persistence.
+* Event/outbox behavior.
 
 ## API Tests
 
 Cover:
 
-* authentication
-* authorization
-* validation
-* ownership
-* error contracts
-* pagination where applicable
-* idempotency
-* rate limiting where testable
+* Customer authorization.
+* Seller authorization.
+* Administrative authorization.
+* Shipment APIs.
+* Return APIs.
+* Review APIs.
+* Notification APIs.
+* Search APIs.
+* Payout APIs.
+* Dispute APIs.
 
 ## Security Tests
 
-Explicitly test:
+Verify:
 
-* cross-customer cart access
-* cross-seller inventory access
-* forged seller IDs
-* forged cart IDs
-* reservation replay
-* duplicate requests
-* privilege escalation
-* malformed quantities
+* Sellers cannot access other sellers' shipments.
+* Sellers cannot access unrelated customer orders.
+* Customers cannot access another customer's returns.
+* Customers cannot manipulate review ownership.
+* Sellers cannot manipulate reviews improperly.
+* Non-admins cannot perform administrative operations.
+* Payouts cannot be marked as paid by unauthorized clients.
 
 ## Concurrency Tests
 
-This is mandatory.
+Test:
 
-Create tests that simulate multiple simultaneous reservation attempts against limited inventory.
-
-Verify that:
-
-* available stock never becomes negative
-* total successful reservations never exceed stock
-* failed reservations return deterministic errors
-* reservation records remain consistent
-* inventory movement history remains correct
+* Concurrent return requests.
+* Concurrent refund processing.
+* Duplicate shipment webhooks.
+* Duplicate payout operations.
+* Duplicate notification jobs.
+* Concurrent review creation.
+* Concurrent search indexing.
 
 ---
 
-# 45. Performance
+# DATABASE VALIDATION
 
-Review query performance for:
+Validate:
 
-* active cart lookup
-* cart item retrieval
-* stock availability
-* active reservations
-* expiring reservations
-* inventory by seller
-* inventory by location
-* inventory movement history
+* Prisma schema.
+* Migrations.
+* Foreign keys.
+* Unique constraints.
+* Indexes.
+* Monetary precision.
+* State consistency.
+* Referential integrity.
+* Historical snapshots.
 
-Avoid:
-
-* N+1 queries
-* unnecessary Prisma relation loading
-* unbounded queries
-* full-table scans for high-frequency paths
-
-Use pagination for potentially large collections.
+Do not destructively rewrite existing migrations.
 
 ---
 
-# 46. API Documentation
+# DOCUMENTATION
 
-Update OpenAPI/Swagger documentation.
+Update:
 
-Document:
+* Fulfillment API documentation.
+* Shipment API documentation.
+* Return API documentation.
+* Review API documentation.
+* Notification API documentation.
+* Search API documentation.
+* Payout API documentation.
+* Dispute API documentation.
+* Webhook contracts.
+* Event contracts.
+* Queue/job documentation.
+* Operational recovery procedures.
 
-* endpoints
-* authentication
-* authorization
-* request DTOs
-* response DTOs
-* validation errors
-* domain errors
-* idempotency requirements
-* pagination
-* reservation semantics
-* cart validation semantics
-
-Do not document behavior that is not actually implemented.
-
----
-
-# 47. Migration Safety
-
-Create proper Prisma migrations for all schema changes.
-
-Before finalizing migrations:
-
-* inspect current production-like schema
-* preserve existing data
-* avoid destructive changes unless necessary
-* provide safe migration paths
-* verify indexes and constraints
-* consider large-table migration behavior
-
-Do not use destructive reset commands against an existing project database.
+Swagger/OpenAPI must reflect actual implementation.
 
 ---
 
-# 48. Backward Compatibility
+# IMPLEMENTATION BOUNDARIES
 
-Existing APIs and functionality must remain compatible unless there is a compelling architectural reason to change them.
+This volume is backend-only.
 
-If an existing contract must change:
+Do not implement:
 
-1. inspect all repository consumers
-2. update them consistently
-3. preserve compatibility where possible
-4. document the change
-5. add regression tests
+* Web UI.
+* Mobile UI.
+* React components.
+* React Native screens.
+* Tailwind components.
+* Frontend state management.
 
-Never silently break existing functionality.
+Do not create unrelated infrastructure.
 
----
+Do not replace working architecture unnecessarily.
 
-# 49. Seed and Development Data
-
-If the repository already uses seed data, update it carefully.
-
-Provide realistic development data for:
-
-* inventory locations
-* SKUs
-* seller offers
-* inventory
-* carts where appropriate
-
-Do not insert fake production secrets.
-
-Do not create unrealistic shortcuts that bypass real domain constraints.
+Do not introduce speculative services without an actual requirement.
 
 ---
 
-# 50. Documentation
+# ABSOLUTE IMPLEMENTATION RULES
 
-Update relevant documentation for:
+You must not:
 
-* inventory model
-* reservation lifecycle
-* cart lifecycle
-* concurrency behavior
-* API usage
-* error codes
-* background jobs
-* Redis keys
-* operational troubleshooting
+* Generate pseudo-code.
+* Generate placeholders.
+* Leave required TODO/FIXME gaps.
+* Fake shipping or payout success.
+* Trust client-provided shipment status.
+* Trust client-provided payout status.
+* Trust client-provided review verification.
+* Trust client-provided refund state.
+* Ignore authorization.
+* Ignore idempotency.
+* Ignore concurrency.
+* Hardcode provider credentials.
+* Leak customer information.
+* Use “implement similarly.”
+* Use “remaining code omitted.”
+* Use “left as an exercise.”
+* Use “for brevity.”
+* Disable security controls merely to pass tests.
 
-Documentation must describe the implementation that actually exists.
-
----
-
-# 51. Explicitly Defer These Domains
-
-Do not implement the complete versions of:
-
-* checkout
-* orders
-* payments
-* Stripe integration
-* fulfillment
-* shipping execution
-* returns
-* refunds
-* reviews
-* notifications
-* analytics
-
-unless a small compatibility change is strictly necessary for the inventory/cart implementation.
-
-Do not prematurely implement these domains.
-
-However, make inventory and cart contracts clean enough to support them later.
+Every required implementation must be complete and integrated.
 
 ---
 
-# 52. Code Quality
+# REPOSITORY COMPATIBILITY
 
-Follow existing repository conventions.
+Follow the repository's existing:
 
-Use:
+* Module structure.
+* Naming conventions.
+* API patterns.
+* Prisma conventions.
+* Authentication.
+* Authorization.
+* Event system.
+* Queue system.
+* Search abstractions.
+* Storage abstractions.
+* Testing patterns.
+* Error handling.
+* Logging.
+* Configuration.
 
-* strict TypeScript
-* explicit types
-* dependency injection
-* small focused services
-* domain-oriented modules
-* repository abstractions
-* transactional application services
-* reusable validation
-* centralized error handling
-* structured logging
+Extend existing functionality rather than duplicating it.
 
-Avoid:
+Maintain backward compatibility whenever practical.
 
-* giant services
-* controllers containing business logic
-* direct Prisma access scattered across controllers
-* duplicated business rules
-* hidden global state
-* unsafe casts
-* `any` used to bypass type safety
-* magic constants
-* hardcoded credentials
+Update all affected consumers when contracts change.
 
 ---
 
-# 53. Implementation Rules
+# VALIDATION AND COMPLETION
 
-You must:
+Before considering this volume complete:
 
-1. Inspect first.
-2. Plan against the actual repository.
-3. Reuse existing compatible infrastructure.
-4. Implement the entire scope of this volume.
-5. Make real repository changes.
-6. Create migrations.
-7. Create/update tests.
-8. Update API documentation.
-9. Update operational documentation where needed.
-10. Run formatting.
-11. Run linting.
-12. Run type checking.
-13. Run relevant tests.
-14. Run build validation.
-15. Verify migrations.
-16. Verify no secrets were introduced.
-17. Verify no placeholder implementations remain.
+1. Inspect the repository.
+2. Implement fulfillment.
+3. Implement shipments.
+4. Implement returns.
+5. Implement reviews.
+6. Implement notifications.
+7. Implement search.
+8. Implement seller payouts.
+9. Implement disputes.
+10. Validate database schema.
+11. Validate migrations.
+12. Compile/typecheck.
+13. Run linting.
+14. Run unit tests.
+15. Run integration tests.
+16. Run API tests.
+17. Run security tests.
+18. Run concurrency tests.
+19. Validate search indexing and recovery.
+20. Validate webhook idempotency.
+21. Validate payout idempotency.
+22. Validate return/refund integrity.
+23. Validate authorization.
+24. Validate observability.
+25. Verify no secrets were introduced.
+26. Verify API documentation.
+27. Verify existing functionality remains operational.
 
-Do not merely describe what should be implemented.
-
-Actually implement it.
-
----
-
-# 54. Final Validation
-
-Before finishing, verify:
-
-### Architecture
-
-* Inventory is authoritative in PostgreSQL.
-* Cart state is consistent.
-* Seller isolation is enforced.
-* Reservation concurrency is safe.
-* Domain boundaries remain clean.
-
-### Database
-
-* migrations succeed
-* constraints are correct
-* indexes support real queries
-* transactions preserve invariants
-
-### API
-
-* DTO validation works
-* authorization works
-* error contracts are consistent
-* idempotency works
-* ownership checks work
-
-### Distributed Systems
-
-* outbox integration is correct
-* events are idempotent
-* BullMQ jobs are retry-safe
-* Redis is non-authoritative
-* failures degrade safely
-
-### Security
-
-* no IDOR
-* no privilege escalation
-* no seller isolation bypass
-* no reservation replay vulnerability
-* no unauthorized inventory mutation
-
-### Testing
-
-* unit tests pass
-* integration tests pass
-* API tests pass
-* security tests pass
-* concurrency tests pass
-
-### Code Quality
-
-* typecheck passes
-* lint passes
-* build passes
-* migrations are valid
-* no unnecessary duplicate implementations exist
+Fix implementation-caused failures before reporting completion.
 
 ---
 
-# 55. Final Response Requirements
+# IMPLEMENTATION REPORT
 
-At the end of the implementation, report only facts about the actual repository state.
+At completion, provide a concise engineering report containing:
 
-Include:
+## Files Created
 
-1. What was implemented.
-2. Files/modules created or materially changed.
-3. Database migrations created.
-4. APIs implemented.
-5. Events implemented.
-6. BullMQ jobs implemented.
-7. Redis behavior implemented.
-8. Security controls added.
-9. Tests added.
-10. Validation commands executed and their actual results.
-11. Any genuine remaining limitations or blockers.
+List every newly created file.
 
-Do not claim success for anything that was not actually verified.
+## Files Modified
 
-Do not say that future functionality is implemented merely because contracts were prepared for it.
+List every modified file and summarize the change.
 
-The repository itself is the final source of truth.
+## Database Changes
+
+Describe models, relations, constraints, indexes, snapshots, and migrations.
+
+## Fulfillment
+
+Describe seller fulfillment and shipment lifecycle implementation.
+
+## Returns
+
+Describe return eligibility, state transitions, and refund integration.
+
+## Reviews
+
+Describe review creation, verification, moderation, and aggregation.
+
+## Notifications
+
+Describe notification records, preferences, queues, and delivery behavior.
+
+## Search
+
+Describe search documents, indexing, querying, facets, suggestions, and recovery.
+
+## Seller Payouts
+
+Describe settlement calculations, payout states, idempotency, and reconciliation.
+
+## Disputes
+
+Describe dispute lifecycle and authorization.
+
+## Events and Queues
+
+List events, workers, retries, and recovery mechanisms.
+
+## Tests
+
+List tests added.
+
+## Validation Results
+
+Report:
+
+* Typecheck/compile.
+* Lint.
+* Unit tests.
+* Integration tests.
+* API tests.
+* Security tests.
+* Concurrency tests.
+* Migration validation.
+
+Clearly identify any unavailable validation and its exact reason.
+
+## Operational Notes
+
+Document external-provider configuration, workers, indexes, queues, and operational requirements.
 
 ---
 
-# 56. Non-Negotiable Rules
+# FINAL DIRECTIVE
 
-* Do not generate pseudo-code.
-* Do not generate TODOs.
-* Do not generate FIXME markers.
-* Do not leave placeholder implementations.
-* Do not create fake provider integrations.
-* Do not invent external API behavior.
-* Do not hardcode production secrets.
-* Do not weaken authentication or authorization for convenience.
-* Do not use frontend validation as a security boundary.
-* Do not use Redis as the authoritative inventory database.
-* Do not use floating-point arithmetic for money.
-* Do not use process-local locking for inventory correctness.
-* Do not trust client-provided prices or totals.
-* Do not allow cross-seller inventory access.
-* Do not allow cross-customer cart access.
-* Do not silently overwrite concurrent inventory updates.
-* Do not regenerate unchanged files unnecessarily.
-* Do not create competing implementations.
-* Do not claim implementation without actually changing and validating the repository.
+Implement this operational backend volume directly in the repository.
 
-Most importantly:
+Inspect the actual implementation before making changes.
 
-**Inspect the repository first, then implement the complete Inventory + Cart backend implementation unit as a production-grade extension of the existing ecommerce marketplace.**
+Build real production-grade fulfillment, shipment, return, review, notification, search, payout, and dispute functionality.
+
+Preserve customer and seller isolation.
+
+Preserve financial integrity.
+
+Make external integrations idempotent and recoverable.
+
+Treat PostgreSQL as the authoritative transactional source.
+
+Treat search as derived data.
+
+Use asynchronous processing where appropriate.
+
+Implement reconciliation for external systems.
+
+Make all operationally significant state transitions explicit, authorized, observable, and auditable.
+
+Do not stop at scaffolding.
+
+Do not provide pseudo-code.
+
+Do not leave required functionality incomplete.
+
+Compile, test, validate, integrate, and provide the implementation report.
