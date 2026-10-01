@@ -1,0 +1,23 @@
+# Cache Architecture (Redis Responsibility Matrix)
+
+Redis is never the sole durable source of truth for transactional business data (per Master Prompt "REDIS" section). Every entry below has a Postgres (or provider) source of truth it is derived from or subordinate to.
+
+| Use Case | Key Namespace / Format | TTL | Serialization | Invalidation | Source of Truth | Stale Behavior | Failure Behavior |
+|---|---|---|---|---|---|---|---|
+| Session revocation cache | `session:revoked:{sessionId}` | Matches token max lifetime (15 min) | Boolean flag | Explicit delete never needed (TTL-only); set on revoke | `Session` table (Postgres) | Worst case: a revoked access token remains valid until its own 15-min expiry if Redis is unreachable at revoke time — acceptable given short access-token lifetime | Redis unavailable → fail open on cache check but the 15-min token TTL bounds exposure; alert fires |
+| Rate limiting counters | `ratelimit:{actor}:{endpointClass}:{window}` | Window length (e.g., 60s) | Integer counter | Natural TTL expiry | N/A (ephemeral by design) | N/A | Redis unavailable → rate limiting fails open (requests allowed) with alerting, never fails closed to block all traffic |
+| Product/catalog read cache | `catalog:product:{productId}:v{version}` | 5 min, or invalidated on `ProductUpdated`/`PriceChanged` event | JSON | Event-driven active invalidation (delete key) + TTL as backstop | Catalog/Pricing tables (Postgres) | Serves stale data for up to TTL/invalidation-lag window; acceptable for browse, never used to authorize checkout pricing | Redis unavailable → falls through to Postgres read (higher latency, correct data) |
+| Category tree cache | `catalog:category-tree:v{version}` | 1 hour or invalidated on category mutation | JSON | Active invalidation on write | Category table | Stale nav for up to TTL | Falls through to Postgres |
+| Cart state (write-through cache) | `cart:{cartId}` | 30 min sliding | JSON | Write-through on every mutation | `Cart`/`CartItem` tables | N/A — write-through keeps cache and DB consistent | Falls through to Postgres on miss; cache is a performance optimization, not a second source of truth |
+| Inventory reservation locks | `lock:inventory:{skuId}` | A few seconds (lock hold time) | Lock token | Released explicitly on unlock, TTL as deadlock safety net | N/A (coordination only) | N/A | Redis unavailable → reservation path falls back to Postgres-only `SELECT ... FOR UPDATE` serialization (slower, still correct) |
+| Checkout idempotency response cache | `idempotency:{key}` | 24h | JSON (stored response + status) | TTL only | `CheckoutSession`/`Order` (authoritative); Redis is a fast-path duplicate to the Postgres-persisted idempotency record | Miss → falls back to the Postgres idempotency table, never re-executes the operation | Redis unavailable → Postgres idempotency check still enforced (Redis is an optimization layer, not the sole guard) |
+| Search result support (hot-query cache) | `search:query:{hash}` | 60s | JSON | TTL only | OpenSearch (itself derived) | Briefly stale facet counts acceptable | Falls through to a live OpenSearch query |
+| Feature flags / platform configuration | `config:{flagKey}` | 5 min or pub/sub-invalidated on change | JSON/scalar | Active invalidation via pub/sub broadcast on admin change | Configuration table (Postgres) | Brief propagation delay for flag changes | Falls back to Postgres read of config table |
+| BullMQ transport | `bull:{queueName}:*` | N/A (queue library internals) | BullMQ internal | N/A | N/A — queue data itself is semi-durable state; critical job payloads always also reference durable Postgres records so a Redis data-loss event is recoverable by reconciliation jobs | N/A | Redis persistence (AOF) configured to bound data loss window; reconciliation jobs (see `11-queue-architecture.md`) detect and repair missed jobs |
+
+## Principles
+
+- **Never cache authoritative money/inventory *decisions*** — only cache *display* data derived from them; the actual reservation/charge/commit always reads Postgres within its transaction.
+- **TTL is always present**, even on write-through caches, as a safety net against invalidation bugs — no permanent unbounded keys except coordination primitives with their own lock-timeout TTL.
+- **Memory bounding:** `maxmemory-policy allkeys-lru` for the general cache logical database; a separate Redis logical database (or cluster) is used for BullMQ transport so cache eviction pressure never evicts queue data.
+- **Observability:** cache hit/miss ratio, eviction rate, and memory usage are tracked per key-namespace prefix.

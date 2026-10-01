@@ -1,0 +1,29 @@
+# Architecture Test Contract
+
+Defines what independent implementation teams must verify against this architecture package (Volumes 1 and 2) before a milestone is considered done. This is the contract `20`/`25` items point back to for "how do we know it's built right."
+
+## 1. Test Categories
+
+| Category | What It Verifies | Representative Cases |
+|---|---|---|
+| API contract tests | Every endpoint matches its OpenAPI definition (`../openapi/marketplace-architecture.yaml` conventions, extended per-endpoint during backend implementation) | Response shape, status codes, error envelope shape (`04-api-contract.md`) match the schema exactly; a contract test suite runs against the OpenAPI spec itself (e.g., Dredd/Schemathesis-class tooling), not hand-written assertions only |
+| Event-schema validation | Every emitted event validates against its JSON Schema (`05-events-and-queues.md` §6, `schemas/event-envelope-v2.schema.json`) | A CI step validates sample event fixtures per event type against the pinned schema file before merge |
+| Database migration validation | Every migration is reversible in the "expand" sense or explicitly marked contract-only-after-bake-in (`17-migration-and-database-operations.md` §1) | CI applies each migration to a scratch database and runs the previous application version's test suite against the post-migration schema (expand-phase backward-compatibility check) |
+| Authorization tests | Every endpoint enforces the exact matrix in `11-security-and-authorization-matrix.md` | For every resource, a test attempts access as each role and asserts the expected allow/deny per the matrix — including the cross-seller-isolation negative case (SellerUser A cannot read SellerUser B's data) |
+| Seller-isolation tests | Cross-seller data leakage is impossible even via edge cases (ID enumeration, batch endpoints mixing sellers) | Attempt to fetch/mutate a resource by guessing/iterating IDs belonging to a different `sellerOrgId`; assert `403`/`404`, never a partial leak |
+| Idempotency tests | Every idempotency-key-protected operation returns the identical stored response on retry, and `409` on a key/hash mismatch (`04-api-contract.md` §2) | Duplicate `POST /checkout-sessions` with the same key and body → same `201` response, same `Order`; same key, different body → `409 IDEMPOTENCY_KEY_CONFLICT` |
+| Queue retry tests | A job that fails transiently retries per its family's policy and reaches the correct dead-letter queue after exhausting attempts (`05-events-and-queues.md` §5, `../11-queue-architecture.md`) | Force a handler to throw N times, assert backoff timing and final DLQ placement; assert a redelivered job for an idempotent operation produces no duplicate side effect |
+| Webhook signature tests | An invalid/missing signature is rejected before any processing; a valid signature with a stale timestamp is rejected; a duplicate valid webhook is acknowledged without reprocessing (`04-api-contract.md` §3) | Send a Stripe-shaped payload with a tampered signature → `400`; replay a previously-processed valid event → `200` with no new `Payment` transition |
+| Search synchronization tests | A catalog/price/inventory change is reflected in the search index within the SLO, and an unpublish/suspend removes the document (`07-search-contracts.md` §3) | Publish a product, poll the index until visible (bounded by the 30s SLO), then unpublish and confirm the document is deleted, not merely flagged |
+| Media authorization tests | Upload-intent creation is denied for non-owners; signed URLs are scoped and expire; malicious content is rejected (`08-storage-and-media-contract.md`) | Attempt an upload-intent for a product the caller doesn't own → `403`; attempt to use an expired signed URL → provider-level rejection; upload a file with a mismatched declared content-type → `status=FAILED, reason=content_type_mismatch` |
+| Observability validation | Every critical operation emits the required log fields, metrics, and trace spans (`13-observability-contract.md`) | Assert a `correlationId` is present and consistent across the request's log lines, the resulting event envelope, and the resulting job payload for a sampled critical flow (checkout) |
+| Resilience tests | Dependency failures degrade as specified, never cascade (`14-reliability-contracts.md`) | Blackhole the email provider and assert checkout still completes (`09-notification-contract.md` §5's explicit test boundary); blackhole OpenSearch and assert checkout/cart/order still function while search-only endpoints degrade gracefully |
+| Deployment compatibility tests | The previous application version functions correctly against the post-expand-migration schema (`17-migration-and-database-operations.md` §1, `18-deployment-and-environments.md` §4) | Run the N-1 version's full test suite against a database migrated to the N version's expand-phase schema |
+
+## 2. Ownership of Test Categories
+
+Each category above is owned by the implementation team whose scope it falls within (backend owns API/event/queue/webhook/search-sync/media/authorization/resilience tests; infrastructure owns deployment-compatibility and migration-validation tests; QA owns end-to-end cross-cutting verification, including seller-isolation and observability validation as an independent check on top of what backend self-verifies) — consistent with the Master Prompt's "a QA task must validate actual behavior rather than fabricate functionality."
+
+## 3. What "Done" Means for This Contract
+
+A milestone that implements a domain/feature covered by this architecture package is not complete until the test categories above that apply to it have real, executed (not merely planned) test coverage — this document defines the categories and representative cases; the actual test code and CI wiring are produced during the corresponding implementation prompt, never claimed as already existing here.

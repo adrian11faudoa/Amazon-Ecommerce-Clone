@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example-marketplace.com/search-product-document.schema.json",
+  "title": "SearchProductDocument",
+  "description": "Concrete OpenSearch document shape for the `products` index — see contracts/07-search-contracts.md. All fields are derived from PostgreSQL; none are authoritative.",
+  "type": "object",
+  "required": ["productId", "sellerOrgId", "title", "categoryPath", "status", "priceRange", "currency", "availability", "publishedAt", "updatedAt", "schemaVersion"],
+  "properties": {
+    "productId": { "type": "string", "format": "uuid" },
+    "sellerOrgId": { "type": "string", "format": "uuid" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "categoryPath": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Category slugs from root to leaf, derived from Category.parentId chain"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Flattened ProductAttribute key/value pairs for faceting",
+      "additionalProperties": { "type": "string" }
+    },
+    "priceRange": {
+      "type": "object",
+      "required": ["minMinorUnits", "maxMinorUnits"],
+      "properties": {
+        "minMinorUnits": { "type": "integer" },
+        "maxMinorUnits": { "type": "integer" }
+      }
+    },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "availability": { "type": "string", "enum": ["IN_STOCK", "LIMITED", "OUT_OF_STOCK"] },
+    "avgRating": { "type": "number", "minimum": 0, "maximum": 5 },
+    "reviewCount": { "type": "integer", "minimum": 0 },
+    "primaryMediaAssetId": { "type": "string", "format": "uuid" },
+    "locale": { "type": "string", "description": "BCP-47 tag if localized fields are indexed per-locale; omitted for locale-neutral catalogs" },
+    "status": { "type": "string", "enum": ["PUBLISHED"], "description": "Only PUBLISHED products are ever indexed; unpublish/suspend triggers a document delete, not a status flip within the index" },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "schemaVersion": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

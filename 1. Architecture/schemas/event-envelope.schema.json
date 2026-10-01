@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example-marketplace.com/event-envelope.schema.json",
+  "title": "EventEnvelope",
+  "description": "Canonical event envelope — see 09-event-architecture.md §2",
+  "type": "object",
+  "required": ["eventId", "eventType", "eventVersion", "aggregateType", "aggregateId", "producer", "occurredAt", "correlationId", "payload"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "type": "string", "pattern": "^[a-z_]+\\.[a-z_]+\\.v[0-9]+$" },
+    "eventVersion": { "type": "integer", "minimum": 1 },
+    "aggregateType": { "type": "string" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "producer": { "type": "string" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string" },
+    "traceContext": {
+      "type": "object",
+      "properties": {
+        "traceparent": { "type": "string" }
+      }
+    },
+    "sequence": {
+      "type": "integer",
+      "description": "Optional per-aggregate monotonic sequence for ordering-sensitive streams (09-event-architecture.md §4)"
+    },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}

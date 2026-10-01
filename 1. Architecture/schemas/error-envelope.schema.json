@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example-marketplace.com/error-envelope.schema.json",
+  "title": "ErrorEnvelope",
+  "description": "Canonical API error envelope — see 07-api-architecture.md §6",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "correlationId"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z_]+$" },
+        "message": { "type": "string" },
+        "correlationId": { "type": "string" },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "issue": { "type": "string" }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

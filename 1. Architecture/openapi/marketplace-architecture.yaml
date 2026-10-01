@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Ecommerce Marketplace API — Architecture Contract (Representative)
+  version: "1.0.0"
+  description: >
+    This is a REPRESENTATIVE, non-exhaustive OpenAPI skeleton demonstrating the
+    canonical conventions defined in 07-api-architecture.md and
+    28-cross-cutting-contracts.md: resource naming, cursor pagination, the
+    canonical error envelope, idempotency headers, and enum/timestamp/money
+    conventions. It is not a request to implement every endpoint now — later
+    backend implementation prompts define the full endpoint set against these
+    conventions.
+servers:
+  - url: https://api.example-marketplace.com/api/v1
+paths:
+  /products:
+    get:
+      summary: List published products (representative Catalog + Search read path)
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: categoryId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: sort
+          in: query
+          schema: { type: string, example: "-createdAt" }
+      responses:
+        "200":
+          description: Paginated product list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ProductSummary" }
+                  pagination: { $ref: "#/components/schemas/Pagination" }
+        "400":
+          $ref: "#/components/responses/Error"
+  /checkout-sessions:
+    post:
+      summary: Start a checkout session (representative Checkout orchestration entrypoint)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StartCheckoutRequest" }
+      responses:
+        "201":
+          description: Checkout session created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        "409":
+          description: Idempotency key conflict or insufficient inventory
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+  /checkout-sessions/{id}/complete:
+    post:
+      summary: Complete a checkout session, producing an Order on success
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "402":
+          description: Payment failed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+  /orders/{id}:
+    get:
+      summary: Get an order (owning customer, scoped seller, or authorized admin/support)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Order detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Canonical error envelope
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        nextCursor: { type: string, nullable: true }
+        hasMore: { type: boolean }
+        limit: { type: integer }
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, example: "INSUFFICIENT_INVENTORY" }
+            message: { type: string }
+            correlationId: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  issue: { type: string }
+    Money:
+      type: object
+      description: Canonical money representation — integer minor units + ISO 4217 code
+      properties:
+        amountMinorUnits: { type: integer, example: 1999 }
+        currency: { type: string, example: "USD" }
+    ProductSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        status: { type: string, enum: [DRAFT, PUBLISHED, UNPUBLISHED, SUSPENDED] }
+        priceRange:
+          type: object
+          properties:
+            min: { $ref: "#/components/schemas/Money" }
+            max: { $ref: "#/components/schemas/Money" }
+        availability: { type: string, enum: [IN_STOCK, LIMITED, OUT_OF_STOCK] }
+        createdAt: { type: string, format: date-time, example: "2026-09-16T14:32:00Z" }
+    StartCheckoutRequest:
+      type: object
+      required: [cartId]
+      properties:
+        cartId: { type: string, format: uuid }
+        shippingAddressId: { type: string, format: uuid }
+        couponCode: { type: string, nullable: true }
+    CheckoutSession:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [STARTED, PRICING_RESOLVED, INVENTORY_RESERVED, PAYMENT_INITIATED, COMPLETED, FAILED, EXPIRED]
+        totals:
+          type: object
+          properties:
+            subtotal: { $ref: "#/components/schemas/Money" }
+            tax: { $ref: "#/components/schemas/Money" }
+            shipping: { $ref: "#/components/schemas/Money" }
+            total: { $ref: "#/components/schemas/Money" }
+    Order:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [PLACED, PAYMENT_AUTHORIZED, PAYMENT_CAPTURED, FULFILLED, DELIVERED, CANCELLED, REFUNDED]
+        placedAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              skuId: { type: string, format: uuid }
+              sellerOrgId: { type: string, format: uuid }
+              quantity: { type: integer }
+              unitPrice: { $ref: "#/components/schemas/Money" }

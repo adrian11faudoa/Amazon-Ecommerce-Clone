@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example-marketplace.com/pagination-envelope.schema.json",
+  "title": "PaginationEnvelope",
+  "description": "Canonical cursor pagination envelope — see 07-api-architecture.md §4",
+  "type": "object",
+  "required": ["data", "pagination"],
+  "properties": {
+    "data": { "type": "array" },
+    "pagination": {
+      "type": "object",
+      "required": ["hasMore", "limit"],
+      "properties": {
+        "nextCursor": { "type": ["string", "null"] },
+        "hasMore": { "type": "boolean" },
+        "limit": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

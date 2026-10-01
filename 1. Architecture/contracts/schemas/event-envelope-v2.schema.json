@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example-marketplace.com/event-envelope-v2.schema.json",
+  "title": "EventEnvelopeV2",
+  "description": "Canonical event envelope, extended with causationId and schemaVersion — see contracts/05-events-and-queues.md §1. Backward-compatible superset of ../schemas/event-envelope.schema.json.",
+  "type": "object",
+  "required": ["eventId", "eventType", "eventVersion", "schemaVersion", "aggregateType", "aggregateId", "producer", "occurredAt", "correlationId", "causationId", "payload"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "type": "string", "pattern": "^[a-z_]+\\.[a-z_]+\\.v[0-9]+$" },
+    "eventVersion": { "type": "integer", "minimum": 1 },
+    "schemaVersion": { "type": "integer", "minimum": 1, "description": "Always equal to the numeric suffix of eventType" },
+    "aggregateType": { "type": "string" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "producer": { "type": "string" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string" },
+    "causationId": { "type": "string", "description": "eventId or request correlationId of the direct cause of this event" },
+    "traceContext": {
+      "type": "object",
+      "properties": {
+        "traceparent": { "type": "string" }
+      }
+    },
+    "sequence": {
+      "type": "integer",
+      "description": "Optional per-aggregate monotonic sequence for ordering-sensitive streams"
+    },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}
