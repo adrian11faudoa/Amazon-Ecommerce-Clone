@@ -1,0 +1,749 @@
+// Prisma schema — Backend Foundation & Identity/Access Milestone (Volume 1)
+//
+// Scope: user identity, customer profile, seller organizations, seller
+// membership, platform roles, sessions/refresh tokens, email verification,
+// password reset, and security audit events.
+//
+// Explicitly NOT included: catalog, inventory, pricing, cart, checkout,
+// orders, payments, shipping, reviews, search, notifications-content.
+// Those are later milestones.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum PlatformRole {
+  CUSTOMER
+  SUPPORT_AGENT
+  MODERATOR
+  PLATFORM_ADMIN
+}
+
+enum OrganizationStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum MembershipRole {
+  SELLER_ADMIN
+  SELLER_STAFF
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+}
+
+// ---------------------------------------------------------------------------
+// Catalog enums (Volume 2)
+// ---------------------------------------------------------------------------
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum AttributeType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SELECT
+}
+
+enum OfferStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum OfferCondition {
+  NEW
+  USED
+  REFURBISHED
+}
+
+enum PromotionDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum MediaAssetType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum MediaAssetStatus {
+  PENDING_UPLOAD
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Inventory / cart / checkout enums (Volume 3)
+// ---------------------------------------------------------------------------
+
+enum InventoryAdjustmentType {
+  INITIAL_STOCK
+  MANUAL_CORRECTION
+  DAMAGED
+  FOUND
+  RECONCILIATION
+}
+
+enum ReservationState {
+  ACTIVE
+  EXPIRED
+  RELEASED
+  CONSUMED
+  FAILED
+}
+
+enum CartStatus {
+  ACTIVE
+  MERGED
+  CONVERTED
+  ABANDONED
+}
+
+enum CheckoutStatus {
+  CREATED
+  VALIDATING
+  RESERVED
+  AWAITING_PAYMENT
+  FAILED
+  EXPIRED
+  CANCELLED
+  COMPLETED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     // display form as provided at registration
+  normalizedEmail   String     @unique // canonical lower-cased/trimmed form; enforces one logical account per address
+  passwordHash      String
+  status            UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt   DateTime?
+  passwordChangedAt DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deactivatedAt     DateTime?
+
+  platformRoles          UserPlatformRole[]
+  customerProfile        CustomerProfile?
+  sellerMemberships      SellerMembership[]
+  sessions               Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  auditEventsAsActor      AuditEvent[]            @relation("AuditActor")
+
+  @@index([status])
+  @@map("users")
+}
+
+model UserPlatformRole {
+  id        String       @id @default(uuid())
+  userId    String
+  role      PlatformRole
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([role])
+  @@map("user_platform_roles")
+}
+
+model CustomerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Seller organizations
+// ---------------------------------------------------------------------------
+
+model SellerOrganization {
+  id          String             @id @default(uuid())
+  legalName   String
+  displayName String
+  status      OrganizationStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  memberships SellerMembership[]
+  products    Product[]
+
+  @@index([status])
+  @@map("seller_organizations")
+}
+
+model SellerMembership {
+  id             String            @id @default(uuid())
+  userId         String
+  organizationId String
+  role           MembershipRole
+  status         MembershipStatus  @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization SellerOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@map("seller_memberships")
+}
+
+// ---------------------------------------------------------------------------
+// Sessions / tokens
+// ---------------------------------------------------------------------------
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  lastUsedAt       DateTime  @default(now())
+  revokedAt        DateTime?
+  replacedBySessionId String?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model EmailVerificationToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+model AuditEvent {
+  id            String       @id @default(uuid())
+  actorUserId   String?
+  action        String
+  targetType    String?
+  targetId      String?
+  outcome       AuditOutcome
+  metadata      Json?
+  requestId     String?
+  correlationId String?
+  createdAt     DateTime     @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_events")
+}
+
+// ---------------------------------------------------------------------------
+// Catalog domain (Volume 2)
+//
+// Ownership model: a Product belongs to exactly one SellerOrganization
+// (catalog ownership). SellerOffer separates seller-specific commercial
+// data (price, status, condition) from shared item data (title,
+// description, attributes) on the same SKU, per the prompt's guidance
+// that multi-seller-per-product support is conditional on the business
+// model requiring it — this milestone does not require it, so Product
+// stays single-seller-owned. See docs/CATALOG.md for the full rationale.
+// ---------------------------------------------------------------------------
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  parentId  String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryToParent", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryToParent")
+
+  products             Product[]
+  categoryAttributes   CategoryAttribute[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@map("categories")
+}
+
+model AttributeDefinition {
+  id                 String        @id @default(uuid())
+  key                String        @unique
+  label              String
+  type               AttributeType
+  allowedValues      Json?
+  isVariantAttribute Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  categoryAttributes    CategoryAttribute[]
+  productAttributeValues ProductAttributeValue[]
+  variantAttributeValues VariantAttributeValue[]
+
+  @@index([isVariantAttribute])
+  @@map("attribute_definitions")
+}
+
+model CategoryAttribute {
+  id                    String   @id @default(uuid())
+  categoryId            String
+  attributeDefinitionId String
+  isRequired            Boolean  @default(false)
+  createdAt             DateTime @default(now())
+
+  category            Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attributeDefinition AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, attributeDefinitionId])
+  @@map("category_attributes")
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  organizationId String
+  categoryId     String?
+  title          String
+  slug           String
+  description    String
+  brand          String?
+  status         ProductStatus @default(DRAFT)
+  publishedAt    DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization SellerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  attributeValues ProductAttributeValue[]
+  variants        ProductVariant[]
+  mediaAssets     MediaAsset[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status])
+  @@index([categoryId, status])
+  @@map("products")
+}
+
+model ProductAttributeValue {
+  id                    String   @id @default(uuid())
+  productId             String
+  attributeDefinitionId String
+  value                 Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  product             Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeDefinition AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, attributeDefinitionId])
+  @@map("product_attribute_values")
+}
+
+model ProductVariant {
+  id                  String    @id @default(uuid())
+  productId           String
+  // Deterministic hash of this variant's sorted variant-attribute
+  // key/value pairs — enforces "no two active variants represent the
+  // same combination" via a database-level unique constraint rather
+  // than an application-only check. See ProductVariantsService.
+  attributeSignature  String
+  isActive            Boolean   @default(true)
+  archivedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  product         Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeValues VariantAttributeValue[]
+  mediaAssets     MediaAsset[]
+  sku             Sku?
+
+  @@unique([productId, attributeSignature])
+  @@index([productId, isActive])
+  @@map("product_variants")
+}
+
+model VariantAttributeValue {
+  id                    String   @id @default(uuid())
+  variantId             String
+  attributeDefinitionId String
+  value                 Json
+  createdAt             DateTime @default(now())
+
+  variant             ProductVariant      @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attributeDefinition AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
+
+  @@unique([variantId, attributeDefinitionId])
+  @@map("variant_attribute_values")
+}
+
+model Sku {
+  id             String   @id @default(uuid())
+  organizationId String
+  variantId      String   @unique
+  code           String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  offer   SellerOffer?
+
+  @@unique([organizationId, code])
+  @@index([organizationId, isActive])
+  @@map("skus")
+}
+
+model SellerOffer {
+  id             String         @id @default(uuid())
+  organizationId String
+  skuId          String         @unique
+  status         OfferStatus    @default(DRAFT)
+  condition      OfferCondition @default(NEW)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  sku        Sku               @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  prices     Price[]
+  promotions PromotionOffer[]
+  inventoryItem  InventoryItem?
+  cartItems      CartItem[]
+  checkoutItems  CheckoutItem[]
+
+  @@index([organizationId, status])
+  @@map("seller_offers")
+}
+
+model Price {
+  id             String    @id @default(uuid())
+  sellerOfferId  String
+  // Exact monetary representation: integer minor units (e.g. cents),
+  // never a float. See PricingService.
+  amountMinorUnits BigInt
+  currency       String
+  effectiveFrom  DateTime  @default(now())
+  effectiveTo    DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  sellerOffer SellerOffer @relation(fields: [sellerOfferId], references: [id], onDelete: Cascade)
+
+  @@index([sellerOfferId, isActive])
+  @@index([sellerOfferId, effectiveFrom])
+  @@map("prices")
+}
+
+model Promotion {
+  id             String                @id @default(uuid())
+  organizationId String
+  name           String
+  discountType   PromotionDiscountType
+  discountValue  Int
+  startAt        DateTime
+  endAt          DateTime
+  isActive       Boolean               @default(false)
+  usageLimit     Int?
+  timesUsed      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  offers PromotionOffer[]
+
+  @@index([organizationId, isActive])
+  @@index([startAt, endAt])
+  @@map("promotions")
+}
+
+model PromotionOffer {
+  promotionId   String
+  sellerOfferId String
+  createdAt     DateTime @default(now())
+
+  promotion   Promotion   @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  sellerOffer SellerOffer @relation(fields: [sellerOfferId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, sellerOfferId])
+  @@index([sellerOfferId])
+  @@map("promotion_offers")
+}
+
+model MediaAsset {
+  id              String            @id @default(uuid())
+  organizationId  String
+  productId       String?
+  variantId       String?
+  assetType       MediaAssetType
+  storageKey      String            @unique
+  mimeType        String
+  sizeBytes       Int
+  checksum        String?
+  status          MediaAssetStatus  @default(PENDING_UPLOAD)
+  uploadExpiresAt DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  product Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([productId])
+  @@index([variantId])
+  @@index([uploadExpiresAt])
+  @@map("media_assets")
+}
+
+model OutboxEvent {
+  id            String            @id @default(uuid())
+  eventType     String
+  eventVersion  Int               @default(1)
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  correlationId String?
+  status        OutboxEventStatus @default(PENDING)
+  attempts      Int               @default(0)
+  lastError     String?
+  producedAt    DateTime          @default(now())
+  publishedAt   DateTime?
+
+  @@index([status, producedAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+// ---------------------------------------------------------------------------
+// Inventory / cart / checkout domain (Volume 3)
+//
+// Ownership model: one InventoryItem per SellerOffer (1:1) — the seller
+// offer is already the SKU-scoped, seller-owned orderable unit from
+// Volume 2, so it is the natural inventory ownership key. Quantity
+// semantics: onHandQuantity and reservedQuantity are both stored and
+// atomically maintained; availableQuantity is ALWAYS a derived
+// calculation (onHandQuantity - reservedQuantity), never stored, so it
+// can never drift out of sync with its inputs. See InventoryService.
+// ---------------------------------------------------------------------------
+
+model InventoryItem {
+  id              String   @id @default(uuid())
+  organizationId  String
+  sellerOfferId   String   @unique
+  onHandQuantity  Int      @default(0)
+  reservedQuantity Int     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  sellerOffer  SellerOffer            @relation(fields: [sellerOfferId], references: [id], onDelete: Cascade)
+  adjustments  InventoryAdjustment[]
+  reservations InventoryReservation[]
+
+  @@index([organizationId])
+  @@map("inventory_items")
+}
+
+model InventoryAdjustment {
+  id              String                  @id @default(uuid())
+  inventoryItemId String
+  quantityDelta   Int
+  type            InventoryAdjustmentType
+  reason          String
+  actorUserId     String?
+  correlationId   String?
+  referenceType   String?
+  referenceId     String?
+  createdAt       DateTime                @default(now())
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId, createdAt])
+  @@map("inventory_adjustments")
+}
+
+model InventoryReservation {
+  id              String           @id @default(uuid())
+  inventoryItemId String
+  checkoutId      String
+  quantity        Int
+  state           ReservationState @default(ACTIVE)
+  expiresAt       DateTime
+  releasedAt      DateTime?
+  consumedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  checkout      Checkout       @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  checkoutItem  CheckoutItem?
+
+  // The natural idempotency key for "reserve this offer's inventory for
+  // this checkout" — see InventoryService.reserveForCheckout.
+  @@unique([checkoutId, inventoryItemId])
+  @@index([state, expiresAt])
+  @@index([inventoryItemId, state])
+  @@map("inventory_reservations")
+}
+
+model Cart {
+  id             String     @id @default(uuid())
+  customerId     String?
+  anonymousToken String?    @unique
+  status         CartStatus @default(ACTIVE)
+  revision       Int        @default(0)
+  expiresAt      DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  items     CartItem[]
+  checkouts Checkout[]
+
+  @@index([customerId, status])
+  @@index([status, expiresAt])
+  @@map("carts")
+}
+
+model CartItem {
+  id            String   @id @default(uuid())
+  cartId        String
+  sellerOfferId String
+  quantity      Int
+  addedAt       DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  cart        Cart        @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  sellerOffer SellerOffer @relation(fields: [sellerOfferId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, sellerOfferId])
+  @@map("cart_items")
+}
+
+model Checkout {
+  id                    String         @id @default(uuid())
+  customerId             String
+  cartId                 String
+  cartRevisionAtCreation Int
+  idempotencyKey         String
+  status                 CheckoutStatus @default(CREATED)
+  currency               String
+  subtotalMinorUnits     BigInt         @default(0)
+  discountMinorUnits     BigInt         @default(0)
+  totalMinorUnits        BigInt         @default(0)
+  failureReason          String?
+  expiresAt              DateTime
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  cart         Cart                   @relation(fields: [cartId], references: [id], onDelete: Restrict)
+  items        CheckoutItem[]
+  reservations InventoryReservation[]
+
+  @@unique([customerId, idempotencyKey])
+  @@index([customerId, status])
+  @@index([status, expiresAt])
+  @@index([cartId])
+  @@map("checkouts")
+}
+
+model CheckoutItem {
+  id                     String   @id @default(uuid())
+  checkoutId             String
+  sellerOfferId          String
+  quantity               Int
+  unitPriceMinorUnits    BigInt
+  discountMinorUnits     BigInt   @default(0)
+  currency               String
+  inventoryReservationId String?  @unique
+  createdAt              DateTime @default(now())
+
+  checkout             Checkout              @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  sellerOffer          SellerOffer           @relation(fields: [sellerOfferId], references: [id], onDelete: Restrict)
+  inventoryReservation InventoryReservation? @relation(fields: [inventoryReservationId], references: [id], onDelete: SetNull)
+
+  @@unique([checkoutId, sellerOfferId])
+  @@map("checkout_items")
+}

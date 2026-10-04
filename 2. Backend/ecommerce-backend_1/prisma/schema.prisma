@@ -1,0 +1,225 @@
+// Prisma schema — Backend Foundation & Identity/Access Milestone (Volume 1)
+//
+// Scope: user identity, customer profile, seller organizations, seller
+// membership, platform roles, sessions/refresh tokens, email verification,
+// password reset, and security audit events.
+//
+// Explicitly NOT included: catalog, inventory, pricing, cart, checkout,
+// orders, payments, shipping, reviews, search, notifications-content.
+// Those are later milestones.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum PlatformRole {
+  CUSTOMER
+  SUPPORT_AGENT
+  MODERATOR
+  PLATFORM_ADMIN
+}
+
+enum OrganizationStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum MembershipRole {
+  SELLER_ADMIN
+  SELLER_STAFF
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     // display form as provided at registration
+  normalizedEmail   String     @unique // canonical lower-cased/trimmed form; enforces one logical account per address
+  passwordHash      String
+  status            UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt   DateTime?
+  passwordChangedAt DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deactivatedAt     DateTime?
+
+  platformRoles          UserPlatformRole[]
+  customerProfile        CustomerProfile?
+  sellerMemberships      SellerMembership[]
+  sessions               Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  auditEventsAsActor      AuditEvent[]            @relation("AuditActor")
+
+  @@index([status])
+  @@map("users")
+}
+
+model UserPlatformRole {
+  id        String       @id @default(uuid())
+  userId    String
+  role      PlatformRole
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([role])
+  @@map("user_platform_roles")
+}
+
+model CustomerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Seller organizations
+// ---------------------------------------------------------------------------
+
+model SellerOrganization {
+  id          String             @id @default(uuid())
+  legalName   String
+  displayName String
+  status      OrganizationStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  memberships SellerMembership[]
+
+  @@index([status])
+  @@map("seller_organizations")
+}
+
+model SellerMembership {
+  id             String            @id @default(uuid())
+  userId         String
+  organizationId String
+  role           MembershipRole
+  status         MembershipStatus  @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization SellerOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@map("seller_memberships")
+}
+
+// ---------------------------------------------------------------------------
+// Sessions / tokens
+// ---------------------------------------------------------------------------
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  lastUsedAt       DateTime  @default(now())
+  revokedAt        DateTime?
+  replacedBySessionId String?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model EmailVerificationToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+model AuditEvent {
+  id            String       @id @default(uuid())
+  actorUserId   String?
+  action        String
+  targetType    String?
+  targetId      String?
+  outcome       AuditOutcome
+  metadata      Json?
+  requestId     String?
+  correlationId String?
+  createdAt     DateTime     @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_events")
+}
